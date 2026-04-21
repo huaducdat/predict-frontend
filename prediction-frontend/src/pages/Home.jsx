@@ -87,6 +87,19 @@ export default function Home() {
           >
             Xem dự đoán
           </Button>
+          {/* 🔥 Nút mới */}
+          <Button
+            variant="outlined"
+            size="large"
+            sx={{
+              px: 4,
+              borderColor: "#00c6ff",
+              color: "#00c6ff",
+            }}
+            onClick={() => navigate("/history")}
+          >
+            Dữ liệu đã lưu
+          </Button>
         </Box>
       </Box>
     </Box>

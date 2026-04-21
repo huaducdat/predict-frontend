@@ -60,7 +60,7 @@ export default function Input() {
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {/* TITLE */}
       <Typography variant="h4" mb={3}>
-        Nhập số dự đoán
+        Nhập kết quả
       </Typography>
 
       {/* DATE */}

@@ -18,8 +18,8 @@ export default function Header() {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
             sx={{
-              width: 32,
-              height: 32,
+              width: 42,
+              height: 42,
               borderRadius: "8px",
               background: "linear-gradient(135deg, #6a5cff, #00c6ff)",
             }}
@@ -28,10 +28,26 @@ export default function Header() {
         </Box>
 
         {/* Navigation */}
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
-          <Button color="inherit"  onClick={() => navigate("/input")}>Input Number</Button>
-          <Button color="inherit"  onClick={() => navigate("/prediction")}>Predict</Button>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            wordBreak: "break-word",
+            whiteSpace: "normal",
+          }}
+        >
+          <Button color="inherit" onClick={() => navigate("/")}>
+            Home
+          </Button>
+          <Button color="inherit" onClick={() => navigate("/input")}>
+            Input Number
+          </Button>
+          <Button color="inherit" onClick={() => navigate("/prediction")}>
+            Predict
+          </Button>
+          <Button color="inherit" onClick={() => navigate("/history")}>
+            History
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>
