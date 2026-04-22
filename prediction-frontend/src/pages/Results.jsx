@@ -42,6 +42,7 @@ function Results() {
     try {
       const res = await getAllResults();
       setData(res);
+      setIsFilterMode(false); // 🔥 reset
     } catch (err) {
       setError(err.message);
     }
@@ -51,6 +52,7 @@ function Results() {
     try {
       const res = await getResultsByDate(date);
       setData(res);
+      setIsFilterMode(true); // 🔥 bật mode
     } catch (err) {
       setError(err.message);
     }
@@ -62,6 +64,8 @@ function Results() {
   }, []);
 
   const latestId = data.length > 0 ? data[data.length - 1].id : null;
+
+  const [isFilterMode, setIsFilterMode] = useState(false);
 
   return (
     <Box sx={{ p: 3, gap: 3, display: "flex", flexDirection: "column" }}>
@@ -108,90 +112,107 @@ function Results() {
 
       {/* Data */}
       <Stack spacing={2} sx={{ mt: 2 }}>
-        {data.map((r, index) => {
-          const isFirst = index === 0;
+        {isFilterMode && data && (
+          <Card sx={{ borderRadius: 3, py: 3, px: 2 }}>
+            <CardContent>
+              <Typography variant="h6">🔍 Result for {data.date}</Typography>
 
-          return (
-            <Card key={r.id} sx={{ borderRadius: 3, py: 3, px: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle1">
-                  <b>Date:</b> {r.date}
-                </Typography>
+              <Typography sx={{ mt: 1 }}>
+                <b>Single:</b> {data.singleNumber}
+              </Typography>
 
-                <Typography variant="subtitle1">
-                  <b>Single:</b> {r.singleNumber}
-                </Typography>
+              <Typography sx={{ mt: 1 }}>
+                <b>Numbers:</b> {data.numbers?.join(", ")}
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+        {!isFilterMode &&
+          Array.isArray(data) &&
+          data.map((r, index) => {
+            const isFirst = index === 0;
 
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  <b>Numbers:</b> {r.numbers?.join(", ")}
-                </Typography>
-              </CardContent>
-
-              {/* DUPLICATE INFO */}
-              {(() => {
-                const countMap = {};
-
-                r.numbers?.forEach((n) => {
-                  countMap[n] = (countMap[n] || 0) + 1;
-                });
-
-                const duplicates = Object.entries(countMap).filter(
-                  ([_, count]) => count > 1,
-                );
-
-                if (duplicates.length === 0) return null;
-
-                return (
-                  <Typography
-                    variant="body2"
-                    sx={{ mt: 1, color: "orange", fontWeight: 500 }}
-                  >
-                    <b>Số lặp:</b>{" "}
-                    {duplicates
-                      .map(([num, count]) => `${num}(x${count})`)
-                      .join(", ")}
-                  </Typography>
-                );
-              })()}
-
-              {/* STREAK INFO */}
-              {isFirst && streakMap && Object.keys(streakMap).length > 0 && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    Streak: current / max (hiện tại / tiên tục nhiều nhất trong
-                    lịch sử)
+            return (
+              <Card key={r.id} sx={{ borderRadius: 3, py: 3, px: 2 }}>
+                <CardContent>
+                  <Typography variant="subtitle1">
+                    <b>Date:</b> {r.date}
                   </Typography>
 
-                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    {[...new Set(r.numbers || [])].map((n) => {
-                      const s = streakMap[n];
-                      if (!s) return null;
-
-                      const isHot = s.currentStreak >= 2;
-
-                      return (
-                        <span
-                          key={n}
-                          style={{
-                            marginRight: 8,
-                            padding: "2px 6px",
-                            borderRadius: 6,
-                            background: isHot ? "#ffebee" : "#f5f5f5",
-                            color: isHot ? "#d32f2f" : "#333",
-                            fontWeight: isHot ? 600 : 400,
-                            display: "inline-block",
-                          }}
-                        >
-                          {n} ({s.currentStreak}/{s.maxStreak})
-                        </span>
-                      );
-                    })}
+                  <Typography variant="subtitle1">
+                    <b>Single:</b> {r.singleNumber}
                   </Typography>
-                </Box>
-              )}
-            </Card>
-          );
-        })}
+
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    <b>Numbers:</b> {r.numbers?.join(", ")}
+                  </Typography>
+                </CardContent>
+
+                {/* DUPLICATE INFO */}
+                {(() => {
+                  const countMap = {};
+
+                  r.numbers?.forEach((n) => {
+                    countMap[n] = (countMap[n] || 0) + 1;
+                  });
+
+                  const duplicates = Object.entries(countMap).filter(
+                    ([_, count]) => count > 1,
+                  );
+
+                  if (duplicates.length === 0) return null;
+
+                  return (
+                    <Typography
+                      variant="body2"
+                      sx={{ mt: 1, color: "orange", fontWeight: 500 }}
+                    >
+                      <b>Số lặp:</b>{" "}
+                      {duplicates
+                        .map(([num, count]) => `${num}(x${count})`)
+                        .join(", ")}
+                    </Typography>
+                  );
+                })()}
+
+                {/* STREAK INFO */}
+                {isFirst && streakMap && Object.keys(streakMap).length > 0 && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Streak: current / max (hiện tại / tiên tục nhiều nhất
+                      trong lịch sử)
+                    </Typography>
+
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      {[...new Set(r.numbers || [])].map((n) => {
+                        const s = streakMap[n];
+                        if (!s) return null;
+
+                        const isHot = s.currentStreak >= 2;
+
+                        return (
+                          <span
+                            key={n}
+                            style={{
+                              marginRight: 8,
+                              padding: "2px 6px",
+                              borderRadius: 6,
+                              background: isHot ? "#ffebee" : "#f5f5f5",
+                              color: isHot ? "#d32f2f" : "#333",
+                              fontWeight: isHot ? 600 : 400,
+                              display: "inline-block",
+                            }}
+                          >
+                            {n} ({s.currentStreak}/{s.maxStreak})
+                          </span>
+                        );
+                      })}
+                    </Typography>
+                  </Box>
+                )}
+              </Card>
+            );
+          })}
       </Stack>
     </Box>
   );
