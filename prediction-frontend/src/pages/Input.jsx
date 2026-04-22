@@ -8,12 +8,15 @@ import {
   Button,
   Stack,
 } from "@mui/material";
+import { createResult } from "../api/resultApi";
+import { CircularProgress } from "@mui/material";
 
 export default function Input() {
   const [numbers, setNumbers] = useState([]);
   const [special, setSpecial] = useState(null);
   const [date, setDate] = useState("");
   const [mode, setMode] = useState("normal"); // normal | special
+  const [loading, setLoading] = useState(false);
 
   const allNumbers = Array.from({ length: 100 }, (_, i) =>
     i.toString().padStart(2, "0"),
@@ -44,16 +47,38 @@ export default function Input() {
   }, {});
 
   // 👉 SUBMIT
-  const handleSubmit = () => {
-    if (!date) return alert("Chọn ngày");
-    if (numbers.length !== 27) return alert("Phải đủ 27 số");
-    if (!special) return alert("Chưa chọn số đặc biệt");
+  const handleSubmit = async () => {
+    try {
+      if (!date) return alert("Chọn ngày");
+      if (numbers.length !== 26) return alert("Phải đủ 26 số thường");
+      if (!special) return alert("Chưa chọn số đặc biệt");
 
-    console.log({
-      date,
-      singleNumber: special,
-      numbers,
-    });
+      setLoading(true);
+
+      // 👉 gộp thành 27 số
+      const fullNumbers = [...numbers, special]
+        .map((n) => parseInt(n))
+        .sort((a, b) => a - b);
+
+      const payload = {
+        date,
+        singleNumber: parseInt(special),
+        numbers: fullNumbers.map((n) => parseInt(n)),
+      };
+
+      await createResult(payload);
+
+      alert("Lưu thành công!");
+
+      setNumbers([]);
+      setSpecial(null);
+      setDate("");
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,7 +115,7 @@ export default function Input() {
 
       {/* SPECIAL */}
       <Box mb={2}>
-        <Typography>
+        <Typography variant="body1" component="span">
           Số đặc biệt:{" "}
           <Paper
             sx={{
@@ -113,7 +138,7 @@ export default function Input() {
 
       {/* SELECTED LIST */}
       <Box mb={3}>
-        <Typography variant="h5" >
+        <Typography variant="h5">
           Danh sách đã chọn:{" "}
           <Typography sx={{ mb: 2 }}>Số thường: {numbers.length}/26</Typography>
         </Typography>
@@ -152,7 +177,7 @@ export default function Input() {
           const count = countMap[num] || 0;
 
           return (
-            <Grid item xs={2} sm={1} key={num}>
+            <Grid xs={2} sm={1} key={num}>
               <Paper
                 onClick={() => handleClick(num)}
                 sx={{
@@ -192,8 +217,18 @@ export default function Input() {
         >
           Reset
         </Button>
-        <Button variant="contained" size="large" onClick={handleSubmit}>
-          Lưu dự đoán
+        <Button
+          variant="contained"
+          size="large"
+          onClick={handleSubmit}
+          disabled={
+            loading || !date || numbers.length !== 26 || special === null
+          }
+          startIcon={
+            loading ? <CircularProgress size={20} color="inherit" /> : null
+          }
+        >
+          {loading ? "Đang lưu..." : "Lưu kết quả"}
         </Button>
       </Box>
     </Box>
