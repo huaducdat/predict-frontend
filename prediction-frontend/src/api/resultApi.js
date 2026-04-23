@@ -34,3 +34,13 @@ export const getLatestStreaks = async () => {
 
   return res.json();
 };
+
+export const getPagedResults = async (page = 1) => {
+  const res = await fetch(
+    `http://localhost:8080/api/results?page=${page}&size=10`
+  );
+
+  if (!res.ok) throw new Error("Fetch failed");
+
+  return res.json();
+};

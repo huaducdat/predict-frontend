@@ -1,6 +1,13 @@
-import { Box, Card, CardContent, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 
-function StreakGrid({ data = [] }) {
+function StreakGrid({ data = [], onSelect }) {
   const streakMap = new Map(data.map((item) => [item.number, item]));
 
   const numbers = Array.from({ length: 100 }, (_, i) => {
@@ -13,53 +20,64 @@ function StreakGrid({ data = [] }) {
     );
   });
 
-  return (
-    <Box
-      sx={{
-        mt: 2,
-        overflowX: "auto",
-        pb: 1,
+  const getStyle = (streak) => {
+    if (streak >= 4) {
+      return {
+        border: "2px solid #d32f2f",
+        bgcolor: "#ffebee",
+        color: "#d32f2f",
+      };
+    }
+    if (streak >= 2) {
+      return {
+        border: "2px solid #2e7d32",
+        bgcolor: "#e8f5e9",
+        color: "#2e7d32",
+      };
+    }
+    if (streak === 1) {
+      return {
+        border: "1px solid #81c784",
+        bgcolor: "#f1f8e9",
+        color: "#558b2f",
+      };
+    }
+    return {
+      border: "1px solid #ddd",
+      bgcolor: "#fafafa",
+      color: "#999",
+    };
+  };
 
-        "&::-webkit-scrollbar": {
-          height: 6,
-        },
-        "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "#bbb",
-          borderRadius: 10,
-        },
-      }}
-    >
+  return (
+    <Box sx={{ mt: 2, overflowX: "auto", pb: 1, background:"#00000010", padding: 1, borderRadius: 1,}}>
       <Box
         sx={{
           display: "grid",
-
-          // 🔥 KEY: 2 hàng
           gridTemplateRows: "repeat(2, auto)",
-
-          // 🔥 đổ item theo cột (quan trọng)
           gridAutoFlow: "column",
-
-          // 🔥 mỗi ô rộng cố định
           gridAutoColumns: "90px",
-
           gap: 2,
-
-          minWidth: "max-content", // để scroll hoạt động
+          minWidth: "max-content",
         }}
       >
         {numbers.map((item) => {
-          const active = item.currentStreak > 0;
+          const style = getStyle(item.currentStreak);
 
           return (
             <Card
               key={item.number}
+              onClick={() => onSelect?.(item.number)}
               sx={{
                 borderRadius: 3,
                 textAlign: "center",
-                border: active
-                  ? "2px solid #2e7d32"
-                  : "1px solid #ddd",
-                bgcolor: active ? "#e8f5e9" : "#fafafa",
+                transition: "0.2s",
+                cursor: "pointer",
+                ...style,
+                "&:hover": {
+                  transform: "translateY(-3px)",
+                  boxShadow: 3,
+                },
               }}
             >
               <CardContent sx={{ py: 2 }}>
@@ -69,16 +87,12 @@ function StreakGrid({ data = [] }) {
 
                 <Typography
                   variant="body2"
-                  sx={{
-                    mt: 1,
-                    color: active ? "success.main" : "text.secondary",
-                    fontWeight: 600,
-                  }}
+                  sx={{ mt: 1, fontWeight: 700, color: style.color }}
                 >
                   🔥 {item.currentStreak}
                 </Typography>
 
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary">
                   max {item.maxStreak}
                 </Typography>
               </CardContent>
