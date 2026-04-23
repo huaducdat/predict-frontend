@@ -165,7 +165,7 @@ function Results() {
           {rebuilding ? "Rebuilding..." : "Rebuild Streak"}
         </Button>
         <p style={{textAlign:'center'}}>
-          Don't click on if you no need update or Streak data is not correct. Everytime input new dât Streak auto update!<br></br>
+          Don't click in if you no need update or Streak data is not correct. Everytime input new data Streak auto update!<br></br>
           (Không ấn nút này nếu dữ liệu Nhịp không sai lệch hoặc cần phải cập nhật dữ liệu mới - mỗi lần nạp dữ liệu mới đã tự động làm mới rồi.)
         </p>
       </div>
