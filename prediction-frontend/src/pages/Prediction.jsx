@@ -10,8 +10,9 @@ import {
   Alert,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { predictNumbers, getTodayPrediction } from "../api/predictionApi";
+import { runPrediction, getTodayPrediction } from "../api/predictionApi";
 import { getStreaks } from "../api/streakApi";
+import ChainAnalysis from "../components/ChainAnalysis";
 
 function Prediction() {
   const [data, setData] = useState(null);
@@ -26,7 +27,8 @@ function Prediction() {
       setLoading(true);
       setError("");
 
-      const res = await predictNumbers();
+      const res = await runPrediction();
+      console.log("RUN DATA:", res); // 🔥 thêm dòng này
       setData(res);
     } catch (err) {
       setError(err.message);
@@ -139,6 +141,9 @@ function Prediction() {
                             {s.currentStreak}/{s.maxStreak}
                           </div>
                         )}
+                        <div style={{ fontSize: 12 }}>
+                          {n.score?.toFixed(2)}
+                        </div>
                       </Box>
                     );
                   })}
@@ -174,6 +179,9 @@ function Prediction() {
                             {s.currentStreak}/{s.maxStreak}
                           </div>
                         )}
+                        <div style={{ fontSize: 12 }}>
+                          {n.score?.toFixed(2)}
+                        </div>
                       </Box>
                     );
                   })}
@@ -188,7 +196,9 @@ function Prediction() {
       {data?.full?.length > 0 && (
         <Card sx={{ borderRadius: 3, mt: 3 }}>
           <CardContent>
-            <Typography variant="h6">All Numbers chance of all time<br></br>(Tỷ lệ ra suốt lịch sử)</Typography>
+            <Typography variant="h6">
+              All Numbers chance in 180 days<br></br>(Tỷ lệ ra trong 180 days)
+            </Typography>
 
             <Grid container spacing={1} sx={{ mt: 2 }}>
               {data.full.map((n) => (
@@ -200,16 +210,19 @@ function Prediction() {
                       textAlign: "center",
                       fontSize: 16,
                       background:
-                        n.percentage > 2
+                        n.percentage * 100 > 2
                           ? "gold"
-                          : n.percentage > 1
+                          : n.percentage * 100 > 1
                             ? "#ddd"
                             : "#f5f5f5",
                     }}
                   >
                     <div>{n.number.toString().padStart(2, "0")}</div>
                     <div style={{ fontSize: 13 }}>
-                      {n.percentage?.toFixed(1) ?? 0}%
+                      {(n.percentage * 100).toFixed(1)}%
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.6 }}>
+                      {n.score?.toFixed(2)}
                     </div>
                   </Box>
                 </Grid>
@@ -218,6 +231,8 @@ function Prediction() {
           </CardContent>
         </Card>
       )}
+
+      {data && <ChainAnalysis chains={data.chains} />}
     </Box>
   );
 }
