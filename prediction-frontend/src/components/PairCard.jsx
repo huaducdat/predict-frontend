@@ -1,65 +1,44 @@
 function PairCard({ data }) {
-  if (!data) return null;
+  if (!Array.isArray(data)) return null;
 
   return (
-    <div style={{ marginBottom: 30 }}>
-      <h3>PAIR</h3>
+    <div>
+      <h3>PAIR → NEXT</h3>
 
-      {/* 🔥 SCROLL DỌC */}
-      <div
-        style={{
-          maxHeight: 400,
-          overflowY: "auto",
-          paddingRight: 6,
-        }}
-      >
-        {Object.entries(data).map(([num, numbers]) => (
-          <PairRow
-            key={num}
-            baseNumber={Number(num)}
-            numbers={numbers}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default PairCard;
-
-function PairRow({ baseNumber, numbers }) {
-  const top = numbers.slice(0, 10);
-
-  return (
-    <div style={{ marginBottom: 12 }}>
-      {/* 🔥 TITLE: 00, 01, 02 */}
-      <b>{baseNumber.toString().padStart(2, "0")}</b>
-
-      {/* 🔥 LIST */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
-        {top.map((n, i) => {
-          let bg = "#222";
-
-          if (i < 3) bg = "#ff4d4f";      // 🔴 top 3
-          else if (i < 9) bg = "#faad14"; // 🟡 top 9
+      <div style={{ maxHeight: 400, overflowY: "auto" }}>
+        {data.map((pair) => {
+          const [a, b] = decodePair(pair.pairKey);
 
           return (
-            <div
-              key={n.number}
-              style={{
-                width: 45,
-                padding: 5,
-                borderRadius: 6,
-                background: bg,
-                color: "white",
-                textAlign: "center",
-                fontSize: 11,
-              }}
-            >
-              <div>{n.number.toString().padStart(2, "0")}</div>
+            <div key={pair.pairKey} style={{ marginBottom: 12 }}>
+              {/* 🔥 PAIR */}
+              <b>
+                ({a.toString().padStart(2, "0")}-
+                {b.toString().padStart(2, "0")})
+              </b>
 
-              <div style={{ fontSize: 9, opacity: 0.7 }}>
-                {n.score.toFixed(1)}
+              {/* 🔥 NEXT */}
+              <div style={{ display: "flex", gap: 5, marginTop: 4 }}>
+                {pair.numbers.map((n, i) => (
+                  <div
+                    key={n.number}
+                    style={{
+                      padding: 6,
+                      borderRadius: 6,
+                      background:
+                        i === 0 ? "#ff4d4f" :
+                        i < 3 ? "#faad14" :
+                        "#222",
+                      color: "white",
+                      fontSize: 11,
+                    }}
+                  >
+                    {n.number.toString().padStart(2, "0")}
+                    <div style={{ fontSize: 9 }}>
+                      {(n.score * 100).toFixed(0)}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           );
@@ -68,3 +47,11 @@ function PairRow({ baseNumber, numbers }) {
     </div>
   );
 }
+
+export default PairCard;
+
+const decodePair = (key) => {
+  const a = Math.floor(key / 100);
+  const b = key % 100;
+  return [a, b];
+};

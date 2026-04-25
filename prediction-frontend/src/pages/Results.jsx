@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  getAllResults,
   getResultsByDate,
   getLatestStreaks,
   getPagedResults,
@@ -18,12 +17,20 @@ import {
 import StreakGrid from "../components/StreakGrid";
 import { rebuildStreaks } from "../api/streakApi";
 
+// 🔥 FORMAT 2 DIGIT
+const formatNumber = (n) => n?.toString().padStart(2, "0");
+
 function Results() {
   const [data, setData] = useState([]);
   const [date, setDate] = useState("");
   const [error, setError] = useState("");
   const [streakMap, setStreakMap] = useState({});
   const [isFilterMode, setIsFilterMode] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [rebuilding, setRebuilding] = useState(false);
 
   const loadStreaks = async () => {
     try {
@@ -38,16 +45,6 @@ function Results() {
     }
   };
 
-  // const loadAll = async () => {
-  //   try {
-  //     const res = await getAllResults();
-  //     setData(res);
-  //     setIsFilterMode(false);
-  //   } catch (err) {
-  //     setError(err.message);
-  //   }
-  // };
-
   const loadByDate = async () => {
     try {
       const res = await getResultsByDate(date);
@@ -58,18 +55,48 @@ function Results() {
     }
   };
 
+  const loadPage = async (p) => {
+    try {
+      const res = await getPagedResults(p);
+
+      setData(res.content);
+      setPage(res.page);
+      setTotalPages(res.totalPages);
+      setIsFilterMode(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   useEffect(() => {
     loadPage(1);
     loadStreaks();
   }, []);
 
-  // 🔥 BUILD TIMELINE (detect missing dates)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
+
+  const handleRebuild = async () => {
+    try {
+      setRebuilding(true);
+
+      await rebuildStreaks();
+      await loadPage(page);
+      await loadStreaks();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRebuilding(false);
+    }
+  };
+
+  // 🔥 BUILD TIMELINE
   const buildTimeline = (data) => {
     if (!Array.isArray(data)) return [];
 
-    // 🔥 sort mới -> cũ
     const sorted = [...data].sort(
-      (a, b) => new Date(b.date) - new Date(a.date),
+      (a, b) => new Date(b.date) - new Date(a.date)
     );
 
     const result = [];
@@ -105,41 +132,6 @@ function Results() {
     return result;
   };
 
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  const loadPage = async (p) => {
-    try {
-      const res = await getPagedResults(p);
-
-      setData(res.content);
-      setPage(res.page);
-      setTotalPages(res.totalPages);
-      setIsFilterMode(false);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
-
-  const [rebuilding, setRebuilding] = useState(false);
-  const handleRebuild = async () => {
-    try {
-      setRebuilding(true);
-
-      await rebuildStreaks();
-      await loadPage(page);
-      await loadStreaks();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setRebuilding(false);
-    }
-  };
-
   return (
     <Box sx={{ p: 3, gap: 3, display: "flex", flexDirection: "column" }}>
       {/* HEADER */}
@@ -153,22 +145,23 @@ function Results() {
 
         <StreakGrid data={Object.values(streakMap)} />
       </Box>
-      {/**Rebuild Streak BTN */}
-      <div style={{alignItems:"center", display:"flex", flexDirection:'column'}}>
+
+      {/* REBUILD */}
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Button
           variant="contained"
           color="warning"
           onClick={handleRebuild}
           disabled={rebuilding}
-          sx={{ width: 300, alignSelf: "center" }}
+          sx={{ width: 300 }}
         >
           {rebuilding ? "Rebuilding..." : "Rebuild Streak"}
         </Button>
-        <p style={{textAlign:'center'}}>
-          Don't click in if you no need update or Streak data is not correct. Everytime input new data Streak auto update!<br></br>
-          (Không ấn nút này nếu dữ liệu Nhịp không sai lệch hoặc cần phải cập nhật dữ liệu mới - mỗi lần nạp dữ liệu mới đã tự động làm mới rồi.)
-        </p>
-      </div>
+
+        <Typography sx={{ mt: 1, textAlign: "center" }}>
+          Don't click if not needed. Auto update already runs.
+        </Typography>
+      </Box>
 
       {/* FILTER */}
       <Typography variant="h4">Result Data</Typography>
@@ -203,11 +196,12 @@ function Results() {
               </Typography>
 
               <Typography sx={{ mt: 1 }}>
-                <b>Single:</b> {data.singleNumber}
+                <b>Single:</b> {formatNumber(data.singleNumber)}
               </Typography>
 
               <Typography sx={{ mt: 1 }}>
-                <b>Numbers:</b> {data.numbers?.join(", ")}
+                <b>Numbers:</b>{" "}
+                {data.numbers?.map((n) => formatNumber(n)).join(", ")}
               </Typography>
             </CardContent>
           </Card>
@@ -216,7 +210,6 @@ function Results() {
         {/* NORMAL MODE */}
         {!isFilterMode &&
           buildTimeline(data).map((item, index) => {
-            // 🔥 CASE: missing days
             if (item.type === "missing_range") {
               const isSingle = item.start === item.end;
 
@@ -239,7 +232,6 @@ function Results() {
               );
             }
 
-            // 🔥 CASE: normal data
             const r = item.value;
             const isFirst = index === 0;
 
@@ -251,11 +243,12 @@ function Results() {
                   </Typography>
 
                   <Typography>
-                    <b>Single:</b> {r.singleNumber}
+                    <b>Single:</b> {formatNumber(r.singleNumber)}
                   </Typography>
 
                   <Typography sx={{ mt: 1 }}>
-                    <b>Numbers:</b> {r.numbers?.join(", ")}
+                    <b>Numbers:</b>{" "}
+                    {r.numbers?.map((n) => formatNumber(n)).join(", ")}
                   </Typography>
                 </CardContent>
 
@@ -267,7 +260,7 @@ function Results() {
                   });
 
                   const duplicates = Object.entries(countMap).filter(
-                    ([_, count]) => count > 1,
+                    ([_, count]) => count > 1
                   );
 
                   if (duplicates.length === 0) return null;
@@ -276,7 +269,10 @@ function Results() {
                     <Typography sx={{ mt: 1, color: "orange" }}>
                       <b>Số lặp:</b>{" "}
                       {duplicates
-                        .map(([num, count]) => `${num}(x${count})`)
+                        .map(
+                          ([num, count]) =>
+                            `${formatNumber(num)}(x${count})`
+                        )
                         .join(", ")}
                     </Typography>
                   );
@@ -308,7 +304,7 @@ function Results() {
                               fontWeight: isHot ? 600 : 400,
                             }}
                           >
-                            {n} ({s.currentStreak}/{s.maxStreak})
+                            {formatNumber(n)} ({s.currentStreak}/{s.maxStreak})
                           </span>
                         );
                       })}
@@ -319,7 +315,8 @@ function Results() {
             );
           })}
       </Stack>
-      {/**PAGINATION */}
+
+      {/* PAGINATION */}
       <Box
         sx={{
           mt: 3,
