@@ -9,6 +9,8 @@ import RepeatCard from "../components/RepeatCard";
 import StreakCard from "../components/StreakCard";
 import RecentFrequencyCard from "../components/RecentFrequencyCard";
 import TimeWeightMapCard from "../components/TimeWeightMapCard";
+import PredictionSourceResultCard from "../components/PredictionSourceResultCard";
+import TimeWeightGlobalCard from "../components/TimeWeightGlobalCard";
 
 function Prediction() {
   const [data, setData] = useState(null);
@@ -91,8 +93,10 @@ function Prediction() {
         </Typography>
       )}
 
+      {meta && <PredictionSourceResultCard date={meta.date} />}
+
       {/* 🔥 CONTROL */}
-      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+      <Stack direction="row" spacing={2} sx={{ mb: 3, marginTop: 2 }}>
         <Button variant="contained" onClick={handleRun} disabled={loading}>
           🚀 Run
         </Button>
@@ -123,6 +127,9 @@ function Prediction() {
           <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
 
           <PairCard data={pairData} />
+          <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
+
+          <TimeWeightGlobalCard date={meta.date} />
           <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
 
           <TimeWeightMapCard data={timeweightData} />

@@ -6,11 +6,9 @@ function TimeWeightMapCard({ data }) {
 
   if (!data) return null;
 
-  const numbers = Array.from({ length: 100 }, (_, i) => i);
+  const list = data?.["-1"] || [];
 
-  const visibleNumbers = expanded
-    ? numbers
-    : numbers.slice(0, 12); // 🔥 chỉ 12 hàng
+  const visibleList = expanded ? list : list.slice(0, 12);
 
   return (
     <Box
@@ -31,9 +29,7 @@ function TimeWeightMapCard({ data }) {
           mb: 2,
         }}
       >
-        <Typography sx={{ fontWeight: "bold" }}>
-          🔗 Time Weight
-        </Typography>
+        <Typography sx={{ fontWeight: "bold" }}>🔗 Time Weight</Typography>
 
         <Button
           size="small"
@@ -62,25 +58,19 @@ function TimeWeightMapCard({ data }) {
           },
         }}
       >
-        {visibleNumbers.map((num) => {
-          const list = data[num] || [];
-
+        {visibleList.map((item, index) => {
           return (
             <Box
-              key={num}
+              key={item.number}
               sx={{
                 px: 1,
                 py: 0.8,
                 borderRadius: 2,
                 background: "rgba(255,255,255,0.05)",
-
                 fontFamily: "Courier New",
                 fontSize: 12,
-
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-
+                display: "flex",
+                justifyContent: "space-between",
                 transition: "0.2s",
 
                 "&:hover": {
@@ -88,19 +78,16 @@ function TimeWeightMapCard({ data }) {
                 },
               }}
             >
+              {/* 🔥 rank */}
+              <span style={{ opacity: 0.5, width: 20 }}>#{index + 1}</span>
+
+              {/* 🔥 number */}
               <span style={{ fontWeight: "bold" }}>
-                {num.toString().padStart(2, "0")}
+                {item.number.toString().padStart(2, "0")}
               </span>
 
-              <span style={{ opacity: 0.7 }}> → </span>
-
-              <span style={{ opacity: 0.8 }}>
-                {list
-                  .map((i) =>
-                    i.number.toString().padStart(2, "0")
-                  )
-                  .join(" ")}
-              </span>
+              {/* 🔥 score */}
+              <span style={{ opacity: 0.7 }}>{item.score.toFixed(2)}</span>
             </Box>
           );
         })}
