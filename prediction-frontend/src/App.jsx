@@ -5,8 +5,7 @@ import Input from "./pages/Input";
 import Prediction from "./pages/Prediction";
 import History from "./pages/History";
 import Results from "./pages/Results";
-import PredictDebug from "./pages/PredictDebug";
-import CombineDebug from "./pages/CombineDebug";
+
 
 function App() {
   return (
@@ -17,8 +16,7 @@ function App() {
           <Route path="/input" element={<Input />} />
           <Route path="/prediction" element={<Prediction />} />
           <Route path="/history" element={<Results />} />
-          <Route path="/debug" element={<PredictDebug />} />
-          <Route path="/combine" element={<CombineDebug />} />
+      
         </Routes>
       </MainLayout>
     </BrowserRouter>
