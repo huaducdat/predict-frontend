@@ -3,55 +3,50 @@ function PairCard({ data }) {
 
   return (
     <div>
-      <h3>PAIR → NEXT</h3>
+      <h3>PAIR → NEXT (Context)</h3>
 
       <div style={{ maxHeight: 400, overflowY: "auto" }}>
-        {data.map((pair) => {
-          const [a, b] = decodePair(pair.pairKey);
+        {data.map((item, idx) => (
+          <div key={idx} style={{ marginBottom: 14 }}>
+            
+            {/* 🔥 NUMBER */}
+            <b style={{ fontSize: 16 }}>
+              {item.number.toString().padStart(2, "0")}
+              {" "}
+              <span style={{ fontSize: 12, color: "#aaa" }}>
+                ({item.score.toFixed(1)})
+              </span>
+            </b>
 
-          return (
-            <div key={pair.pairKey} style={{ marginBottom: 12 }}>
-              {/* 🔥 PAIR */}
-              <b>
-                ({a.toString().padStart(2, "0")}-
-                {b.toString().padStart(2, "0")})
-              </b>
-
-              {/* 🔥 NEXT */}
-              <div style={{ display: "flex", gap: 5, marginTop: 4 }}>
-                {pair.numbers.map((n, i) => (
-                  <div
-                    key={n.number}
-                    style={{
-                      padding: 6,
-                      borderRadius: 6,
-                      background:
-                        i === 0 ? "#ff4d4f" :
-                        i < 3 ? "#faad14" :
-                        "#222",
-                      color: "white",
-                      fontSize: 11,
-                    }}
-                  >
-                    {n.number.toString().padStart(2, "0")}
-                    <div style={{ fontSize: 9 }}>
-                      {(n.score * 100).toFixed(0)}
-                    </div>
+            {/* 🔥 SOURCES (PAIR) */}
+            <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+              {item.sources.slice(0, 5).map((s, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: 6,
+                    borderRadius: 6,
+                    background:
+                      i === 0 ? "#ff4d4f" :
+                      i < 3 ? "#faad14" :
+                      "#222",
+                    color: "white",
+                    fontSize: 11,
+                  }}
+                >
+                  {s.pair}
+                  <div style={{ fontSize: 9 }}>
+                    {s.score.toFixed(1)}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          );
-        })}
+
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 export default PairCard;
-
-const decodePair = (key) => {
-  const a = Math.floor(key / 100);
-  const b = key % 100;
-  return [a, b];
-};

@@ -11,6 +11,8 @@ import RecentFrequencyCard from "../components/RecentFrequencyCard";
 import TimeWeightMapCard from "../components/TimeWeightMapCard";
 import PredictionSourceResultCard from "../components/PredictionSourceResultCard";
 import TimeWeightGlobalCard from "../components/TimeWeightGlobalCard";
+import PairGlobalCard from "../components/PairGlobalCard";
+import WeightControlMini from "../components/WeightControlMini";
 
 function Prediction() {
   const [data, setData] = useState(null);
@@ -112,6 +114,8 @@ function Prediction() {
       {/* ❌ NO DATA */}
       {!loading && !data && <Typography>No data available</Typography>}
 
+      <WeightControlMini />
+
       {/* 🔥 MAIN CARD */}
       {data && (
         <Paper
@@ -126,7 +130,10 @@ function Prediction() {
           <RecentFrequencyCard data={recentFreq} />
           <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
 
-          <PairCard data={pairData} />
+          <PairGlobalCard />
+          <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
+
+          <PairCard data={pairData?.["-1"]} />
           <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
 
           <TimeWeightGlobalCard date={meta.date} />
