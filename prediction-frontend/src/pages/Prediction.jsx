@@ -13,6 +13,10 @@ import PredictionSourceResultCard from "../components/PredictionSourceResultCard
 import TimeWeightGlobalCard from "../components/TimeWeightGlobalCard";
 import PairGlobalCard from "../components/PairGlobalCard";
 import WeightControlMini from "../components/WeightControlMini";
+import CombineResultCard from "../components/CombineResultCard";
+import CombineExplainCard from "../components/CombineExplainCard";
+
+
 
 function Prediction() {
   const [data, setData] = useState(null);
@@ -97,6 +101,10 @@ function Prediction() {
 
       {meta && <PredictionSourceResultCard date={meta.date} />}
 
+      <CombineResultCard />
+      <WeightControlMini />
+      <CombineExplainCard />
+
       {/* 🔥 CONTROL */}
       <Stack direction="row" spacing={2} sx={{ mb: 3, marginTop: 2 }}>
         <Button variant="contained" onClick={handleRun} disabled={loading}>
@@ -113,8 +121,6 @@ function Prediction() {
 
       {/* ❌ NO DATA */}
       {!loading && !data && <Typography>No data available</Typography>}
-
-      <WeightControlMini />
 
       {/* 🔥 MAIN CARD */}
       {data && (
