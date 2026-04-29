@@ -7,13 +7,15 @@ import Prediction from "./pages/Prediction";
 import Results from "./pages/Results";
 import Login from "./pages/Login";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import BetPage from "./pages/BetPage";
+import BetDetailPage from "./pages/BetDetailPage"
+
 
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        
         {/* 🔐 LOGIN */}
         <Route path="/login" element={<Login />} />
 
@@ -28,12 +30,13 @@ function App() {
                   <Route path="/input" element={<Input />} />
                   <Route path="/prediction" element={<Prediction />} />
                   <Route path="/history" element={<Results />} />
+                  <Route path="/bet" element={<BetPage />} />
+                  <Route path="/bet/:date" element={<BetDetailPage />} />
                 </Routes>
               </MainLayout>
             </ProtectedRoute>
           }
         />
-
       </Routes>
     </BrowserRouter>
   );

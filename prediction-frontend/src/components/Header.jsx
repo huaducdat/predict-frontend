@@ -73,6 +73,9 @@ export default function Header() {
           <Button color="inherit" onClick={() => navigate("/history")}>
             History
           </Button>
+          <Button color="inherit" onClick={() => navigate("/bet")}>
+            Bet
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>

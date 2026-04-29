@@ -100,6 +100,9 @@ export default function Home() {
           >
             Dữ liệu đã lưu
           </Button>
+          <Button variant="contained" onClick={() => navigate("/bet")}>
+            🎯 Nhập cược
+          </Button>
         </Box>
       </Box>
     </Box>
