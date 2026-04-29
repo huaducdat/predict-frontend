@@ -1,7 +1,10 @@
 import { Box } from "@mui/material";
 import Header from "../components/Header";
+import { useNavigate } from "react-router-dom";
 
 export default function MainLayout({ children }) {
+
+
   return (
     <Box
       sx={{

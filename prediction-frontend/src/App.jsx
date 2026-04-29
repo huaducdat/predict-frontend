@@ -1,25 +1,42 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import MainLayout from "./layouts/MainLayout";
 import Home from "./pages/Home";
 import Input from "./pages/Input";
 import Prediction from "./pages/Prediction";
-import History from "./pages/History";
 import Results from "./pages/Results";
+import Login from "./pages/Login";
+import ProtectedRoute from "./pages/ProtectedRoute";
 
 
 function App() {
   return (
     <BrowserRouter>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/input" element={<Input />} />
-          <Route path="/prediction" element={<Prediction />} />
-          <Route path="/history" element={<Results />} />
-      
-        </Routes>
-      </MainLayout>
+      <Routes>
+        
+        {/* 🔐 LOGIN */}
+        <Route path="/login" element={<Login />} />
+
+        {/* 🔒 PROTECTED AREA */}
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/input" element={<Input />} />
+                  <Route path="/prediction" element={<Prediction />} />
+                  <Route path="/history" element={<Results />} />
+                </Routes>
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+      </Routes>
     </BrowserRouter>
   );
 }
+
 export default App;
