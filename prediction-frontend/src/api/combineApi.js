@@ -1,13 +1,11 @@
-import axios from "axios";
-
-const BASE_URL = "http://localhost:8080/api"; // 🔥 FIX
+import api from "./api";
 
 export const loadCombine = async () => {
-  const res = await axios.get(`${BASE_URL}/combine/latest`);
+  const res = await api.get("/api/combine/latest");
   return res.data;
 };
 
 export const runCombine = async () => {
-  const res = await axios.post(`${BASE_URL}/combine/run`);
+  const res = await api.post("/api/combine/run");
   return res.data;
 };

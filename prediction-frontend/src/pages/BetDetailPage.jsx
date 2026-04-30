@@ -22,7 +22,14 @@ function BetDetailPage() {
   const [originUnit, setOriginUnit] = useState(null);
 
   // Giá 1 điểm khi trúng
-  const [payout, setPayout] = useState(80000);
+ const [payout, setPayout] = useState(() => {
+  const saved = localStorage.getItem("payout");
+  return saved ? Number(saved) : 80000;
+});
+useEffect(() => {
+  localStorage.setItem("payout", payout);
+}, [payout]);
+
 
   useEffect(() => {
     if (!date) return;

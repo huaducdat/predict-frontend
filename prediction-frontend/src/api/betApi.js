@@ -1,38 +1,30 @@
-const BASE = "http://localhost:8080/api/bet";
+import api from "./api";
 
 export const getLastUnit = async () => {
-  const res = await fetch(`${BASE}/last-unit`);
-  return res.json();
+  const res = await api.get("/api/bet/last-unit");
+  return res.data;
 };
 
 export const checkExists = async (date) => {
-  const res = await fetch(`${BASE}/exists?date=${date}`);
-  return res.json();
+  const res = await api.get(`/api/bet/exists?date=${date}`);
+  return res.data;
 };
 
 export const saveBet = async (data) => {
-  await fetch(BASE, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+  await api.post("/api/bet", data);
 };
 
 export const loadBet = async (date) => {
-  const res = await fetch(`${BASE}?date=${date}`);
-  return res.json();
+  const res = await api.get(`/api/bet?date=${date}`);
+  return res.data;
 };
 
 export const getAllSessions = async () => {
-  const res = await fetch("http://localhost:8080/api/bet/all");
-  return res.json();
+  const res = await api.get("/api/bet/all");
+  return res.data;
 };
 
 export const checkByDate = async (date) => {
-  const res = await fetch(
-    `http://localhost:8080/api/bet/check?date=${date}`
-  );
-  return res.json();
+  const res = await api.get(`/api/bet/check?date=${date}`);
+  return res.data;
 };

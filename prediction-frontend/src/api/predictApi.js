@@ -1,13 +1,11 @@
-import axios from "axios";
-
-const BASE = "http://localhost:8080/api/predict";
+import api from "./api";
 
 export const runPredict = async () => {
-  const res = await axios.post(`${BASE}/run`); // ✅
+  const res = await api.post("/api/predict/run");
   return res.data;
 };
 
 export const loadPredict = async () => {
-  const res = await axios.get(`${BASE}/latest`); // ✅
-  return res.data; // ✅ KHÔNG parse nữa
+  const res = await api.get("/api/predict/latest");
+  return res.data;
 };

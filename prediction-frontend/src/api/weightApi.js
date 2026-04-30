@@ -1,18 +1,15 @@
-const BASE_URL = "http://localhost:8080/api/weights";
+import api from "./api"; // axios instance của ông
 
 // =========================================================
 // 🔥 LOAD CURRENT
 // =========================================================
 export const loadWeights = async () => {
   try {
-    const res = await fetch(BASE_URL);
-
-    if (!res.ok) throw new Error("Failed to load weights");
-
-    return await res.json();
+    const res = await api.get("/api/weights");
+    return res.data;
   } catch (err) {
     console.error("loadWeights error:", err);
-    return null; // 👉 không throw để UI không crash
+    return null;
   }
 };
 
@@ -21,16 +18,7 @@ export const loadWeights = async () => {
 // =========================================================
 export const saveWeights = async (weights) => {
   try {
-    const res = await fetch(BASE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(weights)
-    });
-
-    if (!res.ok) throw new Error("Failed to save weights");
-
+    await api.post("/api/weights", weights);
     return true;
   } catch (err) {
     console.error("saveWeights error:", err);
@@ -43,12 +31,7 @@ export const saveWeights = async (weights) => {
 // =========================================================
 export const resetWeights = async () => {
   try {
-    const res = await fetch(`${BASE_URL}/reset`, {
-      method: "POST"
-    });
-
-    if (!res.ok) throw new Error("Failed to reset weights");
-
+    await api.post("/api/weights/reset");
     return true;
   } catch (err) {
     console.error("resetWeights error:", err);

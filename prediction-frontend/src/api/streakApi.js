@@ -1,26 +1,11 @@
-import Accordion from '@mui/material/Accordion'
-import AccordionSummary from '@mui/material/AccordionSummary'
-import AccordionDetails from '@mui/material/AccordionDetails'
-import Typography from '@mui/material/Typography'
-import ExpandMore from '@mui/icons-material/ExpandMore'
-
+import api from "./api";
 
 export const getStreaks = async () => {
-  const res = await fetch("http://localhost:8080/api/streaks/all");
-
-  if (!res.ok) {
-    throw new Error("Fetch streaks failed");
-  }
-
-  return res.json();
+  const res = await api.get("/api/streaks/all");
+  return res.data;
 };
 
 export const rebuildStreaks = async () => {
-  const res = await fetch("http://localhost:8080/api/streaks/rebuild", {
-    method: "POST",
-  });
-
-  if (!res.ok) throw new Error("Rebuild failed");
-
-  return res.text();
+  const res = await api.post("/api/streaks/rebuild");
+  return res.data;
 };

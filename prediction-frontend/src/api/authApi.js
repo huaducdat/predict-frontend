@@ -8,5 +8,10 @@ export const login = async (username, password) => {
     password,
   });
 
-  return res.data.token;
+  const token = res.data.token;
+
+  // 🔥 LƯU TOKEN NGAY TẠI ĐÂY
+  localStorage.setItem("token", token);
+
+  return token;
 };

@@ -24,10 +24,53 @@ const LABELS = {
   REP: { en: "Repeat", vi: "Lặp lại" },
 };
 
+const PRESETS = {
+  BALANCED: {
+    PAIR: 0.3,
+    POS: 0.2,
+    TIME: 0.15,
+    FREQ: 0.15,
+    STRK: 0.1,
+    GAP: 0.05,
+    REP: 0.05,
+  },
+  AGGRESSIVE: {
+    PAIR: 0.45,
+    POS: 0.2,
+    TIME: 0.15,
+    FREQ: 0.1,
+    STRK: 0.05,
+    GAP: 0.025,
+    REP: 0.025,
+  },
+  SAFE: {
+    PAIR: 0.2,
+    POS: 0.2,
+    TIME: 0.2,
+    FREQ: 0.2,
+    STRK: 0.1,
+    GAP: 0.05,
+    REP: 0.05,
+  },
+  STREAK_FOCUS: {
+    PAIR: 0.25,
+    POS: 0.15,
+    TIME: 0.1,
+    FREQ: 0.1,
+    STRK: 0.3,
+    GAP: 0.05,
+    REP: 0.05,
+  },
+};
+
 function WeightControlMini() {
   const [weights, setWeights] = useState(INIT);
   const [defaultWeights, setDefaultWeights] = useState(INIT);
   const [loading, setLoading] = useState(true);
+
+  const applyPreset = (preset) => {
+    setWeights(preset);
+  };
 
   // 🔥 LOAD từ backend
   useEffect(() => {
@@ -152,6 +195,25 @@ function WeightControlMini() {
           </Box>
         );
       })}
+
+      {/* PRESETS */}
+      <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap" }}>
+        <Button size="small" onClick={() => applyPreset(PRESETS.BALANCED)}>
+          ⚖️ Balanced
+        </Button>
+
+        <Button size="small" onClick={() => applyPreset(PRESETS.AGGRESSIVE)}>
+          🚀 Aggressive
+        </Button>
+
+        <Button size="small" onClick={() => applyPreset(PRESETS.SAFE)}>
+          🛡️ Safe
+        </Button>
+
+        <Button size="small" onClick={() => applyPreset(PRESETS.STREAK_FOCUS)}>
+          🔥 Streak
+        </Button>
+      </Stack>
 
       {/* BUTTONS */}
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>

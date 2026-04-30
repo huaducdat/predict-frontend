@@ -1,10 +1,11 @@
 import axios from "axios";
 
-const instance = axios.create({
+const api = axios.create({
   baseURL: "http://localhost:8080",
 });
 
-instance.interceptors.request.use((config) => {
+// 🔥 AUTO GẮN TOKEN
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
   if (token) {
@@ -14,4 +15,4 @@ instance.interceptors.request.use((config) => {
   return config;
 });
 
-export default instance;
+export default api;

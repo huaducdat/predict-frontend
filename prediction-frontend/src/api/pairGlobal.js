@@ -1,7 +1,6 @@
-// src/api/pairApi.js
+import api from "./api";
 
 export const loadPairGlobal = async () => {
-  const res = await fetch("http://localhost:8080/api/pair/global");
-  if (!res.ok) throw new Error("Failed to load pair global");
-  return res.json();
+  const res = await api.get("/api/pair/global");
+  return res.data;
 };
