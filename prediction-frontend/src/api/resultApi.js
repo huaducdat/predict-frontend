@@ -37,18 +37,26 @@ export const createResult = async (data) => {
     body: JSON.stringify(data),
   });
 
-  if (!res.ok) throw new Error("Create failed");
+  if (!res.ok) {
+    const text = await res.text();
+
+    // 🎯 bắt đúng lỗi trùng ngày
+    if (res.status === 409 && text === "DATE_ALREADY_EXISTS") {
+      throw new Error("DATE_ALREADY_EXISTS");
+    }
+
+    console.error("SERVER ERROR:", text);
+    throw new Error("CREATE_FAILED");
+  }
+
   return res.json();
 };
 
 // 🔥 STREAK
 export const getLatestStreaks = async () => {
-  const res = await fetch(
-    "http://localhost:8080/api/analysis/latest-streaks",
-    {
-      headers: getAuthHeaders(),
-    }
-  );
+  const res = await fetch("http://localhost:8080/api/analysis/latest-streaks", {
+    headers: getAuthHeaders(),
+  });
 
   if (!res.ok) {
     throw new Error("Failed to load streaks");
@@ -63,7 +71,7 @@ export const getPagedResults = async (page = 1) => {
     `http://localhost:8080/api/results?page=${page}&size=10`,
     {
       headers: getAuthHeaders(),
-    }
+    },
   );
 
   if (!res.ok) throw new Error("Fetch failed");

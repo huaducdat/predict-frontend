@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Box,
@@ -7,9 +8,9 @@ import {
   TextField,
   Button,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import { createResult } from "../api/resultApi";
-import { CircularProgress } from "@mui/material";
 
 export default function Input() {
   const [numbers, setNumbers] = useState([]);
@@ -19,7 +20,7 @@ export default function Input() {
   const [loading, setLoading] = useState(false);
 
   const allNumbers = Array.from({ length: 100 }, (_, i) =>
-    i.toString().padStart(2, "0"),
+    i.toString().padStart(2, "0")
   );
 
   // 👉 CLICK
@@ -46,7 +47,7 @@ export default function Input() {
     return acc;
   }, {});
 
-  // 👉 SUBMIT
+  // 👉 SUBMIT (FIX CHUẨN)
   const handleSubmit = async () => {
     try {
       if (!date) return alert("Chọn ngày");
@@ -55,7 +56,6 @@ export default function Input() {
 
       setLoading(true);
 
-      // 👉 gộp thành 27 số
       const fullNumbers = [...numbers, special]
         .map((n) => parseInt(n))
         .sort((a, b) => a - b);
@@ -63,7 +63,8 @@ export default function Input() {
       const payload = {
         date,
         singleNumber: parseInt(special),
-        numbers: fullNumbers.map((n) => parseInt(n)),
+        numbers: fullNumbers,
+        force: false,
       };
 
       await createResult(payload);
@@ -73,9 +74,38 @@ export default function Input() {
       setNumbers([]);
       setSpecial(null);
       setDate("");
+
     } catch (err) {
-      console.error(err);
-      alert("Lỗi: " + err.message);
+      // 🔥 HANDLE DUPLICATE DATE
+      if (err.message === "DATE_ALREADY_EXISTS") {
+        const ok = window.confirm(
+          "Ngày này đã tồn tại. Bạn có muốn ghi đè không?"
+        );
+
+        if (ok) {
+          try {
+            await createResult({
+              date,
+              singleNumber: parseInt(special),
+              numbers: [...numbers, special].map((n) => parseInt(n)),
+              force: true,
+            });
+
+            alert("Đã ghi đè thành công!");
+
+            setNumbers([]);
+            setSpecial(null);
+            setDate("");
+
+          } catch (e) {
+            console.error(e);
+            alert("Lỗi khi ghi đè");
+          }
+        }
+      } else {
+        console.error(err);
+        alert("Lỗi: " + err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -139,8 +169,10 @@ export default function Input() {
       {/* SELECTED LIST */}
       <Box mb={3}>
         <Typography variant="h5">
-          Danh sách đã chọn:{" "}
-          <Typography sx={{ mb: 2 }}>Số thường: {numbers.length}/26</Typography>
+          Danh sách đã chọn:
+          <Typography sx={{ mb: 2 }}>
+            Số thường: {numbers.length}/26
+          </Typography>
         </Typography>
 
         <Box
@@ -177,7 +209,7 @@ export default function Input() {
           const count = countMap[num] || 0;
 
           return (
-            <Grid xs={2} sm={1} key={num}>
+            <Grid item xs={2} sm={1} key={num}>
               <Paper
                 onClick={() => handleClick(num)}
                 sx={{
@@ -189,8 +221,8 @@ export default function Input() {
                     num === special
                       ? "linear-gradient(135deg, gold, orange)"
                       : count > 0
-                        ? "linear-gradient(135deg, #6a5cff, #00c6ff)"
-                        : "rgba(255,255,255,0.05)",
+                      ? "linear-gradient(135deg, #6a5cff, #00c6ff)"
+                      : "rgba(255,255,255,0.05)",
                   "&:hover": {
                     background: "rgba(255,255,255,0.2)",
                   },
@@ -217,6 +249,7 @@ export default function Input() {
         >
           Reset
         </Button>
+
         <Button
           variant="contained"
           size="large"
@@ -234,3 +267,4 @@ export default function Input() {
     </Box>
   );
 }
+
