@@ -3,7 +3,9 @@ import {
   getResultsByDate,
   getLatestStreaks,
   getPagedResults,
+  deleteResultByDate,
 } from "../api/resultApi";
+
 import {
   Box,
   Typography,
@@ -14,11 +16,18 @@ import {
   Stack,
   Alert,
 } from "@mui/material";
+
 import StreakGrid from "../components/StreakGrid";
 import { rebuildStreaks } from "../api/streakApi";
 
 // 🔥 FORMAT 2 DIGIT
 const formatNumber = (n) => n?.toString().padStart(2, "0");
+
+// 🔥 FIX object/array
+const getSingleData = (data) => {
+  if (Array.isArray(data)) return data[0];
+  return data;
+};
 
 function Results() {
   const [data, setData] = useState([]);
@@ -73,10 +82,6 @@ function Results() {
     loadStreaks();
   }, []);
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
-
   const handleRebuild = async () => {
     try {
       setRebuilding(true);
@@ -91,7 +96,7 @@ function Results() {
     }
   };
 
-  // 🔥 BUILD TIMELINE
+  // 🔥 TIMELINE
   const buildTimeline = (data) => {
     if (!Array.isArray(data)) return [];
 
@@ -133,39 +138,27 @@ function Results() {
   };
 
   return (
-    <Box sx={{ p: 3, gap: 3, display: "flex", flexDirection: "column" }}>
+    <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
       {/* HEADER */}
       <Box>
         <Typography variant="h4" fontWeight="bold">
           Number Streak Dashboard
-        </Typography>
-        <Typography color="text.secondary">
-          Theo dõi current streak và max streak
         </Typography>
 
         <StreakGrid data={Object.values(streakMap)} />
       </Box>
 
       {/* REBUILD */}
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <Button
-          variant="contained"
-          color="warning"
-          onClick={handleRebuild}
-          disabled={rebuilding}
-          sx={{ width: 300 }}
-        >
-          {rebuilding ? "Rebuilding..." : "Rebuild Streak"}
-        </Button>
-
-        <Typography sx={{ mt: 1, textAlign: "center" }}>
-          Don't click if not needed. Auto update already runs.
-        </Typography>
-      </Box>
+      <Button
+        variant="contained"
+        color="warning"
+        onClick={handleRebuild}
+        disabled={rebuilding}
+      >
+        {rebuilding ? "Rebuilding..." : "Rebuild Streak"}
+      </Button>
 
       {/* FILTER */}
-      <Typography variant="h4">Result Data</Typography>
-
       <Stack direction="row" spacing={2}>
         <TextField
           type="date"
@@ -185,182 +178,90 @@ function Results() {
 
       {error && <Alert severity="error">{error}</Alert>}
 
-      {/* DATA */}
-      <Stack spacing={2} sx={{ mt: 2 }}>
-        {/* FILTER MODE */}
-        {isFilterMode && data && (
-          <Card sx={{ borderRadius: 3, py: 3, px: 2 }}>
+      {/* FILTER MODE */}
+      {isFilterMode && data && (() => {
+        const d = getSingleData(data);
+
+        return (
+          <Card>
             <CardContent>
               <Typography variant="h6">
-                🔍 Result for {data?.date || data[0]?.date}
+                {d.date}
               </Typography>
 
-              <Typography sx={{ mt: 1 }}>
-                <b>Single:</b> {formatNumber(data.singleNumber)}
+              <Typography>
+                Single: {formatNumber(d.singleNumber)}
               </Typography>
 
-              <Typography sx={{ mt: 1 }}>
-                <b>Numbers:</b>{" "}
-                {data.numbers?.map((n) => formatNumber(n)).join(", ")}
+              <Typography>
+                {d.numbers?.map((n) => formatNumber(n)).join(", ")}
               </Typography>
+
+              <Button
+                color="error"
+                onClick={async () => {
+                  if (!window.confirm(`Xóa ngày ${d.date}?`)) return;
+
+                  try {
+                    await deleteResultByDate(d.date);
+                    loadPage(1);
+                    loadStreaks();
+                    setIsFilterMode(false);
+                  } catch (e) {
+                    setError(e.message);
+                  }
+                }}
+              >
+                Delete
+              </Button>
             </CardContent>
           </Card>
-        )}
+        );
+      })()}
 
-        {/* NORMAL MODE */}
-        {!isFilterMode &&
-          buildTimeline(data).map((item, index) => {
-            if (item.type === "missing_range") {
-              const isSingle = item.start === item.end;
-
-              return (
-                <Card
-                  key={"missing-" + item.start}
-                  sx={{
-                    borderRadius: 3,
-                    py: 2,
-                    px: 2,
-                    bgcolor: "#fff3e0",
-                    border: "2px dashed orange",
-                  }}
-                >
-                  <Typography color="orange" fontWeight={600}>
-                    ⚠ Missing:{" "}
-                    {isSingle ? item.start : `${item.start} → ${item.end}`}
-                  </Typography>
-                </Card>
-              );
-            }
-
-            const r = item.value;
-            const isFirst = index === 0;
-
+      {/* NORMAL MODE */}
+      {!isFilterMode &&
+        buildTimeline(data).map((item) => {
+          if (item.type === "missing_range") {
             return (
-              <Card key={r.id} sx={{ borderRadius: 3, py: 3, px: 2 }}>
-                <CardContent>
-                  <Typography>
-                    <b>Date:</b> {r.date}
-                  </Typography>
-
-                  <Typography>
-                    <b>Single:</b> {formatNumber(r.singleNumber)}
-                  </Typography>
-
-                  <Typography sx={{ mt: 1 }}>
-                    <b>Numbers:</b>{" "}
-                    {r.numbers?.map((n) => formatNumber(n)).join(", ")}
-                  </Typography>
-                </CardContent>
-
-                {/* DUPLICATE */}
-                {(() => {
-                  const countMap = {};
-                  r.numbers?.forEach((n) => {
-                    countMap[n] = (countMap[n] || 0) + 1;
-                  });
-
-                  const duplicates = Object.entries(countMap).filter(
-                    ([_, count]) => count > 1
-                  );
-
-                  if (duplicates.length === 0) return null;
-
-                  return (
-                    <Typography sx={{ mt: 1, color: "orange" }}>
-                      <b>Số lặp:</b>{" "}
-                      {duplicates
-                        .map(
-                          ([num, count]) =>
-                            `${formatNumber(num)}(x${count})`
-                        )
-                        .join(", ")}
-                    </Typography>
-                  );
-                })()}
-
-                {/* STREAK */}
-                {isFirst && Object.keys(streakMap).length > 0 && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography sx={{ fontWeight: 600 }}>
-                      Streak (current / max)
-                    </Typography>
-
-                    <Typography sx={{ mt: 0.5 }}>
-                      {[...new Set(r.numbers || [])].map((n) => {
-                        const s = streakMap[n];
-                        if (!s) return null;
-
-                        const isHot = s.currentStreak >= 2;
-
-                        return (
-                          <span
-                            key={n}
-                            style={{
-                              marginRight: 8,
-                              padding: "2px 6px",
-                              borderRadius: 6,
-                              background: isHot ? "#ffebee" : "#f5f5f5",
-                              color: isHot ? "#d32f2f" : "#333",
-                              fontWeight: isHot ? 600 : 400,
-                            }}
-                          >
-                            {formatNumber(n)} ({s.currentStreak}/{s.maxStreak})
-                          </span>
-                        );
-                      })}
-                    </Typography>
-                  </Box>
-                )}
+              <Card key={item.start}>
+                <Typography color="orange">
+                  Missing: {item.start} → {item.end}
+                </Typography>
               </Card>
             );
-          })}
-      </Stack>
+          }
 
-      {/* PAGINATION */}
-      <Box
-        sx={{
-          mt: 3,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 2,
-        }}
-      >
-        <Button
-          variant="outlined"
-          disabled={page === 1}
-          onClick={() => loadPage(page - 1)}
-        >
-          Prev
-        </Button>
+          const r = item.value;
 
-        <Typography fontWeight={600}>
-          Page {page} / {totalPages}
-        </Typography>
+          return (
+            <Card key={r.id}>
+              <CardContent>
+                <Typography>{r.date}</Typography>
+                <Typography>
+                  {r.numbers?.map((n) => formatNumber(n)).join(", ")}
+                </Typography>
 
-        <Button
-          variant="outlined"
-          disabled={page === totalPages}
-          onClick={() => loadPage(page + 1)}
-        >
-          Next
-        </Button>
+                <Button
+                  color="error"
+                  onClick={async () => {
+                    if (!window.confirm(`Xóa ngày ${r.date}?`)) return;
 
-        <TextField
-          type="number"
-          size="small"
-          placeholder="Go"
-          sx={{ width: 80 }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              const val = Number(e.target.value);
-              if (val >= 1 && val <= totalPages) {
-                loadPage(val);
-              }
-            }
-          }}
-        />
-      </Box>
+                    try {
+                      await deleteResultByDate(r.date);
+                      loadPage(page);
+                      loadStreaks();
+                    } catch (e) {
+                      setError(e.message);
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
     </Box>
   );
 }
