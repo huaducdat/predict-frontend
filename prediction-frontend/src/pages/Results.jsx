@@ -20,15 +20,36 @@ import {
 import StreakGrid from "../components/StreakGrid";
 import { rebuildStreaks } from "../api/streakApi";
 
-// 🔥 FORMAT 2 DIGIT
+// ===== FORMAT =====
 const formatNumber = (n) => n?.toString().padStart(2, "0");
 
-// 🔥 FIX object/array
-const getSingleData = (data) => {
-  if (Array.isArray(data)) return data[0];
-  return data;
-};
+// ===== CARD COMPONENT =====
+function ResultCard({ data, onDelete }) {
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6">{data.date}</Typography>
 
+        <Typography>
+          Single: {formatNumber(data.singleNumber)}
+        </Typography>
+
+        <Typography>
+          {data.numbers?.map((n) => formatNumber(n)).join(", ")}
+        </Typography>
+
+        <Button
+          color="error"
+          onClick={() => onDelete(data.date)}
+        >
+          Delete
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ===== MAIN =====
 function Results() {
   const [data, setData] = useState([]);
   const [date, setDate] = useState("");
@@ -38,9 +59,9 @@ function Results() {
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
   const [rebuilding, setRebuilding] = useState(false);
 
+  // ===== LOAD STREAK =====
   const loadStreaks = async () => {
     try {
       const res = await getLatestStreaks();
@@ -54,16 +75,22 @@ function Results() {
     }
   };
 
+  // ===== LOAD BY DATE =====
   const loadByDate = async () => {
     try {
       const res = await getResultsByDate(date);
-      setData(res);
+
+      // fix array/object
+      const result = Array.isArray(res) ? res : [res];
+
+      setData(result);
       setIsFilterMode(true);
     } catch (err) {
       setError(err.message);
     }
   };
 
+  // ===== LOAD PAGE =====
   const loadPage = async (p) => {
     try {
       const res = await getPagedResults(p);
@@ -82,6 +109,27 @@ function Results() {
     loadStreaks();
   }, []);
 
+  // ===== DELETE =====
+  const handleDelete = async (date) => {
+    if (!window.confirm(`Xóa ngày ${date}?`)) return;
+
+    try {
+      await deleteResultByDate(date);
+
+      if (isFilterMode) {
+        setIsFilterMode(false);
+        loadPage(1);
+      } else {
+        loadPage(page);
+      }
+
+      loadStreaks();
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  // ===== REBUILD =====
   const handleRebuild = async () => {
     try {
       setRebuilding(true);
@@ -96,7 +144,7 @@ function Results() {
     }
   };
 
-  // 🔥 TIMELINE
+  // ===== TIMELINE =====
   const buildTimeline = (data) => {
     if (!Array.isArray(data)) return [];
 
@@ -137,6 +185,7 @@ function Results() {
     return result;
   };
 
+  // ===== UI =====
   return (
     <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
       {/* HEADER */}
@@ -179,87 +228,36 @@ function Results() {
       {error && <Alert severity="error">{error}</Alert>}
 
       {/* FILTER MODE */}
-      {isFilterMode && data && (() => {
-        const d = getSingleData(data);
-
-        return (
-          <Card>
-            <CardContent>
-              <Typography variant="h6">
-                {d.date}
-              </Typography>
-
-              <Typography>
-                Single: {formatNumber(d.singleNumber)}
-              </Typography>
-
-              <Typography>
-                {d.numbers?.map((n) => formatNumber(n)).join(", ")}
-              </Typography>
-
-              <Button
-                color="error"
-                onClick={async () => {
-                  if (!window.confirm(`Xóa ngày ${d.date}?`)) return;
-
-                  try {
-                    await deleteResultByDate(d.date);
-                    loadPage(1);
-                    loadStreaks();
-                    setIsFilterMode(false);
-                  } catch (e) {
-                    setError(e.message);
-                  }
-                }}
-              >
-                Delete
-              </Button>
-            </CardContent>
-          </Card>
-        );
-      })()}
+      {isFilterMode &&
+        data.map((item) => (
+          <ResultCard
+            key={item.date}
+            data={item}
+            onDelete={handleDelete}
+          />
+        ))}
 
       {/* NORMAL MODE */}
       {!isFilterMode &&
-        buildTimeline(data).map((item) => {
+        buildTimeline(data).map((item, idx) => {
           if (item.type === "missing_range") {
             return (
-              <Card key={item.start}>
-                <Typography color="orange">
-                  Missing: {item.start} → {item.end}
-                </Typography>
+              <Card key={idx}>
+                <CardContent>
+                  <Typography color="orange">
+                    Missing: {item.start} → {item.end}
+                  </Typography>
+                </CardContent>
               </Card>
             );
           }
 
-          const r = item.value;
-
           return (
-            <Card key={r.id}>
-              <CardContent>
-                <Typography>{r.date}</Typography>
-                <Typography>
-                  {r.numbers?.map((n) => formatNumber(n)).join(", ")}
-                </Typography>
-
-                <Button
-                  color="error"
-                  onClick={async () => {
-                    if (!window.confirm(`Xóa ngày ${r.date}?`)) return;
-
-                    try {
-                      await deleteResultByDate(r.date);
-                      loadPage(page);
-                      loadStreaks();
-                    } catch (e) {
-                      setError(e.message);
-                    }
-                  }}
-                >
-                  Delete
-                </Button>
-              </CardContent>
-            </Card>
+            <ResultCard
+              key={item.value.id}
+              data={item.value}
+              onDelete={handleDelete}
+            />
           );
         })}
     </Box>

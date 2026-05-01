@@ -4,7 +4,9 @@ const api = axios.create({
   baseURL: "http://localhost:8080",
 });
 
-// 🔥 REQUEST: gắn token
+let isRedirecting = false;
+
+// 🔥 REQUEST
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
@@ -15,30 +17,25 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 🔥 RESPONSE: handle 401
-let isRedirecting = false;
-
+// 🔥 RESPONSE
 api.interceptors.response.use(
-  (response) => response,
+  (res) => res,
+  (err) => {
+    const status = err.response?.status;
 
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      console.log("🔥 Token expired / invalid");
+    if ((status === 401 || status === 404) && !isRedirecting) {
+      isRedirecting = true;
 
-      // 🔥 tránh gọi nhiều lần
-      if (!isRedirecting) {
-        isRedirecting = true;
+      console.error("🔥 AUTH ERROR:", status, err.response?.data);
 
-        localStorage.removeItem("token");
+      localStorage.removeItem("token");
 
-        // 🔥 tránh redirect loop
-        if (window.location.pathname !== "/login") {
-          window.location.replace("/login");
-        }
+      if (window.location.pathname !== "/login") {
+        window.location.replace("/login");
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 

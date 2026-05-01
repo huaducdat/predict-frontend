@@ -13,7 +13,7 @@ function PredictionSourceResultCard({ date }) {
       try {
         setLoading(true);
         const res = await getResultsByDate(date);
-
+        console.log(res);
         // ⚠️ backend trả Optional → có thể null
         setResult(res || null);
       } catch (e) {
