@@ -1,5 +1,3 @@
-// src/components/PairGlobalCard.jsx
-
 import {
   Box,
   Typography,
@@ -18,12 +16,18 @@ function PairGlobalCard() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
 
+  // 🔥 FORMAT SCORE CHUẨN TOÀN HỆ
+  const formatScore = (score) => {
+    return Number(score.toFixed(3));
+  };
+
+  const formatNumber = (n) => n.toString().padStart(2, "0");
+
   const fetchData = async () => {
     try {
       setLoading(true);
       const res = await loadPairGlobal();
       setData(res);
-      console.log(res);
       setFiltered(res);
     } catch (e) {
       console.error(e);
@@ -36,7 +40,7 @@ function PairGlobalCard() {
     fetchData();
   }, []);
 
-  // 🔍 search theo pair hoặc number
+  // 🔍 SEARCH
   useEffect(() => {
     if (!search) {
       setFiltered(data);
@@ -48,16 +52,13 @@ function PairGlobalCard() {
     const result = data.filter((item) => {
       const [a, b] = item.pair.split("-");
 
-      // 🔥 CASE 1: nhập 1 số (vd: 12)
       if (s.length <= 2) {
         return a.includes(s) || b.includes(s);
       }
 
-      // 🔥 CASE 2: nhập 4 số (vd: 1221)
       if (s.length === 4) {
         const x = s.slice(0, 2);
         const y = s.slice(2, 4);
-
         return (a === x && b === y) || (a === y && b === x);
       }
 
@@ -66,8 +67,8 @@ function PairGlobalCard() {
 
     setFiltered(result);
   }, [search, data]);
-  if (loading) return <CircularProgress />;
 
+  if (loading) return <CircularProgress />;
   if (!data || data.length === 0) return null;
 
   const list = expanded ? filtered : filtered.slice(0, 20);
@@ -99,6 +100,7 @@ function PairGlobalCard() {
 
         <Typography sx={{ fontSize: 12 }}>{open ? "▲" : "▼"}</Typography>
       </Box>
+
       {open && (
         <>
           {/* SEARCH */}
@@ -115,9 +117,9 @@ function PairGlobalCard() {
           />
 
           {/* LIST */}
-          {list.map((item, idx) => (
+          {list.map((item) => (
             <Box
-              key={idx}
+              key={item.pair} // ✅ không dùng index
               sx={{
                 mb: 1,
                 p: 1,
@@ -132,9 +134,9 @@ function PairGlobalCard() {
 
               {/* Targets */}
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {item.targets.slice(0, 5).map((t, i) => (
+                {item.targets.slice(0, 5).map((t) => (
                   <Box
-                    key={i}
+                    key={t.number}
                     sx={{
                       px: 1,
                       py: 0.5,
@@ -143,13 +145,23 @@ function PairGlobalCard() {
                       fontSize: 12,
                     }}
                   >
-                    {t.number.toString().padStart(2, "0")} ({t.score.toFixed(1)}
-                    )
+                    {formatNumber(t.number)} ({formatScore(t.score)})
                   </Box>
                 ))}
               </Box>
             </Box>
           ))}
+
+          {/* EXPAND */}
+          {search === "" && (
+            <Button
+              size="small"
+              onClick={() => setExpanded(!expanded)}
+              sx={{ mt: 1 }}
+            >
+              {expanded ? "Thu gọn" : "Xem thêm"}
+            </Button>
+          )}
         </>
       )}
     </Box>

@@ -13,12 +13,18 @@ function CombineExplainCard() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔥 FORMAT %
+  const formatPercent = (score) => {
+    return Number((score * 100).toFixed(3));
+  };
+
+  const formatNumber = (n) => n.toString().padStart(2, "0");
+
   // ===== LOAD =====
   const fetchData = async () => {
     try {
       setLoading(true);
       const res = await loadCombineExplain();
-
       setData(res || []);
       setFiltered(res || []);
     } catch (e) {
@@ -45,7 +51,6 @@ function CombineExplainCard() {
     }
   }, [search, data]);
 
-  // ===== LOADING =====
   if (loading) {
     return <CircularProgress />;
   }
@@ -87,8 +92,7 @@ function CombineExplainCard() {
           gap: 1,
         }}
       >
-        {filtered.slice(0, 20).map((item, index) => {
-
+        {filtered.slice(0, 20).map((item) => {
           const reasons = item.reasons?.slice(0, 2) || [];
 
           return (
@@ -103,12 +107,12 @@ function CombineExplainCard() {
             >
               {/* NUMBER */}
               <Typography sx={{ fontWeight: "bold" }}>
-                {item.number.toString().padStart(2, "0")}
+                {formatNumber(item.number)}
               </Typography>
 
               {/* SCORE */}
               <Typography sx={{ fontSize: 12 }}>
-                {(item.score * 100).toFixed(2)}%
+                {formatPercent(item.score)}%
               </Typography>
 
               {/* REASONS */}

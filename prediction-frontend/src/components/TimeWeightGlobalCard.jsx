@@ -1,4 +1,3 @@
-// src/components/TimeWeightGlobalCard.jsx
 import {
   Box,
   Typography,
@@ -16,6 +15,12 @@ function TimeWeightGlobalCard({ date }) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState("");
 
+  // ===== FORMAT SCORE =====
+  const formatScore = (score) => {
+    return Number(score.toFixed(3)); // 🔥 fix chính
+  };
+
+  // ===== NORMALIZE =====
   const normalize = (raw) => {
     const result = {};
 
@@ -23,7 +28,6 @@ function TimeWeightGlobalCard({ date }) {
       if (Array.isArray(v)) {
         result[k] = v;
       } else if (v && typeof v === "object") {
-        // convert object → array
         result[k] = Object.entries(v).map(([num, score]) => ({
           number: Number(num),
           score: Number(score),
@@ -36,17 +40,13 @@ function TimeWeightGlobalCard({ date }) {
     return result;
   };
 
+  // ===== FETCH =====
   const fetchData = async () => {
     try {
       setLoading(true);
       const res = await loadGlobal();
 
-      console.log("🔥 RAW:", res);
-
       const clean = normalize(res);
-
-      console.log("🔥 NORMALIZED:", clean);
-
       setData(clean);
     } catch (e) {
       console.error(e);
@@ -117,7 +117,7 @@ function TimeWeightGlobalCard({ date }) {
             <>
               {list.map(([source, targets]) => {
                 const sorted = targets
-                  .slice() // clone
+                  .slice()
                   .sort((a, b) => b.score - a.score)
                   .slice(0, 3);
 
@@ -147,9 +147,9 @@ function TimeWeightGlobalCard({ date }) {
 
                     {/* TARGETS */}
                     <Box sx={{ display: "flex", gap: 1 }}>
-                      {sorted.map((t, i) => (
+                      {sorted.map((t) => (
                         <Box
-                          key={i}
+                          key={t.number}
                           sx={{
                             px: 1.2,
                             py: 0.4,
@@ -159,7 +159,7 @@ function TimeWeightGlobalCard({ date }) {
                           }}
                         >
                           {t.number.toString().padStart(2, "0")} (
-                          {t.score.toFixed(1)})
+                          {formatScore(t.score)})
                         </Box>
                       ))}
                     </Box>

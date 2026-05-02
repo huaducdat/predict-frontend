@@ -11,6 +11,13 @@ function RecentFrequencyCard({ data }) {
 
   const maxScore = fullList[0]?.score || 1;
 
+  // 🔥 format chuẩn toàn hệ thống
+  const formatScore = (score) => {
+    return Number(score.toFixed(3));
+  };
+
+  const formatNumber = (n) => n.toString().padStart(2, "0");
+
   return (
     <Box
       sx={{
@@ -64,10 +71,10 @@ function RecentFrequencyCard({ data }) {
                 }}
               >
                 <span>
-                  #{index + 1} — {item.number.toString().padStart(2, "0")}
+                  #{index + 1} — {formatNumber(item.number)}
                 </span>
                 <span style={{ opacity: 0.7 }}>
-                  {item.score.toFixed(2)}
+                  {formatScore(item.score)}
                 </span>
               </Box>
 

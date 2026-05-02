@@ -49,23 +49,25 @@ function ResultCard({ data, onDelete }) {
 function StreakHighlightCard({ result, streakMap }) {
   if (!result) return null;
 
-  const allNumbers = [
-    ...(result.numbers || []),
-    result.singleNumber,
-  ];
+  // ✅ UNIQUE số → tránh lặp
+  const allNumbers = Array.from(
+    new Set([...(result.numbers || []), result.singleNumber])
+  );
 
+  // ✅ lọc + map rõ ràng
   const streakNumbers = allNumbers
+    .filter((n) => {
+      const s = streakMap[n];
+      return s && s.currentStreak > 0;
+    })
     .map((n) => {
       const s = streakMap[n];
-      if (!s || s.currentStreak <= 0) return null;
-
       return {
         number: n,
         current: s.currentStreak,
         max: s.maxStreak,
       };
     })
-    .filter(Boolean)
     .sort((a, b) => b.current - a.current);
 
   if (streakNumbers.length === 0) return null;
@@ -77,7 +79,6 @@ function StreakHighlightCard({ result, streakMap }) {
           🔥 Streak ({result.date})
         </Typography>
 
-        {/* 🔥 HIỂN THỊ NGANG */}
         <Box
           sx={{
             display: "flex",
@@ -85,33 +86,37 @@ function StreakHighlightCard({ result, streakMap }) {
             gap: 1,
           }}
         >
-          {streakNumbers.map((item, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                px: 1.5,
-                py: 0.5,
-                borderRadius: "12px",
-                fontSize: 13,
-                fontFamily: "Courier New",
-                border: "1px solid #ccc",
-                background:
-                  item.current >= 4
+          {streakNumbers.map((item) => {
+            const isHot = item.current >= 4;
+            const isWarm = item.current >= 2;
+
+            return (
+              <Box
+                key={item.number} // ✅ không dùng index nữa
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: "12px",
+                  fontSize: 13,
+                  fontFamily: "Courier New",
+                  border: "1px solid #ccc",
+                  background: isHot
                     ? "#ffe5e5"
-                    : item.current >= 2
+                    : isWarm
                     ? "#fff3cd"
                     : "#f5f5f5",
-                color:
-                  item.current >= 4
+                  color: isHot
                     ? "red"
-                    : item.current >= 2
+                    : isWarm
                     ? "#b36b00"
                     : "#666",
-              }}
-            >
-              {formatNumber(item.number)} ({item.current}/{item.max})
-            </Box>
-          ))}
+                  fontWeight: isHot ? "bold" : "normal",
+                }}
+              >
+                {formatNumber(item.number)} ({item.current}/{item.max})
+              </Box>
+            );
+          })}
         </Box>
       </CardContent>
     </Card>

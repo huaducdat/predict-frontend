@@ -7,6 +7,8 @@ import {
   applyWeightPreset,
 } from "../api/weightApi";
 
+import { getMode, setMode } from "../api/modeApi";
+
 const ORDER = ["PAIR", "POS", "TIME", "FREQ", "STRK", "GAP", "REP"];
 
 const LABELS = {
@@ -36,19 +38,23 @@ function WeightControlMini() {
   const [activePreset, setActivePreset] = useState("CUSTOM");
   const [lastSaved, setLastSaved] = useState({});
 
-  const fetchWeights = async () => {
-    const data = await loadWeights();
+  const [mode, setModeState] = useState("LONG");
 
-    setWeights(data);
-    setLastSaved(data);
-  };
+  
+ const MODES = [
+  { label: "SHORT", value: "SHORT_TERM" },
+  { label: "LONG", value: "EXTENDED" },
+];
 
   useEffect(() => {
     const fetch = async () => {
       try {
         await fetchWeights();
+
+        const m = await getMode();
+        setModeState(m);
       } catch (e) {
-        console.error("Load weights failed", e);
+        console.error("Load failed", e);
       } finally {
         setLoading(false);
       }
@@ -56,6 +62,28 @@ function WeightControlMini() {
 
     fetch();
   }, []);
+
+  const handleModeChange = async (m) => {
+    try {
+      setSaving(true);
+
+      await setMode(m);
+      setModeState(m);
+
+      console.log("✅ Mode changed:", m);
+    } catch (e) {
+      console.error("Change mode failed", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fetchWeights = async () => {
+    const data = await loadWeights();
+
+    setWeights(data);
+    setLastSaved(data);
+  };
 
   const handleChange = (key, newValue) => {
     setActivePreset("CUSTOM");
@@ -145,6 +173,25 @@ function WeightControlMini() {
         fontFamily: "Courier New",
       }}
     >
+      <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+        {MODES.map((m) => (
+          <Button
+            key={m.value}
+            size="small"
+            variant={mode === m.value ? "contained" : "outlined"}
+            onClick={() => handleModeChange(m.value)}
+            disabled={saving}
+            sx={{
+              fontSize: 11,
+              px: 1.5,
+              minWidth: 60,
+            }}
+          >
+            {m.label}
+          </Button>
+        ))}
+      </Stack>
+
       <Box sx={{ mb: 1, fontSize: 13, fontWeight: "bold" }}>
         ⚙️ Trọng số Predictor
       </Box>

@@ -3,6 +3,12 @@ function GapCard({ data }) {
 
   const list = data["-1"];
 
+  const formatScore = (score) => {
+    return score.toFixed(3); // 🔥 3 số sau dấu phẩy
+  };
+
+  const formatNumber = (n) => n.toString().padStart(2, "0");
+
   return (
     <div>
       <h3>GAP (Lâu chưa ra)</h3>
@@ -17,8 +23,8 @@ function GapCard({ data }) {
         {list.map((item, i) => {
           let bg = "#222";
 
-          if (i < 3) bg = "#ff4d4f";       // 🔴 top
-          else if (i < 10) bg = "#faad14"; // 🟡 mid
+          if (i < 3) bg = "#ff4d4f";
+          else if (i < 10) bg = "#faad14";
 
           return (
             <div
@@ -33,14 +39,10 @@ function GapCard({ data }) {
                 fontSize: 12,
               }}
             >
-              {/* 🔥 number */}
-              <div>
-                {item.number.toString().padStart(2, "0")}
-              </div>
+              <div>{formatNumber(item.number)}</div>
 
-              {/* 🔥 gap */}
               <div style={{ fontSize: 10, opacity: 0.7 }}>
-                {item.score}
+                {formatScore(item.score)}
               </div>
             </div>
           );

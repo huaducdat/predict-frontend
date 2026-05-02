@@ -17,6 +17,13 @@ function CombineResultCard() {
   const [message, setMessage] = useState("");
   const [expanded, setExpanded] = useState(false);
 
+  // 🔥 FORMAT %
+  const formatPercent = (score) => {
+    return Number((score * 100).toFixed(3));
+  };
+
+  const formatNumber = (n) => n.toString().padStart(2, "0");
+
   // ===== NORMALIZE =====
   const normalizeData = (res) => {
     if (Array.isArray(res)) return res;
@@ -76,11 +83,7 @@ function CombineResultCard() {
     fetchData();
   }, []);
 
-  // ===== DISPLAY =====
   const displayList = expanded ? filtered : filtered.slice(0, 10);
-
-  // 🔥 TOP FIX (không phụ thuộc filter)
-  const top10 = data.slice(0, 10).map((i) => i.number);
 
   if (!loading && data.length === 0) {
     return (
@@ -175,7 +178,7 @@ function CombineResultCard() {
             bg = "linear-gradient(135deg, #ff9800, #ffb74d)";
             label = "⚡";
           } else if (isTop10) {
-            bg = "#ff9800"; // cam nhẹ
+            bg = "#ff9800";
           }
 
           return (
@@ -194,7 +197,6 @@ function CombineResultCard() {
                 },
               }}
             >
-              {/* ICON */}
               {label && (
                 <Typography
                   sx={{
@@ -209,13 +211,11 @@ function CombineResultCard() {
               )}
 
               <Typography sx={{ fontWeight: "bold" }}>
-                {(item.number ?? 0).toString().padStart(2, "0")}
+                {formatNumber(item.number)}
               </Typography>
 
               <Typography sx={{ fontSize: 12 }}>
-                {typeof item.score === "number"
-                  ? (item.score * 100).toFixed(2) + "%"
-                  : "0.00%"}
+                {formatPercent(item.score)}%
               </Typography>
             </Box>
           );
