@@ -14,14 +14,40 @@ function TimeWeightGlobalCard({ date }) {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [visible, setVisible] = useState(false);
-
   const [search, setSearch] = useState("");
+
+  const normalize = (raw) => {
+    const result = {};
+
+    Object.entries(raw || {}).forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        result[k] = v;
+      } else if (v && typeof v === "object") {
+        // convert object → array
+        result[k] = Object.entries(v).map(([num, score]) => ({
+          number: Number(num),
+          score: Number(score),
+        }));
+      } else {
+        result[k] = [];
+      }
+    });
+
+    return result;
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await loadGlobal(date);
-      setData(res);
+      const res = await loadGlobal();
+
+      console.log("🔥 RAW:", res);
+
+      const clean = normalize(res);
+
+      console.log("🔥 NORMALIZED:", clean);
+
+      setData(clean);
     } catch (e) {
       console.error(e);
     } finally {
@@ -35,20 +61,17 @@ function TimeWeightGlobalCard({ date }) {
     }
   }, [date, visible]);
 
-  // ===== FILTER LOGIC =====
+  // ===== FILTER =====
   let entries = data ? Object.entries(data) : [];
 
   if (search !== "") {
-    entries = entries.filter(([source]) =>
-      source === search
-    );
+    entries = entries.filter(([source]) => source === search);
   }
 
   const list = expanded ? entries : entries.slice(0, 20);
 
   return (
     <Box>
-      {/* TOGGLE */}
       <Button
         variant="contained"
         size="small"
@@ -72,13 +95,13 @@ function TimeWeightGlobalCard({ date }) {
             🧠 Time Weight Global
           </Typography>
 
-          {/* 🔍 SEARCH */}
+          {/* SEARCH */}
           <TextField
             size="small"
             placeholder="Nhập số (00-99)..."
             value={search}
             onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, ""); // chỉ số
+              const val = e.target.value.replace(/\D/g, "");
               if (val.length <= 2) setSearch(val);
             }}
             sx={{
@@ -88,58 +111,62 @@ function TimeWeightGlobalCard({ date }) {
             }}
           />
 
-          {/* LOADING */}
           {loading && <CircularProgress />}
 
-          {/* DATA */}
           {!loading && data && (
             <>
-              {list.map(([source, targets]) => (
-                <Box
-                  key={source}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    mb: 1,
-                    gap: 1,
-                  }}
-                >
-                  {/* SOURCE */}
+              {list.map(([source, targets]) => {
+                const sorted = targets
+                  .slice() // clone
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 3);
+
+                return (
                   <Box
+                    key={source}
                     sx={{
-                      width: 40,
-                      textAlign: "center",
-                      fontWeight: "bold",
-                      background: "#333",
-                      borderRadius: 1,
-                      py: 0.5,
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 1,
+                      gap: 1,
                     }}
                   >
-                    {source.toString().padStart(2, "0")}
-                  </Box>
+                    {/* SOURCE */}
+                    <Box
+                      sx={{
+                        width: 40,
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        background: "#333",
+                        borderRadius: 1,
+                        py: 0.5,
+                      }}
+                    >
+                      {source.toString().padStart(2, "0")}
+                    </Box>
 
-                  {/* TARGETS */}
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    {targets.map((t, i) => (
-                      <Box
-                        key={i}
-                        sx={{
-                          px: 1.2,
-                          py: 0.4,
-                          borderRadius: 1,
-                          background: "rgba(255,255,255,0.1)",
-                          fontSize: 12,
-                        }}
-                      >
-                        {t.number.toString().padStart(2, "0")} (
-                        {t.score.toFixed(1)})
-                      </Box>
-                    ))}
+                    {/* TARGETS */}
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      {sorted.map((t, i) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            px: 1.2,
+                            py: 0.4,
+                            borderRadius: 1,
+                            background: "rgba(255,255,255,0.1)",
+                            fontSize: 12,
+                          }}
+                        >
+                          {t.number.toString().padStart(2, "0")} (
+                          {t.score.toFixed(1)})
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
-                </Box>
-              ))}
+                );
+              })}
 
-              {/* EXPAND chỉ khi không search */}
               {search === "" && (
                 <Button
                   size="small"
@@ -150,7 +177,6 @@ function TimeWeightGlobalCard({ date }) {
                 </Button>
               )}
 
-              {/* không có kết quả */}
               {search !== "" && entries.length === 0 && (
                 <Typography sx={{ mt: 1, opacity: 0.7 }}>
                   Không tìm thấy số

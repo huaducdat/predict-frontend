@@ -1,87 +1,52 @@
 import { useState, useEffect } from "react";
-import { Box, Slider, Button, Stack } from "@mui/material";
-import { loadWeights, saveWeights, resetWeights } from "../api/weightApi";
-
-const INIT = {
-  PAIR: 0.3,
-  POS: 0.2,
-  FREQ: 0.15,
-  TIME: 0.15,
-  STRK: 0.1,
-  GAP: 0.05,
-  REP: 0.05,
-};
+import { Box, Slider, Button, Stack, Typography } from "@mui/material";
+import {
+  loadWeights,
+  saveWeights,
+  resetWeights,
+  applyWeightPreset,
+} from "../api/weightApi";
 
 const ORDER = ["PAIR", "POS", "TIME", "FREQ", "STRK", "GAP", "REP"];
 
 const LABELS = {
-  PAIR: { en: "Pair To Next", vi: "Cặp số → ngày sau" },
+  PAIR: { en: "Pair", vi: "Cặp số → ngày sau" },
   POS: { en: "Position", vi: "Nhóm số" },
-  TIME: { en: "Time Weighted", vi: "Trọng số thời gian" },
-  FREQ: { en: "Recent Frequency", vi: "Tần suất gần" },
-  STRK: { en: "Streak Continue", vi: "Chuỗi tiếp diễn" },
+  TIME: { en: "Time", vi: "Trọng số thời gian" },
+  FREQ: { en: "Frequency", vi: "Tần suất gần" },
+  STRK: { en: "Streak", vi: "Chuỗi tiếp diễn" },
   GAP: { en: "Gap", vi: "Khoảng cách" },
   REP: { en: "Repeat", vi: "Lặp lại" },
 };
 
-const PRESETS = {
-  BALANCED: {
-    PAIR: 0.3,
-    POS: 0.2,
-    TIME: 0.15,
-    FREQ: 0.15,
-    STRK: 0.1,
-    GAP: 0.05,
-    REP: 0.05,
-  },
-  AGGRESSIVE: {
-    PAIR: 0.45,
-    POS: 0.2,
-    TIME: 0.15,
-    FREQ: 0.1,
-    STRK: 0.05,
-    GAP: 0.025,
-    REP: 0.025,
-  },
-  SAFE: {
-    PAIR: 0.2,
-    POS: 0.2,
-    TIME: 0.2,
-    FREQ: 0.2,
-    STRK: 0.1,
-    GAP: 0.05,
-    REP: 0.05,
-  },
-  STREAK_FOCUS: {
-    PAIR: 0.25,
-    POS: 0.15,
-    TIME: 0.1,
-    FREQ: 0.1,
-    STRK: 0.3,
-    GAP: 0.05,
-    REP: 0.05,
-  },
+const PRESETS = ["SAFE", "BALANCED", "AGGRESSIVE", "STREAK_FOCUS"];
+
+const PRESET_LABELS = {
+  SAFE: "🛡 Safe",
+  BALANCED: "⚖️ Balanced",
+  AGGRESSIVE: "🚀 Aggressive",
+  STREAK_FOCUS: "🔥 Streak",
 };
 
 function WeightControlMini() {
-  const [weights, setWeights] = useState(INIT);
-  const [defaultWeights, setDefaultWeights] = useState(INIT);
+  const [weights, setWeights] = useState({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const applyPreset = (preset) => {
-    setWeights(preset);
+  const [activePreset, setActivePreset] = useState("CUSTOM");
+  const [lastSaved, setLastSaved] = useState({});
+
+  const fetchWeights = async () => {
+    const data = await loadWeights();
+
+    setWeights(data);
+    setLastSaved(data);
   };
 
-  // 🔥 LOAD từ backend
   useEffect(() => {
     const fetch = async () => {
       try {
-        const data = await loadWeights();
-
-        const merged = { ...INIT, ...data };
-
-        setWeights(merged);
-        setDefaultWeights(merged); // lưu default
+        await fetchWeights();
       } catch (e) {
         console.error("Load weights failed", e);
       } finally {
@@ -93,55 +58,81 @@ function WeightControlMini() {
   }, []);
 
   const handleChange = (key, newValue) => {
+    setActivePreset("CUSTOM");
+
     setWeights((prev) => {
-      const oldValue = prev[key];
+      const oldValue = prev[key] ?? 0;
       const diff = newValue - oldValue;
 
-      const next = { ...prev };
-      next[key] = newValue;
+      const next = { ...prev, [key]: newValue };
 
-      const others = Object.keys(prev).filter((k) => k !== key);
-      const othersSum = others.reduce((s, k) => s + prev[k], 0);
+      const others = ORDER.filter((k) => k !== key);
+      const othersSum = others.reduce((sum, k) => sum + (prev[k] ?? 0), 0);
 
-      if (othersSum === 0) return prev;
+      if (othersSum <= 0) {
+        return next;
+      }
 
       others.forEach((k) => {
-        const ratio = prev[k] / othersSum;
-        next[k] = prev[k] - diff * ratio;
+        const current = prev[k] ?? 0;
+        const ratio = current / othersSum;
+        const value = current - diff * ratio;
+
+        next[k] = Math.max(0, value);
       });
 
       return next;
     });
   };
 
-  // 🔥 SAVE
   const handleSave = async () => {
     try {
+      setSaving(true);
+
       await saveWeights(weights);
-      setDefaultWeights(weights);
-      console.log("Saved!");
+
+      setLastSaved(weights);
+      console.log("✅ Weights saved");
     } catch (e) {
-      console.error(e);
+      console.error("Save weights failed", e);
+    } finally {
+      setSaving(false);
     }
   };
 
-  // 🔥 RESET
   const handleReset = async () => {
     try {
+      setSaving(true);
+
       await resetWeights();
+      await fetchWeights();
 
-      const data = await loadWeights();
-
-      const merged = { ...INIT, ...data };
-
-      setWeights(merged);
-      setDefaultWeights(merged);
+      setActivePreset("AGGRESSIVE");
+      console.log("✅ Reset to default");
     } catch (e) {
-      console.error(e);
+      console.error("Reset failed", e);
+    } finally {
+      setSaving(false);
     }
   };
-  // 🔥 CHECK CHANGE
-  const isChanged = JSON.stringify(weights) !== JSON.stringify(defaultWeights);
+
+  const handlePreset = async (type) => {
+    try {
+      setSaving(true);
+
+      await applyWeightPreset(type);
+      await fetchWeights();
+
+      setActivePreset(type);
+      console.log("✅ Preset applied:", type);
+    } catch (e) {
+      console.error("Apply preset failed", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isChanged = JSON.stringify(weights) !== JSON.stringify(lastSaved);
 
   if (loading) return null;
 
@@ -154,12 +145,14 @@ function WeightControlMini() {
         fontFamily: "Courier New",
       }}
     >
-      {/* TITLE */}
       <Box sx={{ mb: 1, fontSize: 13, fontWeight: "bold" }}>
         ⚙️ Trọng số Predictor
       </Box>
 
-      {/* SLIDERS */}
+      <Typography sx={{ fontSize: 11, opacity: 0.7, mb: 1 }}>
+        Preset hiện tại: {activePreset}
+      </Typography>
+
       {ORDER.map((key) => {
         const value = weights[key] ?? 0;
         const label = LABELS[key];
@@ -174,7 +167,7 @@ function WeightControlMini() {
               mb: 1,
             }}
           >
-            <Box sx={{ width: 110, fontSize: 11, lineHeight: 1.2 }}>
+            <Box sx={{ width: 130, fontSize: 11, lineHeight: 1.2 }}>
               <div>{label.en}</div>
               <div style={{ opacity: 0.6 }}>{label.vi}</div>
             </Box>
@@ -189,47 +182,53 @@ function WeightControlMini() {
               sx={{ flex: 1 }}
             />
 
-            <Box sx={{ width: 40, fontSize: 11, textAlign: "right" }}>
-              {(value * 100).toFixed(0)}%
+            <Box sx={{ width: 45, fontSize: 11, textAlign: "right" }}>
+              {(value * 100).toFixed(1)}%
             </Box>
           </Box>
         );
       })}
 
-      {/* PRESETS */}
-      <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap" }}>
-        <Button size="small" onClick={() => applyPreset(PRESETS.BALANCED)}>
-          ⚖️ Balanced
-        </Button>
-
-        <Button size="small" onClick={() => applyPreset(PRESETS.AGGRESSIVE)}>
-          🚀 Aggressive
-        </Button>
-
-        <Button size="small" onClick={() => applyPreset(PRESETS.SAFE)}>
-          🛡️ Safe
-        </Button>
-
-        <Button size="small" onClick={() => applyPreset(PRESETS.STREAK_FOCUS)}>
-          🔥 Streak
-        </Button>
+      <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+        {PRESETS.map((type) => (
+          <Button
+            key={type}
+            size="small"
+            variant={activePreset === type ? "contained" : "outlined"}
+            onClick={() => handlePreset(type)}
+            disabled={saving}
+            sx={{ fontSize: 10 }}
+          >
+            {PRESET_LABELS[type]}
+          </Button>
+        ))}
       </Stack>
 
-      {/* BUTTONS */}
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <Button
           size="small"
           variant="contained"
           onClick={handleSave}
-          disabled={!isChanged}
+          disabled={!isChanged || saving}
         >
           💾 Save
         </Button>
 
-        <Button size="small" variant="outlined" onClick={handleReset}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={handleReset}
+          disabled={saving}
+        >
           🔄 Reset
         </Button>
       </Stack>
+
+      {isChanged && (
+        <Typography sx={{ mt: 1, fontSize: 11, color: "#ffb74d" }}>
+          ⚠️ Có thay đổi chưa lưu
+        </Typography>
+      )}
     </Box>
   );
 }

@@ -19,35 +19,106 @@ import {
 
 import StreakGrid from "../components/StreakGrid";
 import { rebuildStreaks } from "../api/streakApi";
+import { Pagination } from "@mui/material";
 
 // ===== FORMAT =====
 const formatNumber = (n) => n?.toString().padStart(2, "0");
 
-// ===== CARD COMPONENT =====
+// ===== RESULT CARD =====
 function ResultCard({ data, onDelete }) {
   return (
     <Card>
       <CardContent>
         <Typography variant="h6">{data.date}</Typography>
 
-        <Typography>
-          Single: {formatNumber(data.singleNumber)}
-        </Typography>
+        <Typography>Single: {formatNumber(data.singleNumber)}</Typography>
 
         <Typography>
           {data.numbers?.map((n) => formatNumber(n)).join(", ")}
         </Typography>
 
-        <Button
-          color="error"
-          onClick={() => onDelete(data.date)}
-        >
+        <Button color="error" onClick={() => onDelete(data.date)}>
           Delete
         </Button>
       </CardContent>
     </Card>
   );
 }
+
+// ===== 🔥 STREAK HIGHLIGHT CARD =====
+function StreakHighlightCard({ result, streakMap }) {
+  if (!result) return null;
+
+  const allNumbers = [
+    ...(result.numbers || []),
+    result.singleNumber,
+  ];
+
+  const streakNumbers = allNumbers
+    .map((n) => {
+      const s = streakMap[n];
+      if (!s || s.currentStreak <= 0) return null;
+
+      return {
+        number: n,
+        current: s.currentStreak,
+        max: s.maxStreak,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.current - a.current);
+
+  if (streakNumbers.length === 0) return null;
+
+  return (
+    <Card sx={{ border: "1px solid #ddd", background: "#fff" }}>
+      <CardContent>
+        <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+          🔥 Streak ({result.date})
+        </Typography>
+
+        {/* 🔥 HIỂN THỊ NGANG */}
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1,
+          }}
+        >
+          {streakNumbers.map((item, idx) => (
+            <Box
+              key={idx}
+              sx={{
+                px: 1.5,
+                py: 0.5,
+                borderRadius: "12px",
+                fontSize: 13,
+                fontFamily: "Courier New",
+                border: "1px solid #ccc",
+                background:
+                  item.current >= 4
+                    ? "#ffe5e5"
+                    : item.current >= 2
+                    ? "#fff3cd"
+                    : "#f5f5f5",
+                color:
+                  item.current >= 4
+                    ? "red"
+                    : item.current >= 2
+                    ? "#b36b00"
+                    : "#666",
+              }}
+            >
+              {formatNumber(item.number)} ({item.current}/{item.max})
+            </Box>
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+
 
 // ===== MAIN =====
 function Results() {
@@ -60,6 +131,11 @@ function Results() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [rebuilding, setRebuilding] = useState(false);
+
+  const handleChangePage = (event, value) => {
+    setPage(value);
+    loadPage(value);
+  };
 
   // ===== LOAD STREAK =====
   const loadStreaks = async () => {
@@ -79,8 +155,6 @@ function Results() {
   const loadByDate = async () => {
     try {
       const res = await getResultsByDate(date);
-
-      // fix array/object
       const result = Array.isArray(res) ? res : [res];
 
       setData(result);
@@ -230,14 +304,17 @@ function Results() {
       {/* FILTER MODE */}
       {isFilterMode &&
         data.map((item) => (
-          <ResultCard
-            key={item.date}
-            data={item}
-            onDelete={handleDelete}
-          />
+          <ResultCard key={item.date} data={item} onDelete={handleDelete} />
         ))}
 
       {/* NORMAL MODE */}
+      {!isFilterMode && data.length > 0 && page === 1 && (
+        <StreakHighlightCard
+          result={data[0]}
+          streakMap={streakMap}
+        />
+      )}
+
       {!isFilterMode &&
         buildTimeline(data).map((item, idx) => {
           if (item.type === "missing_range") {
@@ -260,6 +337,18 @@ function Results() {
             />
           );
         })}
+
+      {/* PAGINATION */}
+      {!isFilterMode && totalPages > 1 && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handleChangePage}
+            color="primary"
+          />
+        </Box>
+      )}
     </Box>
   );
 }

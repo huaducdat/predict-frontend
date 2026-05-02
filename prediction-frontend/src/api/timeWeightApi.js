@@ -1,6 +1,6 @@
 import api from "./api";
 
-export const loadGlobal = async (date) => {
-  const res = await api.get(`/api/time-weight-global/${date}`);
+export const loadGlobal = async () => {
+  const res = await api.get(`/api/time-weight-global`);
   return res.data;
 };
