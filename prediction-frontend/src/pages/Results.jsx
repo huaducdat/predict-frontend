@@ -51,7 +51,7 @@ function StreakHighlightCard({ result, streakMap }) {
 
   // ✅ UNIQUE số → tránh lặp
   const allNumbers = Array.from(
-    new Set([...(result.numbers || []), result.singleNumber])
+    new Set([...(result.numbers || []), result.singleNumber]),
   );
 
   // ✅ lọc + map rõ ràng
@@ -103,13 +103,9 @@ function StreakHighlightCard({ result, streakMap }) {
                   background: isHot
                     ? "#ffe5e5"
                     : isWarm
-                    ? "#fff3cd"
-                    : "#f5f5f5",
-                  color: isHot
-                    ? "red"
-                    : isWarm
-                    ? "#b36b00"
-                    : "#666",
+                      ? "#fff3cd"
+                      : "#f5f5f5",
+                  color: isHot ? "red" : isWarm ? "#b36b00" : "#666",
                   fontWeight: isHot ? "bold" : "normal",
                 }}
               >
@@ -122,8 +118,78 @@ function StreakHighlightCard({ result, streakMap }) {
     </Card>
   );
 }
+{/*REPEAT */}
+function RepeatInDayCard({ result }) {
+  if (!result) return null;
 
+  // ✅ chỉ đếm 27 số trong ngày, KHÔNG cộng singleNumber
+  const allNumbers = result.numbers || [];
 
+  const countMap = {};
+
+  allNumbers.forEach((n) => {
+    if (n === null || n === undefined) return;
+    countMap[n] = (countMap[n] || 0) + 1;
+  });
+
+  const repeated = Object.entries(countMap)
+    .filter(([_, count]) => count >= 2)
+    .map(([number, count]) => ({
+      number: Number(number),
+      count,
+    }))
+    .sort((a, b) => b.count - a.count || a.number - b.number);
+
+  if (repeated.length === 0) {
+    return (
+      <Card sx={{ border: "1px solid #ddd", background: "#fff" }}>
+        <CardContent>
+          <Typography variant="subtitle1" fontWeight="bold">
+            🔁 Repeat ({result.date})
+          </Typography>
+          <Typography fontSize={13} color="text.secondary">
+            Không có số lặp
+          </Typography>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card sx={{ border: "1px solid #ddd", background: "#fff" }}>
+      <CardContent>
+        <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+          🔁 Repeat ({result.date})
+        </Typography>
+
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {repeated.map((item) => {
+            const isHot = item.count >= 3;
+
+            return (
+              <Box
+                key={item.number}
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: "12px",
+                  fontSize: 13,
+                  fontFamily: "Courier New",
+                  border: "1px solid #ccc",
+                  background: isHot ? "#ffe5e5" : "#f0f0f0",
+                  color: isHot ? "red" : "#333",
+                  fontWeight: isHot ? "bold" : "normal",
+                }}
+              >
+                {formatNumber(item.number)} ×{item.count}
+              </Box>
+            );
+          })}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
 
 // ===== MAIN =====
 function Results() {
@@ -228,7 +294,7 @@ function Results() {
     if (!Array.isArray(data)) return [];
 
     const sorted = [...data].sort(
-      (a, b) => new Date(b.date) - new Date(a.date)
+      (a, b) => new Date(b.date) - new Date(a.date),
     );
 
     const result = [];
@@ -309,15 +375,18 @@ function Results() {
       {/* FILTER MODE */}
       {isFilterMode &&
         data.map((item) => (
-          <ResultCard key={item.date} data={item} onDelete={handleDelete} />
+          <Box
+            key={item.date}
+            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+          >
+            <ResultCard data={item} onDelete={handleDelete} />
+            <RepeatInDayCard result={item} />
+          </Box>
         ))}
 
       {/* NORMAL MODE */}
       {!isFilterMode && data.length > 0 && page === 1 && (
-        <StreakHighlightCard
-          result={data[0]}
-          streakMap={streakMap}
-        />
+        <StreakHighlightCard result={data[0]} streakMap={streakMap} />
       )}
 
       {!isFilterMode &&
@@ -335,11 +404,13 @@ function Results() {
           }
 
           return (
-            <ResultCard
+            <Box
               key={item.value.id}
-              data={item.value}
-              onDelete={handleDelete}
-            />
+              sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+            >
+              <ResultCard data={item.value} onDelete={handleDelete} />
+              <RepeatInDayCard result={item.value} />
+            </Box>
           );
         })}
 
