@@ -6,9 +6,11 @@ import {
   Box,
   Stack,
   Button,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useState } from "react";
-import { getAllSessions } from "../api/betApi";
+import { getAllSessions, deleteSession } from "../api/betApi";
 import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 10;
@@ -44,6 +46,28 @@ function BetHistoryDialog({ open, onClose }) {
   const current = list.slice(start, start + PAGE_SIZE);
   const totalPage = Math.ceil(list.length / PAGE_SIZE);
 
+  // ===== DELETE =====
+  const handleDelete = async (date) => {
+    if (!window.confirm("Xóa phiên này?")) return;
+
+    try {
+      const res = await deleteSession(date);
+
+      if (!res.success) {
+        alert("Xóa thất bại");
+        return;
+      }
+
+      // 🔥 update UI
+      setList((prev) =>
+        prev.filter((x) => x.date !== date)
+      );
+
+    } catch (e) {
+      alert("Lỗi hệ thống");
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -51,7 +75,7 @@ function BetHistoryDialog({ open, onClose }) {
       fullWidth
       maxWidth="sm"
       scroll="paper"
-        disableRestoreFocus // 🔥 THÊM DÒNG NÀY
+      disableRestoreFocus
     >
       <DialogTitle>📊 Lịch sử cược</DialogTitle>
 
@@ -70,16 +94,8 @@ function BetHistoryDialog({ open, onClose }) {
             return (
               <Box
                 key={i}
-                onClick={() => {
-                  if (!item.date) {
-                    console.error("DATE lỗi:", item);
-                    return;
-                  }
-
-                  onClose(); // 🔥 đóng dialog
-                  navigate(`/bet/${item.date}`); // 🔥 chuyển trang
-                }}
                 sx={{
+                  position: "relative", // 🔥 để đặt nút delete
                   p: 2,
                   borderRadius: 2,
                   cursor: "pointer",
@@ -89,7 +105,37 @@ function BetHistoryDialog({ open, onClose }) {
                     background: "#e3e8ff",
                   },
                 }}
+                onClick={() => {
+                  if (!item.date) return;
+
+                  onClose();
+                  navigate(`/bet/${item.date}`);
+                }}
               >
+                {/* 🔥 DELETE BUTTON */}
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation(); // 🔥 QUAN TRỌNG
+                    handleDelete(item.date);
+                  }}
+                  sx={{
+                    position: "absolute",
+                    top: 6,
+                    right: 6,
+                    background: "#fff",
+                    border: "1px solid #ddd",
+                    "&:hover": {
+                      background: "#ffebee",
+                      borderColor: "#f44336",
+                    },
+                  }}
+                >
+                  <CloseIcon
+                    sx={{ fontSize: 16, color: "#f44336" }}
+                  />
+                </IconButton>
+
                 <Typography>
                   📅 <b>{item.date}</b>
                 </Typography>
@@ -131,8 +177,10 @@ function BetHistoryDialog({ open, onClose }) {
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: "50%",
-                cursor: page === 0 ? "default" : "pointer",
-                background: page === 0 ? "#eee" : "#f5f7ff",
+                cursor:
+                  page === 0 ? "default" : "pointer",
+                background:
+                  page === 0 ? "#eee" : "#f5f7ff",
               }}
             >
               ‹

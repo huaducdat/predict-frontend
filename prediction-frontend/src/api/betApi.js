@@ -28,3 +28,8 @@ export const checkByDate = async (date) => {
   const res = await api.get(`/api/bet/check?date=${date}`);
   return res.data;
 };
+
+export const deleteSession = async (date) => {
+  const res = await api.delete(`/api/bet?date=${date}`);
+  return res.data;
+};
