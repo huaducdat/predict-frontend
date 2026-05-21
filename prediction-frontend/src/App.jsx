@@ -8,7 +8,8 @@ import Results from "./pages/Results";
 import Login from "./pages/Login";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import BetPage from "./pages/BetPage";
-import BetDetailPage from "./pages/BetDetailPage"
+import BetDetailPage from "./pages/BetDetailPage";
+import PatternReportPage from "./pages/PatternReportPage";
 
 
 
@@ -32,6 +33,7 @@ function App() {
                   <Route path="/history" element={<Results />} />
                   <Route path="/bet" element={<BetPage />} />
                   <Route path="/bet/:date" element={<BetDetailPage />} />
+                  <Route path="/pattern-report" element={<PatternReportPage />} />
                 </Routes>
               </MainLayout>
             </ProtectedRoute>

@@ -16,12 +16,12 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 
 import { useState } from "react";
+import PatternReportWidget from "./PatternReportWidget";
 
 export default function Header() {
   const navigate = useNavigate();
   const theme = useTheme();
 
-  // 🔥 detect mobile
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -63,8 +63,13 @@ export default function Header() {
         color: "gray",
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        {/* LEFT */}
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 2,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
             sx={{
@@ -77,13 +82,15 @@ export default function Header() {
           <Typography variant="h6">Prediction App</Typography>
         </Box>
 
-        {/* RIGHT */}
         {isMobile ? (
           <>
-            {/* 🔥 MOBILE MENU BUTTON */}
-            <IconButton onClick={handleMenuOpen} color="inherit">
-              <MenuIcon />
-            </IconButton>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <PatternReportWidget dense />
+
+              <IconButton onClick={handleMenuOpen} color="inherit">
+                <MenuIcon />
+              </IconButton>
+            </Box>
 
             <Menu
               anchorEl={anchorEl}
@@ -114,7 +121,16 @@ export default function Header() {
             </Menu>
           </>
         ) : (
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              alignItems: "center",
+              minWidth: 0,
+            }}
+          >
+            <PatternReportWidget />
+
             {navItems.map((item) => (
               <Button
                 key={item.path}
