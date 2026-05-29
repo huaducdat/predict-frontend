@@ -6,51 +6,29 @@ import {
   resetWeights,
   applyWeightPreset,
 } from "../api/weightApi";
-
 import { getMode, setMode } from "../api/modeApi";
+import { vi } from "../i18n/vi";
 
 const ORDER = ["PAIR", "POS", "TIME", "FREQ", "STRK", "GAP", "REP"];
-
-const LABELS = {
-  PAIR: { en: "Pair", vi: "Cặp số → ngày sau" },
-  POS: { en: "Position", vi: "Nhóm số" },
-  TIME: { en: "Time", vi: "Trọng số thời gian" },
-  FREQ: { en: "Frequency", vi: "Tần suất gần" },
-  STRK: { en: "Streak", vi: "Chuỗi tiếp diễn" },
-  GAP: { en: "Gap", vi: "Khoảng cách" },
-  REP: { en: "Repeat", vi: "Lặp lại" },
-};
-
 const PRESETS = ["SAFE", "BALANCED", "AGGRESSIVE", "STREAK_FOCUS"];
-
-const PRESET_LABELS = {
-  SAFE: "🛡 Safe",
-  BALANCED: "⚖️ Balanced",
-  AGGRESSIVE: "🚀 Aggressive",
-  STREAK_FOCUS: "🔥 Streak",
-};
 
 function WeightControlMini() {
   const [weights, setWeights] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [activePreset, setActivePreset] = useState("CUSTOM");
   const [lastSaved, setLastSaved] = useState({});
+  const [mode, setModeState] = useState("EXTENDED");
 
-  const [mode, setModeState] = useState("LONG");
-
-  
- const MODES = [
-  { label: "SHORT", value: "SHORT_TERM" },
-  { label: "LONG", value: "EXTENDED" },
-];
+  const modes = [
+    { label: vi.mode.SHORT_TERM, value: "SHORT_TERM" },
+    { label: vi.mode.EXTENDED, value: "EXTENDED" },
+  ];
 
   useEffect(() => {
     const fetch = async () => {
       try {
         await fetchWeights();
-
         const m = await getMode();
         setModeState(m);
       } catch (e) {
@@ -66,11 +44,8 @@ function WeightControlMini() {
   const handleModeChange = async (m) => {
     try {
       setSaving(true);
-
       await setMode(m);
       setModeState(m);
-
-      console.log("✅ Mode changed:", m);
     } catch (e) {
       console.error("Change mode failed", e);
     } finally {
@@ -80,7 +55,6 @@ function WeightControlMini() {
 
   const fetchWeights = async () => {
     const data = await loadWeights();
-
     setWeights(data);
     setLastSaved(data);
   };
@@ -91,22 +65,16 @@ function WeightControlMini() {
     setWeights((prev) => {
       const oldValue = prev[key] ?? 0;
       const diff = newValue - oldValue;
-
       const next = { ...prev, [key]: newValue };
-
       const others = ORDER.filter((k) => k !== key);
       const othersSum = others.reduce((sum, k) => sum + (prev[k] ?? 0), 0);
 
-      if (othersSum <= 0) {
-        return next;
-      }
+      if (othersSum <= 0) return next;
 
       others.forEach((k) => {
         const current = prev[k] ?? 0;
         const ratio = current / othersSum;
-        const value = current - diff * ratio;
-
-        next[k] = Math.max(0, value);
+        next[k] = Math.max(0, current - diff * ratio);
       });
 
       return next;
@@ -116,11 +84,8 @@ function WeightControlMini() {
   const handleSave = async () => {
     try {
       setSaving(true);
-
       await saveWeights(weights);
-
       setLastSaved(weights);
-      console.log("✅ Weights saved");
     } catch (e) {
       console.error("Save weights failed", e);
     } finally {
@@ -131,12 +96,9 @@ function WeightControlMini() {
   const handleReset = async () => {
     try {
       setSaving(true);
-
       await resetWeights();
       await fetchWeights();
-
       setActivePreset("AGGRESSIVE");
-      console.log("✅ Reset to default");
     } catch (e) {
       console.error("Reset failed", e);
     } finally {
@@ -147,12 +109,9 @@ function WeightControlMini() {
   const handlePreset = async (type) => {
     try {
       setSaving(true);
-
       await applyWeightPreset(type);
       await fetchWeights();
-
       setActivePreset(type);
-      console.log("✅ Preset applied:", type);
     } catch (e) {
       console.error("Apply preset failed", e);
     } finally {
@@ -174,18 +133,14 @@ function WeightControlMini() {
       }}
     >
       <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-        {MODES.map((m) => (
+        {modes.map((m) => (
           <Button
             key={m.value}
             size="small"
             variant={mode === m.value ? "contained" : "outlined"}
             onClick={() => handleModeChange(m.value)}
             disabled={saving}
-            sx={{
-              fontSize: 11,
-              px: 1.5,
-              minWidth: 60,
-            }}
+            sx={{ fontSize: 11, px: 1.5, minWidth: 80 }}
           >
             {m.label}
           </Button>
@@ -193,16 +148,15 @@ function WeightControlMini() {
       </Stack>
 
       <Box sx={{ mb: 1, fontSize: 13, fontWeight: "bold" }}>
-        ⚙️ Trọng số Predictor
+        {vi.prediction.weightControl}
       </Box>
 
       <Typography sx={{ fontSize: 11, opacity: 0.7, mb: 1 }}>
-        Preset hiện tại: {activePreset}
+        {vi.prediction.currentPreset}: {vi.weights[activePreset] ?? activePreset}
       </Typography>
 
       {ORDER.map((key) => {
         const value = weights[key] ?? 0;
-        const label = LABELS[key];
 
         return (
           <Box
@@ -214,9 +168,8 @@ function WeightControlMini() {
               mb: 1,
             }}
           >
-            <Box sx={{ width: 130, fontSize: 11, lineHeight: 1.2 }}>
-              <div>{label.en}</div>
-              <div style={{ opacity: 0.6 }}>{label.vi}</div>
+            <Box sx={{ width: 150, fontSize: 11, lineHeight: 1.2 }}>
+              {vi.predictor[key] ?? key}
             </Box>
 
             <Slider
@@ -246,7 +199,7 @@ function WeightControlMini() {
             disabled={saving}
             sx={{ fontSize: 10 }}
           >
-            {PRESET_LABELS[type]}
+            {vi.weights[type] ?? type}
           </Button>
         ))}
       </Stack>
@@ -258,7 +211,7 @@ function WeightControlMini() {
           onClick={handleSave}
           disabled={!isChanged || saving}
         >
-          💾 Save
+          {vi.common.save}
         </Button>
 
         <Button
@@ -267,13 +220,13 @@ function WeightControlMini() {
           onClick={handleReset}
           disabled={saving}
         >
-          🔄 Reset
+          {vi.common.reset}
         </Button>
       </Stack>
 
       {isChanged && (
         <Typography sx={{ mt: 1, fontSize: 11, color: "#ffb74d" }}>
-          ⚠️ Có thay đổi chưa lưu
+          {vi.prediction.unsavedChanges}
         </Typography>
       )}
     </Box>

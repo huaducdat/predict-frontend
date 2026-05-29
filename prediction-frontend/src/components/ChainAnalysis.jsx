@@ -1,4 +1,5 @@
 import { Box, Card, CardContent, Typography, Stack } from "@mui/material";
+import { vi } from "../i18n/vi";
 
 function ChainAnalysis({ chains }) {
   if (!chains || chains.length === 0) return null;
@@ -6,7 +7,7 @@ function ChainAnalysis({ chains }) {
   return (
     <Card sx={{ borderRadius: 3,  marginTop: 3 }}>
       <CardContent>
-        <Typography variant="h6">Chain Analysis</Typography>
+        <Typography variant="h6">{vi.chain.title}</Typography>
 
         <Stack spacing={3} sx={{ mt: 2 }}>
           {[...chains].reverse().map((chain) => (

@@ -17,6 +17,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 
 import { useState } from "react";
 import PatternReportWidget from "./PatternReportWidget";
+import { vi } from "../i18n/vi";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -45,11 +46,12 @@ export default function Header() {
   };
 
   const navItems = [
-    { label: "Home", path: "/" },
-    { label: "Input Number", path: "/input" },
-    { label: "Predict", path: "/prediction" },
-    { label: "History", path: "/history" },
-    { label: "Bet", path: "/bet" },
+    { label: vi.menu.home, path: "/" },
+    { label: vi.menu.input, path: "/input" },
+    { label: vi.menu.prediction, path: "/prediction" },
+    { label: vi.menu.intelligence, path: "/intelligence" },
+    { label: vi.menu.history, path: "/history" },
+    { label: vi.menu.bet, path: "/bet" },
   ];
 
   return (
@@ -79,7 +81,7 @@ export default function Header() {
               background: "linear-gradient(135deg, #6a5cff, #00c6ff)",
             }}
           />
-          <Typography variant="h6">Prediction App</Typography>
+          <Typography variant="h6">{vi.app.name}</Typography>
         </Box>
 
         {isMobile ? (
@@ -116,7 +118,7 @@ export default function Header() {
 
               <MenuItem onClick={handleLogout}>
                 <LogoutIcon sx={{ mr: 1 }} />
-                Logout
+                {vi.menu.logout}
               </MenuItem>
             </Menu>
           </>
@@ -156,7 +158,7 @@ export default function Header() {
                 },
               }}
             >
-              Logout
+              {vi.menu.logout}
             </Button>
           </Box>
         )}

@@ -18,26 +18,20 @@ import {
 } from "../api/betApi";
 
 import BetHistoryDialog from "../components/BetHistoryDialog";
+import { vi } from "../i18n/vi";
 
 function BetPage() {
   const [date, setDate] = useState("");
-
   const [unit, setUnit] = useState("");
   const [unitDisplay, setUnitDisplay] = useState("");
-
-  const [rows, setRows] = useState([
-    { number: "", point: "" },
-  ]);
-
+  const [rows, setRows] = useState([{ number: "", point: "" }]);
   const [openHistory, setOpenHistory] = useState(false);
 
-  // ===== FORMAT =====
   const formatVND = (value) => {
     if (!value || isNaN(value)) return "0 ₫";
     return Number(value).toLocaleString("vi-VN") + " ₫";
   };
 
-  // ===== INIT =====
   useEffect(() => {
     const init = async () => {
       const last = await getLastUnit();
@@ -47,15 +41,12 @@ function BetPage() {
     init();
   }, []);
 
-  // ===== LOAD DATE =====
   useEffect(() => {
     if (!date) return;
 
     const fetchData = async () => {
       try {
         const data = await loadBet(date);
-
-        // 🔥 FIX SHAPE
         const betMap = data?.bets || data || {};
 
         if (!betMap || Object.keys(betMap).length === 0) {
@@ -63,20 +54,17 @@ function BetPage() {
           return;
         }
 
-        // 🔥 SET UNIT TỪ DB
         if (data?.unitValue) {
           setUnit(data.unitValue);
           setUnitDisplay(formatVND(data.unitValue));
         }
 
-        const list = Object.entries(betMap).map(
-          ([number, point]) => ({
+        setRows(
+          Object.entries(betMap).map(([number, point]) => ({
             number,
             point,
-          })
+          })),
         );
-
-        setRows(list);
       } catch (e) {
         console.error(e);
         setRows([{ number: "", point: "" }]);
@@ -86,7 +74,6 @@ function BetPage() {
     fetchData();
   }, [date]);
 
-  // ===== ROW =====
   const addRow = () => {
     setRows([...rows, { number: "", point: "" }]);
   };
@@ -101,22 +88,21 @@ function BetPage() {
     setRows(newRows);
   };
 
-  // ===== VALIDATE =====
   const validate = () => {
     const nums = rows.map((r) => r.number);
 
     if (new Set(nums).size !== nums.length) {
-      alert("Trùng số");
+      alert(vi.bet.duplicatedNumber);
       return false;
     }
 
     for (let r of rows) {
       if (!r.number || r.number < 0 || r.number > 99) {
-        alert("Number phải 0–99");
+        alert(vi.bet.invalidNumber);
         return false;
       }
       if (!r.point || r.point <= 0) {
-        alert("Point phải > 0");
+        alert(vi.bet.invalidPoint);
         return false;
       }
     }
@@ -124,16 +110,13 @@ function BetPage() {
     return true;
   };
 
-  // ===== SAVE =====
   const handleSave = async () => {
     if (!validate()) return;
 
     const exists = await checkExists(date);
 
     if (exists) {
-      const ok = window.confirm(
-        "Ngày này đã có dữ liệu. Ghi đè?"
-      );
+      const ok = window.confirm(vi.bet.overwriteConfirm);
       if (!ok) return;
     }
 
@@ -148,15 +131,10 @@ function BetPage() {
       bets,
     });
 
-    alert("Saved");
+    alert(vi.bet.saved);
   };
 
-  // ===== CALC =====
-  const totalPoint = rows.reduce(
-    (sum, r) => sum + Number(r.point || 0),
-    0
-  );
-
+  const totalPoint = rows.reduce((sum, r) => sum + Number(r.point || 0), 0);
   const totalMoney = totalPoint * (Number(unit) || 0);
 
   return (
@@ -170,24 +148,17 @@ function BetPage() {
             "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,240,255,0.7))",
         }}
       >
-        {/* HISTORY */}
         <BetHistoryDialog
           open={openHistory}
           onClose={() => setOpenHistory(false)}
         />
 
-        <Button
-          onClick={() => setOpenHistory(true)}
-          sx={{ mb: 2 }}
-        >
-          📊 Xem lịch sử
+        <Button onClick={() => setOpenHistory(true)} sx={{ mb: 2 }}>
+          {vi.bet.history}
         </Button>
 
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: "bold", mb: 2 }}
-        >
-          🎯 Nhập cược
+        <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
+          {vi.bet.title}
         </Typography>
 
         <Stack spacing={2} sx={{ mb: 2 }}>
@@ -199,7 +170,7 @@ function BetPage() {
           />
 
           <TextField
-            label="Giá 1 điểm"
+            label={vi.bet.unitPrice}
             fullWidth
             value={unitDisplay}
             onChange={(e) => {
@@ -207,16 +178,13 @@ function BetPage() {
               setUnit(raw);
               setUnitDisplay(raw);
             }}
-            onBlur={() =>
-              setUnitDisplay(formatVND(unit))
-            }
+            onBlur={() => setUnitDisplay(formatVND(unit))}
             onFocus={() => setUnitDisplay(unit)}
           />
         </Stack>
 
         <Divider sx={{ my: 2 }} />
 
-        {/* ROW */}
         {rows.map((row, i) => (
           <BetRow
             key={i}
@@ -228,43 +196,33 @@ function BetPage() {
         ))}
 
         <Button onClick={addRow} sx={{ mt: 1 }}>
-          ➕ Thêm số
+          {vi.bet.addNumber}
         </Button>
 
         <Divider sx={{ my: 3 }} />
 
-        {/* SUMMARY */}
         <Box
           sx={{
             p: 2,
             borderRadius: 3,
-            background:
-              "linear-gradient(135deg, #f5f7ff, #eef1ff)",
+            background: "linear-gradient(135deg, #f5f7ff, #eef1ff)",
           }}
         >
           <Typography>
-            🔢 Tổng điểm: <b>{totalPoint}</b>
+            {vi.bet.totalPoint}: <b>{totalPoint}</b>
           </Typography>
 
           <Typography>
-            💰 Tổng cược:{" "}
-            <b style={{ color: "#1976d2" }}>
-              {formatVND(totalMoney)}
-            </b>
+            {vi.bet.totalBet}: <b style={{ color: "#1976d2" }}>{formatVND(totalMoney)}</b>
           </Typography>
 
           <Typography sx={{ fontSize: 12, color: "#777" }}>
-            Công thức: Điểm × Giá 1 điểm
+            {vi.bet.formula}
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleSave}
-          sx={{ mt: 3 }}
-        >
-          💾 Lưu
+        <Button variant="contained" fullWidth onClick={handleSave} sx={{ mt: 3 }}>
+          {vi.common.save}
         </Button>
       </Paper>
     </Box>

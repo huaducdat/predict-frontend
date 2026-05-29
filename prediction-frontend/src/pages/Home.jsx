@@ -1,5 +1,7 @@
 import { Box, Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { vi } from "../i18n/vi";
+
 export default function Home() {
   const navigate = useNavigate();
   return (
@@ -15,7 +17,6 @@ export default function Home() {
         borderRadius: "15px",
       }}
     >
-      {/* Background Image */}
       <Box
         sx={{
           position: "absolute",
@@ -23,17 +24,16 @@ export default function Home() {
           left: 0,
           width: "100%",
           height: "100%",
-          backgroundImage: `url("/HeroBG.png")`, // bỏ ảnh vào public/
+          backgroundImage: `url("/HeroBG.png")`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           filter: "blur(3px)",
-          transform: "scale(1.1)", // tránh bị hở viền khi blur
+          transform: "scale(1.1)",
           zIndex: 0,
           opacity: 0.05,
         }}
       />
 
-      {/* Dark Overlay */}
       <Box
         sx={{
           position: "absolute",
@@ -44,7 +44,6 @@ export default function Home() {
         }}
       />
 
-      {/* Content */}
       <Box sx={{ position: "relative", zIndex: 2 }}>
         <Typography
           variant="h2"
@@ -55,14 +54,14 @@ export default function Home() {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Prediction System
+          {vi.home.title}
         </Typography>
 
         <Typography variant="h6" sx={{ mt: 2, opacity: 0.8 }}>
-          Dự đoán số theo ngày – nhanh, gọn, chính xác
+          {vi.home.subtitle}
         </Typography>
 
-        <Box sx={{ mt: 4, display: "flex", gap: 3, justifyContent: "center" }}>
+        <Box sx={{ mt: 4, display: "flex", gap: 3, justifyContent: "center", flexWrap: "wrap" }}>
           <Button
             variant="contained"
             size="large"
@@ -72,7 +71,7 @@ export default function Home() {
             }}
             onClick={() => navigate("/input")}
           >
-            Nhập số
+            {vi.home.input}
           </Button>
 
           <Button
@@ -85,9 +84,9 @@ export default function Home() {
             }}
             onClick={() => navigate("/prediction")}
           >
-            Xem dự đoán
+            {vi.home.prediction}
           </Button>
-          {/* 🔥 Nút mới */}
+
           <Button
             variant="outlined"
             size="large"
@@ -98,10 +97,11 @@ export default function Home() {
             }}
             onClick={() => navigate("/history")}
           >
-            Dữ liệu đã lưu
+            {vi.home.savedData}
           </Button>
+
           <Button variant="contained" onClick={() => navigate("/bet")}>
-            🎯 Nhập cược
+            {vi.home.bet}
           </Button>
         </Box>
       </Box>

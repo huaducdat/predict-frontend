@@ -15,15 +15,13 @@ import PairGlobalCard from "../components/PairGlobalCard";
 import WeightControlMini from "../components/WeightControlMini";
 import CombineResultCard from "../components/CombineResultCard";
 import CombineExplainCard from "../components/CombineExplainCard";
-
-
+import { vi } from "../i18n/vi";
 
 function Prediction() {
   const [data, setData] = useState(null);
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // 🚀 RUN
   const handleRun = async () => {
     try {
       setLoading(true);
@@ -36,14 +34,12 @@ function Prediction() {
     }
   };
 
-  // 📦 LOAD
   const handleLoad = async () => {
     try {
       setLoading(true);
       const res = await loadPredict();
-      console.log(res);
-      setData(res.data); // predictor
-      setMeta(res); // meta
+      setData(res.data);
+      setMeta(res);
     } catch (e) {
       console.error(e);
     } finally {
@@ -51,12 +47,10 @@ function Prediction() {
     }
   };
 
-  // 🔥 AUTO LOAD
   useEffect(() => {
     handleLoad();
   }, []);
 
-  // 🧠 SAFE ACCESS
   const positionData = data?.POSITION;
   const gapData = data?.GAP;
   const pairData = data?.PAIR_TO_NEXT;
@@ -65,13 +59,11 @@ function Prediction() {
   const streakData = data?.STREAK_CONTINUE;
   const timeweightData = data?.TIME_WEIGHTED_COUNT;
 
-  // ⚠️ CHECK OLD DATA
   const isOld =
     meta && new Date(meta.date).toDateString() !== new Date().toDateString();
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* 🔥 HEADER */}
       <Typography
         variant="h4"
         sx={{
@@ -80,10 +72,9 @@ function Prediction() {
           fontWeight: "bold",
         }}
       >
-        Prediction Engine
+        {vi.prediction.title}
       </Typography>
 
-      {/* 📅 META */}
       {meta && (
         <Typography
           sx={{
@@ -94,8 +85,8 @@ function Prediction() {
             color: isOld ? "orange" : "white",
           }}
         >
-          📅 {meta.date} | ⏱ {new Date(meta.createdAt).toLocaleString()}
-          {isOld && "  ⚠️ OLD DATA"}
+          {vi.common.date}: {meta.date} | {new Date(meta.createdAt).toLocaleString("vi-VN")}
+          {isOld && ` - ${vi.prediction.oldData}`}
         </Typography>
       )}
 
@@ -105,24 +96,20 @@ function Prediction() {
       <WeightControlMini />
       <CombineExplainCard />
 
-      {/* 🔥 CONTROL */}
       <Stack direction="row" spacing={2} sx={{ mb: 3, marginTop: 2 }}>
         <Button variant="contained" onClick={handleRun} disabled={loading}>
-          🚀 Run
+          {vi.common.run}
         </Button>
 
         <Button variant="outlined" onClick={handleLoad} disabled={loading}>
-          📦 Reload
+          {vi.common.reload}
         </Button>
       </Stack>
 
-      {/* ⏳ LOADING */}
-      {loading && <Typography sx={{ mb: 2 }}>Loading...</Typography>}
+      {loading && <Typography sx={{ mb: 2 }}>{vi.common.loading}</Typography>}
 
-      {/* ❌ NO DATA */}
-      {!loading && !data && <Typography>No data available</Typography>}
+      {!loading && !data && <Typography>{vi.prediction.noData}</Typography>}
 
-      {/* 🔥 MAIN CARD */}
       {data && (
         <Paper
           sx={{

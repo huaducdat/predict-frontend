@@ -28,6 +28,7 @@ import {
   getPatternState,
   getRecentPatternReports,
 } from "../api/patternApi";
+import { vi } from "../i18n/vi";
 
 const STATE_LABELS = {
   STABLE: "STABLE",
@@ -396,7 +397,7 @@ export default function PatternReportPage() {
         setRecentReports(Array.isArray(recent) ? recent : []);
 
         if (!isUsableReport(latest) && isUsableReport(snapshot)) {
-          setNotice("Latest report chưa có, đang hiển thị realtime state.");
+          setNotice("Chưa có báo cáo mới nhất, đang hiển thị trạng thái realtime.");
         } else if (!isUsableReport(latest) && !isUsableReport(snapshot)) {
           setNotice("Chưa có report mới nhất, page đang ở trạng thái empty.");
         }
@@ -406,13 +407,13 @@ export default function PatternReportPage() {
           stateRes.status === "rejected" &&
           recentRes.status === "rejected"
         ) {
-          setError("Không tải được dữ liệu Pattern.");
+          setError(vi.pattern.loadError);
         }
       }
     } catch (err) {
       console.error("Load pattern page error:", err);
       if (mountedRef.current) {
-        setError("Không tải được dữ liệu Pattern.");
+        setError(vi.pattern.loadError);
       }
     } finally {
       if (mountedRef.current) {
@@ -439,7 +440,7 @@ export default function PatternReportPage() {
   const tone = stateTone(state, theme);
   const summary =
     readFirst(headerReport, ["summary", "message", "title", "description"]) ??
-    "Chưa có Pattern report";
+    vi.pattern.noPatternReport;
   const mode = readFirst(headerReport, ["mode", "patternMode", "reportMode"]);
   const boostCap = readFirst(headerReport, ["boostCap", "boost_cap", "boost", "boostLimit"]);
   const createdAt = readFirst(headerReport, ["createdAt", "created_at", "timestamp", "generatedAt"]);
@@ -472,16 +473,16 @@ export default function PatternReportPage() {
   );
 
   const selectedSourceLabel = isUsableReport(latestReport)
-    ? "latest report"
+    ? "báo cáo mới nhất"
     : isUsableReport(stateSnapshot)
-      ? "realtime state"
-      : "empty";
+      ? "trạng thái realtime"
+      : "trống";
 
   const topMeta = [
-    mode ? `mode ${String(mode).toUpperCase()}` : null,
-    boostCap !== undefined && boostCap !== null && boostCap !== "" ? `boost ${formatNumber(boostCap, 2)}` : null,
+    mode ? `${vi.mode.label} ${String(mode).toUpperCase()}` : null,
+    boostCap !== undefined && boostCap !== null && boostCap !== "" ? `Tăng cường ${formatNumber(boostCap, 2)}` : null,
     createdAt ? formatDate(createdAt) : null,
-    targetDate ? `target ${formatDate(targetDate)}` : null,
+    targetDate ? `${vi.table.targetDate} ${formatDate(targetDate)}` : null,
   ].filter(Boolean);
 
   const rowStateTone = (rowState) => stateTone(normalizeState(rowState), theme);
@@ -523,10 +524,10 @@ export default function PatternReportPage() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                Pattern Report
+                {vi.pattern.pageTitle}
               </Typography>
               <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)" }}>
-                PatternShiftService, PatternReport và recent history trong một màn hình.
+                {vi.pattern.pageSubtitle}
               </Typography>
             </Box>
 
@@ -541,7 +542,7 @@ export default function PatternReportPage() {
                   textTransform: "none",
                 }}
               >
-                Back
+                {vi.common.back}
               </Button>
 
               <Button
@@ -554,7 +555,7 @@ export default function PatternReportPage() {
                   background: "linear-gradient(135deg, #6a5cff, #00c6ff)",
                 }}
               >
-                {loading ? "Loading..." : "Refresh"}
+                {loading ? vi.common.loading : vi.common.refresh}
               </Button>
             </Stack>
           </Stack>
@@ -563,14 +564,14 @@ export default function PatternReportPage() {
           {notice && !error && <Alert severity="info">{notice}</Alert>}
 
           <SectionCard
-            title="Header card"
-            subtitle="Current snapshot from latest report, falling back to realtime state when latest is missing."
+            title={vi.pattern.headerCard}
+            subtitle={vi.pattern.headerCardSubtitle}
             action={
               loading && !headerReport ? (
                 <Stack direction="row" spacing={1} alignItems="center">
                   <CircularProgress size={18} />
                   <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.65)" }}>
-                    Loading pattern data...
+                    {vi.pattern.loadingData}
                   </Typography>
                 </Stack>
               ) : null
@@ -583,7 +584,7 @@ export default function PatternReportPage() {
                 alignItems={{ xs: "flex-start", md: "center" }}
               >
                 <Chip
-                  label={state}
+                  label={vi.patternState[state] ?? state}
                   sx={{
                     fontWeight: 800,
                     color: tone.chipColor,
@@ -598,14 +599,14 @@ export default function PatternReportPage() {
               </Stack>
 
               <Stack direction="row" flexWrap="wrap" gap={1}>
-                {mode && <Chip size="small" label={`mode: ${String(mode).toUpperCase()}`} />}
+                {mode && <Chip size="small" label={`${vi.mode.label}: ${String(mode).toUpperCase()}`} />}
                 {boostCap !== undefined && boostCap !== null && boostCap !== "" && (
-                  <Chip size="small" label={`boostCap: ${formatNumber(boostCap, 2)}`} />
+                  <Chip size="small" label={`${vi.pattern.boostCap}: ${formatNumber(boostCap, 2)}`} />
                 )}
-                {createdAt && <Chip size="small" label={`createdAt: ${formatDate(createdAt)}`} />}
-                {targetDate && <Chip size="small" label={`targetDate: ${formatDate(targetDate)}`} />}
-                <Chip size="small" label={`source: ${selectedSourceLabel}`} />
-                {source && <Chip size="small" label={`report source: ${String(source)}`} />}
+                {createdAt && <Chip size="small" label={`${vi.pattern.createdAt}: ${formatDate(createdAt)}`} />}
+                {targetDate && <Chip size="small" label={`${vi.table.targetDate}: ${formatDate(targetDate)}`} />}
+                <Chip size="small" label={`${vi.pattern.source}: ${selectedSourceLabel}`} />
+                {source && <Chip size="small" label={`${vi.pattern.reportSource}: ${String(source)}`} />}
               </Stack>
             </Stack>
           </SectionCard>
@@ -618,8 +619,8 @@ export default function PatternReportPage() {
             }}
           >
             <SectionCard
-              title="Metrics card"
-              subtitle="Compact metrics from PatternReport."
+              title={vi.pattern.metricsCard}
+              subtitle={vi.pattern.compactMetrics}
             >
               {metricEntries.length > 0 ? (
                 <Box
@@ -645,23 +646,23 @@ export default function PatternReportPage() {
                 </Box>
               ) : (
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
-                  Chưa có metric chi tiết.
+                  {vi.pattern.noMetrics}
                 </Typography>
               )}
             </SectionCard>
 
             <SectionCard
-              title="Service flow card"
-              subtitle="How the pattern flow is produced."
+              title={vi.pattern.serviceFlowCard}
+              subtitle={vi.pattern.serviceFlowSubtitle}
             >
               <Stack spacing={1}>
                 {[
-                  "PatternShiftService phân tích 3/7/14/30 ngày",
-                  "Tạo PatternState theo realtime snapshot",
-                  "CombineService sinh effectiveWeights runtime",
-                  "Áp boostCap theo mode hiện tại",
-                  "Lưu PatternReport",
-                  "Frontend đọc latest và recent history",
+                  "Phân tích dữ liệu 3/7/14/30 ngày",
+                  "Tạo trạng thái hệ thống theo snapshot thời gian thực",
+                  "Sinh mức độ tin cậy hiệu lực khi tổng hợp",
+                  "Áp giới hạn tăng cường theo chế độ hiện tại",
+                  "Lưu báo cáo trạng thái",
+                  "Frontend đọc báo cáo mới nhất và lịch sử gần đây",
                 ].map((step, index) => (
                   <Box
                     key={step}
@@ -702,8 +703,8 @@ export default function PatternReportPage() {
             }}
           >
             <SectionCard
-              title="Reasons card"
-              subtitle="Reason list from the latest PatternReport."
+              title={vi.pattern.reasonsCard}
+              subtitle={vi.pattern.reasonList}
             >
               {reasons.length > 0 ? (
                 <Stack spacing={1}>
@@ -723,14 +724,14 @@ export default function PatternReportPage() {
                 </Stack>
               ) : (
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
-                  Chưa có reason cụ thể.
+                  {vi.pattern.noReasons}
                 </Typography>
               )}
             </SectionCard>
 
             <SectionCard
-              title="Effective weights card"
-              subtitle="PAIR, TIME, FREQ, POS, REP, STRK, GAP and other runtime weights."
+              title={vi.pattern.effectiveWeightsCard}
+              subtitle={vi.pattern.effectiveWeights}
             >
               {effectiveWeights.length > 0 ? (
                 <Box
@@ -755,15 +756,15 @@ export default function PatternReportPage() {
                 </Box>
               ) : (
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
-                  Chưa có effectiveWeights.
+                  {vi.pattern.noEffectiveWeights}
                 </Typography>
               )}
             </SectionCard>
           </Box>
 
           <SectionCard
-            title="Recent reports section"
-            subtitle="20 report gần nhất từ /api/pattern/report/recent?limit=20"
+            title={vi.pattern.recentReports}
+            subtitle={vi.pattern.recentReportsSubtitle}
           >
             {recentReports.length > 0 ? (
               <TableContainer
@@ -776,7 +777,7 @@ export default function PatternReportPage() {
                 <Table stickyHeader size="small">
                   <TableHead>
                     <TableRow>
-                      {["createdAt", "state", "summary", "boostCap", "mode", "source"].map((head) => (
+                      {[vi.pattern.createdAt, vi.table.patternState, vi.intelligence.summary, vi.pattern.boostCap, vi.mode.label, vi.pattern.source].map((head) => (
                         <TableCell
                           key={head}
                           sx={{
@@ -796,7 +797,7 @@ export default function PatternReportPage() {
                       const rowTone = rowStateTone(rowState);
                       const rowSummary =
                         readFirst(row, ["summary", "message", "title", "description"]) ??
-                        "No summary";
+                        vi.intelligence.summary;
                       const rowBoost = readFirst(row, ["boostCap", "boost_cap", "boost", "boostLimit"]);
                       const rowMode = readFirst(row, ["mode", "patternMode", "reportMode"]);
                       const rowCreatedAt = readFirst(row, ["createdAt", "created_at", "timestamp", "generatedAt"]);
@@ -817,7 +818,7 @@ export default function PatternReportPage() {
                           <TableCell>
                             <Chip
                               size="small"
-                              label={rowState}
+                              label={vi.patternState[rowState] ?? rowState}
                               sx={{
                                 fontWeight: 800,
                                 color: rowTone.chipColor,
@@ -864,7 +865,7 @@ export default function PatternReportPage() {
                   color: "rgba(255,255,255,0.72)",
                 }}
               >
-                Chưa có recent reports.
+                {vi.pattern.noRecentReports}
               </Box>
             )}
           </SectionCard>

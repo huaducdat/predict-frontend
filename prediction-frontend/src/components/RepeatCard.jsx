@@ -1,5 +1,6 @@
 import { Box, Typography, Stack, Button } from "@mui/material";
 import { useState } from "react";
+import { vi } from "../i18n/vi";
 
 function RepeatCard({ data }) {
   const [expanded, setExpanded] = useState(false);
@@ -28,7 +29,7 @@ function RepeatCard({ data }) {
           mb: 2,
         }}
       >
-        <Typography variant="h6">🔁 Repeat Predictor</Typography>
+        <Typography variant="h6">{vi.predictor.REP}</Typography>
 
         <Button
           size="small"
@@ -39,7 +40,7 @@ function RepeatCard({ data }) {
             fontSize: 12,
           }}
         >
-          {expanded ? "Thu gọn" : "Xem thêm"}
+          {expanded ? vi.common.collapse : vi.common.viewMore}
         </Button>
       </Box>
 

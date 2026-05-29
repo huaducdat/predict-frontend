@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { loadPairGlobal } from "../api/pairGlobal";
+import { vi } from "../i18n/vi";
 
 function PairGlobalCard() {
   const [data, setData] = useState([]);
@@ -95,7 +96,7 @@ function PairGlobalCard() {
         onClick={() => setOpen(!open)}
       >
         <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-          🔗 Pair Global
+          {vi.predictor.PAIR}
         </Typography>
 
         <Typography sx={{ fontSize: 12 }}>{open ? "▲" : "▼"}</Typography>
@@ -106,7 +107,7 @@ function PairGlobalCard() {
           {/* SEARCH */}
           <TextField
             size="small"
-            placeholder="Tìm pair hoặc số..."
+            placeholder={vi.common.searchPairOrNumber}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             fullWidth
@@ -159,7 +160,7 @@ function PairGlobalCard() {
               onClick={() => setExpanded(!expanded)}
               sx={{ mt: 1 }}
             >
-              {expanded ? "Thu gọn" : "Xem thêm"}
+              {expanded ? vi.common.collapse : vi.common.viewMore}
             </Button>
           )}
         </>

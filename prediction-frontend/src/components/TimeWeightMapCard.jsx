@@ -1,5 +1,6 @@
 import { Box, Typography, Button } from "@mui/material";
 import { useState } from "react";
+import { vi } from "../i18n/vi";
 
 function TimeWeightMapCard({ data }) {
   const [expanded, setExpanded] = useState(false);
@@ -29,7 +30,7 @@ function TimeWeightMapCard({ data }) {
           mb: 2,
         }}
       >
-        <Typography sx={{ fontWeight: "bold" }}>🔗 Time Weight</Typography>
+        <Typography sx={{ fontWeight: "bold" }}>{vi.predictor.TIME}</Typography>
 
         <Button
           size="small"
@@ -40,7 +41,7 @@ function TimeWeightMapCard({ data }) {
             fontSize: 12,
           }}
         >
-          {expanded ? "Thu gọn" : "Xem thêm"}
+          {expanded ? vi.common.collapse : vi.common.viewMore}
         </Button>
       </Box>
 

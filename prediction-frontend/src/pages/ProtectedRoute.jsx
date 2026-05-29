@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import api from "../api/api";
+import { vi } from "../i18n/vi";
 
 function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,7 @@ function ProtectedRoute({ children }) {
 
   // ⏳ đang check
   if (loading) {
-    return <div>Checking login...</div>;
+    return <div>{vi.common.checkingLogin}</div>;
   }
 
   // ❌ không hợp lệ

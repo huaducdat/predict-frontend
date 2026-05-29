@@ -9,6 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { checkByDate, loadBet } from "../api/betApi";
+import { vi } from "../i18n/vi";
 
 function BetDetailPage() {
   const { date } = useParams();
@@ -16,20 +17,16 @@ function BetDetailPage() {
 
   const [checkData, setCheckData] = useState(null);
   const [betData, setBetData] = useState(null);
-
-  // Giá 1 điểm khi chơi
   const [unit, setUnit] = useState(1000);
   const [originUnit, setOriginUnit] = useState(null);
+  const [payout, setPayout] = useState(() => {
+    const saved = localStorage.getItem("payout");
+    return saved ? Number(saved) : 80000;
+  });
 
-  // Giá 1 điểm khi trúng
- const [payout, setPayout] = useState(() => {
-  const saved = localStorage.getItem("payout");
-  return saved ? Number(saved) : 80000;
-});
-useEffect(() => {
-  localStorage.setItem("payout", payout);
-}, [payout]);
-
+  useEffect(() => {
+    localStorage.setItem("payout", payout);
+  }, [payout]);
 
   useEffect(() => {
     if (!date) return;
@@ -60,7 +57,7 @@ useEffect(() => {
   if (!checkData || !betData) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography>Đang tải dữ liệu...</Typography>
+        <Typography>{vi.common.loading}</Typography>
       </Box>
     );
   }
@@ -83,46 +80,38 @@ useEffect(() => {
       return b.point - a.point;
     });
 
-  const totalBet = items.reduce(
-    (sum, i) => sum + i.point * unit,
-    0
-  );
-
-  const totalWin = items.reduce(
-    (sum, i) => sum + i.hit * i.point * payout,
-    0
-  );
-
+  const totalBet = items.reduce((sum, i) => sum + i.point * unit, 0);
+  const totalWin = items.reduce((sum, i) => sum + i.hit * i.point * payout, 0);
   const profit = totalWin - totalBet;
 
   return (
     <Box sx={{ maxWidth: 760, mx: "auto", p: 3 }}>
-      <Button onClick={() => navigate(-1)}>← Quay lại</Button>
+      <Button onClick={() => navigate(-1)}>{vi.common.back}</Button>
 
       <Typography variant="h6" sx={{ mt: 1, mb: 1 }}>
-        📅 {date}
+        {vi.common.date}: {date}
       </Typography>
 
       {originUnit && (
         <Typography sx={{ mb: 1, color: "#666" }}>
-          Giá gốc khi chơi: {formatVND(originUnit)} / điểm
+          {vi.bet.originalUnit}: {formatVND(originUnit)} / {vi.bet.point.toLowerCase()}
         </Typography>
       )}
 
       <Typography sx={{ mb: 2 }}>
-        Đang tính cược theo: <b>{formatVND(unit)}</b> / điểm
+        {vi.bet.currentUnit}: <b>{formatVND(unit)}</b> / {vi.bet.point.toLowerCase()}
       </Typography>
 
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <TextField
-          label="Giá 1 điểm chơi (₫)"
+          label={vi.bet.playUnitLabel}
           value={unit}
           onChange={(e) => setUnit(Number(e.target.value) || 0)}
           fullWidth
         />
 
         <TextField
-          label="Giá 1 điểm thưởng (₫)"
+          label={vi.bet.payoutUnitLabel}
           value={payout}
           onChange={(e) => setPayout(Number(e.target.value) || 0)}
           fullWidth
@@ -139,28 +128,18 @@ useEffect(() => {
           fontSize: 14,
         }}
       >
-        <Typography>Cược = Điểm chơi × Giá 1 điểm chơi</Typography>
-        <Typography>
-          Trúng = Hit × Điểm chơi × Giá 1 điểm thưởng
-        </Typography>
-        <Typography>Lãi/Lỗ = Tổng trúng - Tổng cược</Typography>
+        <Typography>{vi.bet.formulaBet}</Typography>
+        <Typography>{vi.bet.formulaWin}</Typography>
+        <Typography>{vi.bet.formulaProfit}</Typography>
       </Box>
 
       <Divider sx={{ mb: 2 }} />
 
-      <Stack
-        direction="row"
-        sx={{
-          px: 1,
-          mb: 1,
-          fontWeight: "bold",
-          color: "#888",
-        }}
-      >
-        <Box sx={{ width: 60 }}>Số</Box>
-        <Box sx={{ width: 80 }}>Điểm</Box>
-        <Box sx={{ width: 60 }}>Hit</Box>
-        <Box sx={{ flex: 1, textAlign: "right" }}>Tiền trúng</Box>
+      <Stack direction="row" sx={{ px: 1, mb: 1, fontWeight: "bold", color: "#888" }}>
+        <Box sx={{ width: 60 }}>{vi.bet.number}</Box>
+        <Box sx={{ width: 80 }}>{vi.bet.point}</Box>
+        <Box sx={{ width: 60 }}>{vi.bet.hitCount}</Box>
+        <Box sx={{ flex: 1, textAlign: "right" }}>{vi.bet.winMoney}</Box>
       </Stack>
 
       <Stack spacing={1}>
@@ -180,12 +159,8 @@ useEffect(() => {
               }}
             >
               <Stack direction="row" alignItems="center">
-                <Box sx={{ width: 60 }}>
-                  {String(i.number).padStart(2, "0")}
-                </Box>
-
+                <Box sx={{ width: 60 }}>{String(i.number).padStart(2, "0")}</Box>
                 <Box sx={{ width: 80 }}>{i.point}</Box>
-
                 <Box
                   sx={{
                     width: 60,
@@ -206,7 +181,7 @@ useEffect(() => {
                 >
                   <Typography>{formatVND(win)}</Typography>
                   <Typography sx={{ fontSize: 11, color: "#888" }}>
-                    {i.hit} × {i.point} × {payout}
+                    {i.hit} x {i.point} x {payout}
                   </Typography>
                 </Box>
               </Stack>
@@ -217,8 +192,8 @@ useEffect(() => {
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography>Tổng cược: {formatVND(totalBet)}</Typography>
-      <Typography>Trúng: {formatVND(totalWin)}</Typography>
+      <Typography>{vi.bet.totalBet}: {formatVND(totalBet)}</Typography>
+      <Typography>{vi.bet.winMoney}: {formatVND(totalWin)}</Typography>
 
       <Typography
         sx={{
@@ -228,7 +203,7 @@ useEffect(() => {
           color: profit >= 0 ? "#2e7d32" : "#d32f2f",
         }}
       >
-        Lãi/Lỗ: {formatVND(profit)}
+        {vi.bet.profit}: {formatVND(profit)}
       </Typography>
     </Box>
   );

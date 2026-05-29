@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getResultsByDate } from "../api/resultApi";
 import { Card, CardContent, Typography, Box } from "@mui/material";
+import { vi } from "../i18n/vi";
 
 function PredictionSourceResultCard({ date }) {
   const [result, setResult] = useState(null);
@@ -13,8 +14,6 @@ function PredictionSourceResultCard({ date }) {
       try {
         setLoading(true);
         const res = await getResultsByDate(date);
-        console.log(res);
-        // ⚠️ backend trả Optional → có thể null
         setResult(res || null);
       } catch (e) {
         console.error("Load source result error:", e);
@@ -31,7 +30,7 @@ function PredictionSourceResultCard({ date }) {
   if (loading) {
     return (
       <Typography sx={{ mt: 2, opacity: 0.6 }}>
-        Loading source data...
+        {vi.common.loading}
       </Typography>
     );
   }
@@ -39,7 +38,7 @@ function PredictionSourceResultCard({ date }) {
   if (!result) {
     return (
       <Typography sx={{ mt: 2, color: "orange" }}>
-        ⚠️ No source data found for this date
+        {vi.common.noSourceData}
       </Typography>
     );
   }
@@ -55,17 +54,14 @@ function PredictionSourceResultCard({ date }) {
       }}
     >
       <CardContent>
-        {/* 🔥 HEADER */}
         <Typography variant="h6" sx={{ mb: 1 }}>
-          📌 Prediction Source Result
+          {vi.prediction.sourceResult}
         </Typography>
 
-        {/* 📅 DATE */}
         <Typography sx={{ fontSize: 13, opacity: 0.6 }}>
           {result.date}
         </Typography>
 
-        {/* 🔥 SPECIAL NUMBER */}
         <Box
           sx={{
             mt: 2,
@@ -75,27 +71,16 @@ function PredictionSourceResultCard({ date }) {
             py: 2,
           }}
         >
-          <Typography
-            variant="h3"
-            sx={{ fontWeight: "bold", letterSpacing: 2 }}
-          >
+          <Typography variant="h3" sx={{ fontWeight: "bold", letterSpacing: 2 }}>
             {result.singleNumber.toString().padStart(2, "0")}
           </Typography>
 
           <Typography sx={{ fontSize: 12, opacity: 0.6 }}>
-            Special Number
+            {vi.prediction.specialNumber}
           </Typography>
         </Box>
 
-        {/* 🔢 LIST 27 số */}
-        <Box
-          sx={{
-            mt: 2,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 1,
-          }}
-        >
+        <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
           {result.numbers.map((n, i) => (
             <Box
               key={i}

@@ -6,6 +6,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { vi } from "../i18n/vi";
 
 function StreakGrid({ data = [], onSelect }) {
   const streakMap = new Map(data.map((item) => [item.number, item]));
@@ -93,7 +94,7 @@ function StreakGrid({ data = [], onSelect }) {
                 </Typography>
 
                 <Typography variant="caption" color="text.secondary">
-                  max {item.maxStreak}
+                  {vi.results.streak} tối đa {item.maxStreak}
                 </Typography>
               </CardContent>
             </Card>

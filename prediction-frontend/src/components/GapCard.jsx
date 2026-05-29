@@ -1,3 +1,5 @@
+import { vi } from "../i18n/vi";
+
 function GapCard({ data }) {
   if (!data || !data["-1"]) return null;
 
@@ -11,7 +13,7 @@ function GapCard({ data }) {
 
   return (
     <div>
-      <h3>GAP (Lâu chưa ra)</h3>
+      <h3>{vi.predictor.GAP}</h3>
 
       <div
         style={{

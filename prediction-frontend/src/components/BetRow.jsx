@@ -1,4 +1,5 @@
 import { Stack, TextField, IconButton } from "@mui/material";
+import { vi } from "../i18n/vi";
 
 function BetRow({ row, index, onChange, onRemove }) {
 
@@ -19,14 +20,14 @@ function BetRow({ row, index, onChange, onRemove }) {
     <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
       
       <TextField
-        label="Number"
+        label={vi.bet.number}
         value={row.number}
         onChange={(e) => handleNumberChange(e.target.value)}
         sx={{ width: 100 }}
       />
 
       <TextField
-        label="Point"
+        label={vi.bet.point}
         value={row.point}
         onChange={(e) => handlePointChange(e.target.value)}
         sx={{ width: 120 }}

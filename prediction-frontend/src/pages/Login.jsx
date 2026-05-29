@@ -9,10 +9,11 @@ import {
   Typography,
   Paper,
   InputAdornment,
-  IconButton
+  IconButton,
 } from "@mui/material";
 
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { vi } from "../i18n/vi";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -27,7 +28,7 @@ function Login() {
       localStorage.setItem("token", token);
       navigate("/");
     } catch (e) {
-      alert("Login fail");
+      alert(vi.auth.loginFail);
     }
   };
 
@@ -38,8 +39,7 @@ function Login() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background:
-          "linear-gradient(135deg, #f4f6f8, #e9edf2)"
+        background: "linear-gradient(135deg, #f4f6f8, #e9edf2)",
       }}
     >
       <Paper
@@ -49,44 +49,32 @@ function Login() {
           width: 340,
           borderRadius: 4,
           background: "white",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         }}
       >
-        {/* 🔥 CONTEXT HEADER */}
-        <Typography
-          variant="overline"
-          sx={{ color: "#888", letterSpacing: 1 }}
-        >
-          USER ACCESS
+        <Typography variant="overline" sx={{ color: "#888", letterSpacing: 1 }}>
+          {vi.auth.access}
         </Typography>
 
-        <Typography
-          variant="h5"
-          sx={{ mb: 1, fontWeight: "bold" }}
-        >
-          Login Page
+        <Typography variant="h5" sx={{ mb: 1, fontWeight: "bold" }}>
+          {vi.auth.loginTitle}
         </Typography>
 
-        <Typography
-          variant="body2"
-          sx={{ mb: 3, color: "#666" }}
-        >
-          Nhập thông tin để truy cập hệ thống dự đoán số
+        <Typography variant="body2" sx={{ mb: 3, color: "#666" }}>
+          {vi.auth.loginSubtitle}
         </Typography>
 
-        {/* USERNAME */}
         <TextField
           fullWidth
-          label="Username"
+          label={vi.auth.username}
           size="small"
           sx={{ mb: 2 }}
           onChange={(e) => setUsername(e.target.value)}
         />
 
-        {/* PASSWORD */}
         <TextField
           fullWidth
-          label="Password"
+          label={vi.auth.password}
           type={showPass ? "text" : "password"}
           size="small"
           sx={{ mb: 3 }}
@@ -94,17 +82,14 @@ function Login() {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPass(!showPass)}
-                >
+                <IconButton onClick={() => setShowPass(!showPass)}>
                   {showPass ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
-            )
+            ),
           }}
         />
 
-        {/* BUTTON */}
         <Button
           fullWidth
           variant="contained"
@@ -114,15 +99,13 @@ function Login() {
             borderRadius: 3,
             textTransform: "none",
             fontWeight: "bold",
-            background:
-              "linear-gradient(135deg, #4a4a4a, #2a2a2a)",
+            background: "linear-gradient(135deg, #4a4a4a, #2a2a2a)",
             "&:hover": {
-              background:
-                "linear-gradient(135deg, #2a2a2a, #000)"
-            }
+              background: "linear-gradient(135deg, #2a2a2a, #000)",
+            },
           }}
         >
-          Login
+          {vi.auth.login}
         </Button>
       </Paper>
     </Box>

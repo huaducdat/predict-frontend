@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { loadCombine, runCombine } from "../api/combineApi";
+import { vi } from "../i18n/vi";
 
 function CombineResultCard() {
   const [data, setData] = useState([]);
@@ -56,13 +57,13 @@ function CombineResultCard() {
       await runCombine();
 
       setMessage(
-        "⚠️ Combine đã chạy. Nếu có dữ liệu mới, hãy chạy lại Predict.",
+        vi.prediction.combineRunMessage,
       );
 
       await fetchData();
     } catch (e) {
       console.error(e);
-      setMessage("❌ Run combine thất bại");
+      setMessage(vi.prediction.combineRunFailed);
     } finally {
       setLoading(false);
     }
@@ -88,9 +89,9 @@ function CombineResultCard() {
   if (!loading && data.length === 0) {
     return (
       <Box sx={{ color: "white", mt: 2 }}>
-        <Typography>No combine data</Typography>
+        <Typography>{vi.prediction.noCombineData}</Typography>
         <Button onClick={handleRun} sx={{ mt: 1 }}>
-          Run Combine
+          {vi.prediction.runCombine}
         </Button>
       </Box>
     );
@@ -109,15 +110,15 @@ function CombineResultCard() {
     >
       {/* HEADER */}
       <Stack direction="row" sx={{ justifyContent: "space-between", mb: 1 }}>
-        <Typography variant="h6">🔥 Combine Result</Typography>
+        <Typography variant="h6">{vi.prediction.combineResult}</Typography>
 
         <Stack direction="row" spacing={1}>
           <Button variant="contained" onClick={handleRun} disabled={loading}>
-            {loading ? "Running..." : "Run"}
+            {loading ? vi.common.running : vi.common.run}
           </Button>
 
           <Button variant="outlined" onClick={() => setExpanded(!expanded)}>
-            {expanded ? "Thu gọn" : "Xem thêm"}
+            {expanded ? vi.common.collapse : vi.common.viewMore}
           </Button>
         </Stack>
       </Stack>
@@ -132,7 +133,7 @@ function CombineResultCard() {
       {/* SEARCH */}
       <TextField
         size="small"
-        placeholder="Search number..."
+        placeholder={vi.common.searchNumber}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         sx={{

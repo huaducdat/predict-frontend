@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Box,
@@ -11,19 +10,19 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { createResult } from "../api/resultApi";
+import { vi } from "../i18n/vi";
 
 export default function Input() {
   const [numbers, setNumbers] = useState([]);
   const [special, setSpecial] = useState(null);
   const [date, setDate] = useState("");
-  const [mode, setMode] = useState("normal"); // normal | special
+  const [mode, setMode] = useState("normal");
   const [loading, setLoading] = useState(false);
 
   const allNumbers = Array.from({ length: 100 }, (_, i) =>
-    i.toString().padStart(2, "0")
+    i.toString().padStart(2, "0"),
   );
 
-  // 👉 CLICK
   const handleClick = (num) => {
     if (mode === "special") {
       setSpecial(num);
@@ -36,23 +35,26 @@ export default function Input() {
     });
   };
 
-  // 👉 REMOVE
   const removeNumber = (index) => {
     setNumbers((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // 👉 COUNT MAP
   const countMap = numbers.reduce((acc, num) => {
     acc[num] = (acc[num] || 0) + 1;
     return acc;
   }, {});
 
-  // 👉 SUBMIT (FIX CHUẨN)
+  const resetForm = () => {
+    setNumbers([]);
+    setSpecial(null);
+    setDate("");
+  };
+
   const handleSubmit = async () => {
     try {
-      if (!date) return alert("Chọn ngày");
-      if (numbers.length !== 26) return alert("Phải đủ 26 số thường");
-      if (!special) return alert("Chưa chọn số đặc biệt");
+      if (!date) return alert(vi.input.chooseDate);
+      if (numbers.length !== 26) return alert(vi.input.needNormalNumbers);
+      if (!special) return alert(vi.input.needSpecialNumber);
 
       setLoading(true);
 
@@ -60,27 +62,18 @@ export default function Input() {
         .map((n) => parseInt(n))
         .sort((a, b) => a - b);
 
-      const payload = {
+      await createResult({
         date,
         singleNumber: parseInt(special),
         numbers: fullNumbers,
         force: false,
-      };
+      });
 
-      await createResult(payload);
-
-      alert("Lưu thành công!");
-
-      setNumbers([]);
-      setSpecial(null);
-      setDate("");
-
+      alert(vi.input.saved);
+      resetForm();
     } catch (err) {
-      // 🔥 HANDLE DUPLICATE DATE
       if (err.message === "DATE_ALREADY_EXISTS") {
-        const ok = window.confirm(
-          "Ngày này đã tồn tại. Bạn có muốn ghi đè không?"
-        );
+        const ok = window.confirm(vi.input.duplicateConfirm);
 
         if (ok) {
           try {
@@ -91,20 +84,16 @@ export default function Input() {
               force: true,
             });
 
-            alert("Đã ghi đè thành công!");
-
-            setNumbers([]);
-            setSpecial(null);
-            setDate("");
-
+            alert(vi.input.overwriteSaved);
+            resetForm();
           } catch (e) {
             console.error(e);
-            alert("Lỗi khi ghi đè");
+            alert(vi.input.overwriteError);
           }
         }
       } else {
         console.error(err);
-        alert("Lỗi: " + err.message);
+        alert(vi.input.errorPrefix + err.message);
       }
     } finally {
       setLoading(false);
@@ -113,12 +102,10 @@ export default function Input() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      {/* TITLE */}
       <Typography variant="h4" mb={3}>
-        Nhập kết quả
+        {vi.input.title}
       </Typography>
 
-      {/* DATE */}
       <TextField
         type="date"
         value={date}
@@ -126,27 +113,25 @@ export default function Input() {
         sx={{ mb: 3 }}
       />
 
-      {/* MODE */}
       <Stack direction="row" spacing={2} mb={3}>
         <Button
           variant={mode === "normal" ? "contained" : "outlined"}
           onClick={() => setMode("normal")}
         >
-          Thêm số
+          {vi.input.addNormal}
         </Button>
 
         <Button
           variant={mode === "special" ? "contained" : "outlined"}
           onClick={() => setMode("special")}
         >
-          Chọn số đặc biệt
+          {vi.input.chooseSpecial}
         </Button>
       </Stack>
 
-      {/* SPECIAL */}
       <Box mb={2}>
         <Typography variant="body1" component="span">
-          Số đặc biệt:{" "}
+          {vi.input.specialNumber}:{" "}
           <Paper
             sx={{
               display: "inline-block",
@@ -166,23 +151,15 @@ export default function Input() {
         </Typography>
       </Box>
 
-      {/* SELECTED LIST */}
       <Box mb={3}>
         <Typography variant="h5">
-          Danh sách đã chọn:
+          {vi.input.selectedList}:
           <Typography sx={{ mb: 2 }}>
-            Số thường: {numbers.length}/26
+            {vi.input.normalCount}: {numbers.length}/26
           </Typography>
         </Typography>
 
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 1,
-            mt: 1,
-          }}
-        >
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
           {numbers.map((num, index) => (
             <Paper
               key={index}
@@ -203,7 +180,6 @@ export default function Input() {
         </Box>
       </Box>
 
-      {/* GRID */}
       <Grid container spacing={1}>
         {allNumbers.map((num) => {
           const count = countMap[num] || 0;
@@ -221,8 +197,8 @@ export default function Input() {
                     num === special
                       ? "linear-gradient(135deg, gold, orange)"
                       : count > 0
-                      ? "linear-gradient(135deg, #6a5cff, #00c6ff)"
-                      : "rgba(255,255,255,0.05)",
+                        ? "linear-gradient(135deg, #6a5cff, #00c6ff)"
+                        : "rgba(255,255,255,0.05)",
                   "&:hover": {
                     background: "rgba(255,255,255,0.2)",
                   },
@@ -236,35 +212,21 @@ export default function Input() {
         })}
       </Grid>
 
-      {/* SUBMIT */}
       <Box mt={4} sx={{ display: "flex", flexDirection: "row", gap: 3 }}>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={() => {
-            setNumbers([]);
-            setSpecial(null);
-            setDate("");
-          }}
-        >
-          Reset
+        <Button variant="outlined" size="large" onClick={resetForm}>
+          {vi.common.reset}
         </Button>
 
         <Button
           variant="contained"
           size="large"
           onClick={handleSubmit}
-          disabled={
-            loading || !date || numbers.length !== 26 || special === null
-          }
-          startIcon={
-            loading ? <CircularProgress size={20} color="inherit" /> : null
-          }
+          disabled={loading || !date || numbers.length !== 26 || special === null}
+          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          {loading ? "Đang lưu..." : "Lưu kết quả"}
+          {loading ? vi.common.saving : vi.input.saveResult}
         </Button>
       </Box>
     </Box>
   );
 }
-

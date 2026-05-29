@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { loadGlobal } from "../api/timeWeightApi";
+import { vi } from "../i18n/vi";
 
 function TimeWeightGlobalCard({ date }) {
   const [data, setData] = useState(null);
@@ -78,7 +79,7 @@ function TimeWeightGlobalCard({ date }) {
         onClick={() => setVisible(!visible)}
         sx={{ mb: 1 }}
       >
-        {visible ? "Ẩn Global" : "Xem Global"}
+        {visible ? vi.common.hideGlobal : vi.common.viewGlobal}
       </Button>
 
       {visible && (
@@ -92,13 +93,13 @@ function TimeWeightGlobalCard({ date }) {
           }}
         >
           <Typography sx={{ mb: 2, fontWeight: "bold" }}>
-            🧠 Time Weight Global
+            {vi.predictor.TIME}
           </Typography>
 
           {/* SEARCH */}
           <TextField
             size="small"
-            placeholder="Nhập số (00-99)..."
+            placeholder={vi.common.searchNumber}
             value={search}
             onChange={(e) => {
               const val = e.target.value.replace(/\D/g, "");
@@ -173,13 +174,13 @@ function TimeWeightGlobalCard({ date }) {
                   onClick={() => setExpanded(!expanded)}
                   sx={{ mt: 1 }}
                 >
-                  {expanded ? "Thu gọn" : "Xem thêm"}
+                  {expanded ? vi.common.collapse : vi.common.viewMore}
                 </Button>
               )}
 
               {search !== "" && entries.length === 0 && (
                 <Typography sx={{ mt: 1, opacity: 0.7 }}>
-                  Không tìm thấy số
+                  {vi.common.noNumberFound}
                 </Typography>
               )}
             </>

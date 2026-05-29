@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { vi } from "../i18n/vi";
 
 function PositionCard({ data }) {
   if (!data) return null;
@@ -18,7 +19,7 @@ function PositionCard({ data }) {
 
   return (
     <div style={{ marginBottom: 30 }}>
-      <h3>POSITION</h3>
+      <h3>{vi.predictor.POS}</h3>
 
       {/* 🔥 CONTEXT */}
       {context && (
@@ -49,7 +50,7 @@ function ContextRow({ numbers, windowSize }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <b style={{ color: "#00e0ff" }}>🔥 TODAY CONTEXT</b>
+      <b style={{ color: "#00e0ff" }}>{vi.context.today}</b>
 
       <div style={{ margin: "6px 0" }}>
         <button

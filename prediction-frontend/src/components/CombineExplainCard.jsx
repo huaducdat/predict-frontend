@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { loadCombineExplain } from "../api/combineExplainApi";
+import { vi } from "../i18n/vi";
 
 function CombineExplainCard() {
   const [data, setData] = useState([]);
@@ -68,13 +69,13 @@ function CombineExplainCard() {
     >
       {/* HEADER */}
       <Typography variant="h6" mb={2}>
-        🧠 Combine Explain
+        {vi.prediction.combineExplain}
       </Typography>
 
       {/* SEARCH */}
       <TextField
         size="small"
-        placeholder="Search number..."
+        placeholder={vi.common.searchNumber}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         sx={{

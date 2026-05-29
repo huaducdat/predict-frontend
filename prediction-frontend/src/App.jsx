@@ -10,6 +10,7 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 import BetPage from "./pages/BetPage";
 import BetDetailPage from "./pages/BetDetailPage";
 import PatternReportPage from "./pages/PatternReportPage";
+import PredictionIntelligence from "./pages/PredictionIntelligence";
 
 
 
@@ -34,6 +35,7 @@ function App() {
                   <Route path="/bet" element={<BetPage />} />
                   <Route path="/bet/:date" element={<BetDetailPage />} />
                   <Route path="/pattern-report" element={<PatternReportPage />} />
+                  <Route path="/intelligence" element={<PredictionIntelligence />} />
                 </Routes>
               </MainLayout>
             </ProtectedRoute>

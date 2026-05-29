@@ -1,3 +1,5 @@
+import { vi } from "../i18n/vi";
+
 function PairCard({ data }) {
   if (!Array.isArray(data)) return null;
 
@@ -10,7 +12,7 @@ function PairCard({ data }) {
 
   return (
     <div>
-      <h3>PAIR → NEXT (Context)</h3>
+      <h3>{vi.predictor.PAIR}</h3>
 
       <div style={{ maxHeight: 400, overflowY: "auto" }}>
         {data.map((item) => (

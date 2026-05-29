@@ -12,13 +12,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useState } from "react";
 import { getAllSessions, deleteSession } from "../api/betApi";
 import { useNavigate } from "react-router-dom";
+import { vi } from "../i18n/vi";
 
 const PAGE_SIZE = 10;
 
 function BetHistoryDialog({ open, onClose }) {
   const [list, setList] = useState([]);
   const [page, setPage] = useState(0);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,12 +26,7 @@ function BetHistoryDialog({ open, onClose }) {
 
     const load = async () => {
       const data = await getAllSessions();
-
-      const sorted = data.sort((a, b) =>
-        b.date.localeCompare(a.date)
-      );
-
-      setList(sorted);
+      setList(data.sort((a, b) => b.date.localeCompare(a.date)));
       setPage(0);
     };
 
@@ -41,30 +36,24 @@ function BetHistoryDialog({ open, onClose }) {
   const formatVND = (value) =>
     Number(value || 0).toLocaleString("vi-VN") + " ₫";
 
-  // ===== PAGINATION =====
   const start = page * PAGE_SIZE;
   const current = list.slice(start, start + PAGE_SIZE);
   const totalPage = Math.ceil(list.length / PAGE_SIZE);
 
-  // ===== DELETE =====
   const handleDelete = async (date) => {
-    if (!window.confirm("Xóa phiên này?")) return;
+    if (!window.confirm(`${vi.common.delete} phiên này?`)) return;
 
     try {
       const res = await deleteSession(date);
 
       if (!res.success) {
-        alert("Xóa thất bại");
+        alert(vi.common.deleteFailed);
         return;
       }
 
-      // 🔥 update UI
-      setList((prev) =>
-        prev.filter((x) => x.date !== date)
-      );
-
+      setList((prev) => prev.filter((x) => x.date !== date));
     } catch (e) {
-      alert("Lỗi hệ thống");
+      alert(vi.common.systemError);
     }
   };
 
@@ -77,30 +66,22 @@ function BetHistoryDialog({ open, onClose }) {
       scroll="paper"
       disableRestoreFocus
     >
-      <DialogTitle>📊 Lịch sử cược</DialogTitle>
+      <DialogTitle>{vi.bet.history}</DialogTitle>
 
-      <DialogContent
-        sx={{
-          maxHeight: "70vh",
-          overflowY: "auto",
-        }}
-      >
-        {/* LIST */}
+      <DialogContent sx={{ maxHeight: "70vh", overflowY: "auto" }}>
         <Stack spacing={1}>
           {current.map((item, i) => {
-            const totalMoney =
-              item.totalPoint * item.unitValue;
+            const totalMoney = item.totalPoint * item.unitValue;
 
             return (
               <Box
                 key={i}
                 sx={{
-                  position: "relative", // 🔥 để đặt nút delete
+                  position: "relative",
                   p: 2,
                   borderRadius: 2,
                   cursor: "pointer",
-                  background:
-                    "linear-gradient(135deg, #f5f7ff, #eef1ff)",
+                  background: "linear-gradient(135deg, #f5f7ff, #eef1ff)",
                   "&:hover": {
                     background: "#e3e8ff",
                   },
@@ -112,11 +93,10 @@ function BetHistoryDialog({ open, onClose }) {
                   navigate(`/bet/${item.date}`);
                 }}
               >
-                {/* 🔥 DELETE BUTTON */}
                 <IconButton
                   size="small"
                   onClick={(e) => {
-                    e.stopPropagation(); // 🔥 QUAN TRỌNG
+                    e.stopPropagation();
                     handleDelete(item.date);
                   }}
                   sx={{
@@ -131,43 +111,27 @@ function BetHistoryDialog({ open, onClose }) {
                     },
                   }}
                 >
-                  <CloseIcon
-                    sx={{ fontSize: 16, color: "#f44336" }}
-                  />
+                  <CloseIcon sx={{ fontSize: 16, color: "#f44336" }} />
                 </IconButton>
 
                 <Typography>
-                  📅 <b>{item.date}</b>
+                  {vi.common.date}: <b>{item.date}</b>
                 </Typography>
 
                 <Typography>
-                  🔢 {item.totalPoint} điểm
+                  {vi.bet.totalPoint}: {item.totalPoint}
                 </Typography>
 
                 <Typography>
-                  💰 {formatVND(totalMoney)}
+                  {vi.bet.totalBet}: {formatVND(totalMoney)}
                 </Typography>
               </Box>
             );
           })}
         </Stack>
 
-        {/* PAGINATION */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 2,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            {/* LEFT */}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Box
               onClick={() => page > 0 && setPage(page - 1)}
               sx={{
@@ -177,33 +141,19 @@ function BetHistoryDialog({ open, onClose }) {
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: "50%",
-                cursor:
-                  page === 0 ? "default" : "pointer",
-                background:
-                  page === 0 ? "#eee" : "#f5f7ff",
+                cursor: page === 0 ? "default" : "pointer",
+                background: page === 0 ? "#eee" : "#f5f7ff",
               }}
             >
-              ‹
+              {"<"}
             </Box>
 
-            {/* TEXT */}
-            <Box
-              sx={{
-                width: 80,
-                textAlign: "center",
-                fontWeight: 600,
-                color: "#555",
-              }}
-            >
+            <Box sx={{ width: 80, textAlign: "center", fontWeight: 600, color: "#555" }}>
               {page + 1} / {totalPage || 1}
             </Box>
 
-            {/* RIGHT */}
             <Box
-              onClick={() =>
-                page < totalPage - 1 &&
-                setPage(page + 1)
-              }
+              onClick={() => page < totalPage - 1 && setPage(page + 1)}
               sx={{
                 width: 36,
                 height: 36,
@@ -211,24 +161,17 @@ function BetHistoryDialog({ open, onClose }) {
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: "50%",
-                cursor:
-                  page >= totalPage - 1
-                    ? "default"
-                    : "pointer",
-                background:
-                  page >= totalPage - 1
-                    ? "#eee"
-                    : "#f5f7ff",
+                cursor: page >= totalPage - 1 ? "default" : "pointer",
+                background: page >= totalPage - 1 ? "#eee" : "#f5f7ff",
               }}
             >
-              ›
+              {">"}
             </Box>
           </Box>
         </Box>
 
-        {/* CLOSE */}
         <Button fullWidth sx={{ mt: 2 }} onClick={onClose}>
-          Đóng
+          {vi.common.close}
         </Button>
       </DialogContent>
     </Dialog>

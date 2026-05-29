@@ -15,46 +15,44 @@ import {
   CardContent,
   Stack,
   Alert,
+  Pagination,
 } from "@mui/material";
 
 import StreakGrid from "../components/StreakGrid";
 import { rebuildStreaks } from "../api/streakApi";
-import { Pagination } from "@mui/material";
+import { vi } from "../i18n/vi";
 
-// ===== FORMAT =====
 const formatNumber = (n) => n?.toString().padStart(2, "0");
 
-// ===== RESULT CARD =====
 function ResultCard({ data, onDelete }) {
   return (
     <Card>
       <CardContent>
         <Typography variant="h6">{data.date}</Typography>
 
-        <Typography>Single: {formatNumber(data.singleNumber)}</Typography>
+        <Typography>
+          {vi.results.single}: {formatNumber(data.singleNumber)}
+        </Typography>
 
         <Typography>
           {data.numbers?.map((n) => formatNumber(n)).join(", ")}
         </Typography>
 
         <Button color="error" onClick={() => onDelete(data.date)}>
-          Delete
+          {vi.results.delete}
         </Button>
       </CardContent>
     </Card>
   );
 }
 
-// ===== 🔥 STREAK HIGHLIGHT CARD =====
 function StreakHighlightCard({ result, streakMap }) {
   if (!result) return null;
 
-  // ✅ UNIQUE số → tránh lặp
   const allNumbers = Array.from(
     new Set([...(result.numbers || []), result.singleNumber]),
   );
 
-  // ✅ lọc + map rõ ràng
   const streakNumbers = allNumbers
     .filter((n) => {
       const s = streakMap[n];
@@ -76,23 +74,17 @@ function StreakHighlightCard({ result, streakMap }) {
     <Card sx={{ border: "1px solid #ddd", background: "#fff" }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-          🔥 Streak ({result.date})
+          {vi.results.streak} ({result.date})
         </Typography>
 
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 1,
-          }}
-        >
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {streakNumbers.map((item) => {
             const isHot = item.current >= 4;
             const isWarm = item.current >= 2;
 
             return (
               <Box
-                key={item.number} // ✅ không dùng index nữa
+                key={item.number}
                 sx={{
                   px: 1.5,
                   py: 0.5,
@@ -100,11 +92,7 @@ function StreakHighlightCard({ result, streakMap }) {
                   fontSize: 13,
                   fontFamily: "Courier New",
                   border: "1px solid #ccc",
-                  background: isHot
-                    ? "#ffe5e5"
-                    : isWarm
-                      ? "#fff3cd"
-                      : "#f5f5f5",
+                  background: isHot ? "#ffe5e5" : isWarm ? "#fff3cd" : "#f5f5f5",
                   color: isHot ? "red" : isWarm ? "#b36b00" : "#666",
                   fontWeight: isHot ? "bold" : "normal",
                 }}
@@ -118,16 +106,12 @@ function StreakHighlightCard({ result, streakMap }) {
     </Card>
   );
 }
-{/*REPEAT */}
+
 function RepeatInDayCard({ result }) {
   if (!result) return null;
 
-  // ✅ chỉ đếm 27 số trong ngày, KHÔNG cộng singleNumber
-  const allNumbers = result.numbers || [];
-
   const countMap = {};
-
-  allNumbers.forEach((n) => {
+  (result.numbers || []).forEach((n) => {
     if (n === null || n === undefined) return;
     countMap[n] = (countMap[n] || 0) + 1;
   });
@@ -145,10 +129,10 @@ function RepeatInDayCard({ result }) {
       <Card sx={{ border: "1px solid #ddd", background: "#fff" }}>
         <CardContent>
           <Typography variant="subtitle1" fontWeight="bold">
-            🔁 Repeat ({result.date})
+            {vi.results.repeat} ({result.date})
           </Typography>
           <Typography fontSize={13} color="text.secondary">
-            Không có số lặp
+            {vi.results.noRepeat}
           </Typography>
         </CardContent>
       </Card>
@@ -159,7 +143,7 @@ function RepeatInDayCard({ result }) {
     <Card sx={{ border: "1px solid #ddd", background: "#fff" }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight="bold" mb={1}>
-          🔁 Repeat ({result.date})
+          {vi.results.repeat} ({result.date})
         </Typography>
 
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -181,7 +165,7 @@ function RepeatInDayCard({ result }) {
                   fontWeight: isHot ? "bold" : "normal",
                 }}
               >
-                {formatNumber(item.number)} ×{item.count}
+                {formatNumber(item.number)} x{item.count}
               </Box>
             );
           })}
@@ -191,14 +175,12 @@ function RepeatInDayCard({ result }) {
   );
 }
 
-// ===== MAIN =====
 function Results() {
   const [data, setData] = useState([]);
   const [date, setDate] = useState("");
   const [error, setError] = useState("");
   const [streakMap, setStreakMap] = useState({});
   const [isFilterMode, setIsFilterMode] = useState(false);
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [rebuilding, setRebuilding] = useState(false);
@@ -208,7 +190,6 @@ function Results() {
     loadPage(value);
   };
 
-  // ===== LOAD STREAK =====
   const loadStreaks = async () => {
     try {
       const res = await getLatestStreaks();
@@ -222,24 +203,19 @@ function Results() {
     }
   };
 
-  // ===== LOAD BY DATE =====
   const loadByDate = async () => {
     try {
       const res = await getResultsByDate(date);
-      const result = Array.isArray(res) ? res : [res];
-
-      setData(result);
+      setData(Array.isArray(res) ? res : [res]);
       setIsFilterMode(true);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // ===== LOAD PAGE =====
   const loadPage = async (p) => {
     try {
       const res = await getPagedResults(p);
-
       setData(res.content);
       setPage(res.page);
       setTotalPages(res.totalPages);
@@ -254,31 +230,26 @@ function Results() {
     loadStreaks();
   }, []);
 
-  // ===== DELETE =====
-  const handleDelete = async (date) => {
-    if (!window.confirm(`Xóa ngày ${date}?`)) return;
+  const handleDelete = async (targetDate) => {
+    if (!window.confirm(`${vi.results.delete} ${targetDate}?`)) return;
 
     try {
-      await deleteResultByDate(date);
-
+      await deleteResultByDate(targetDate);
       if (isFilterMode) {
         setIsFilterMode(false);
         loadPage(1);
       } else {
         loadPage(page);
       }
-
       loadStreaks();
     } catch (e) {
       setError(e.message);
     }
   };
 
-  // ===== REBUILD =====
   const handleRebuild = async () => {
     try {
       setRebuilding(true);
-
       await rebuildStreaks();
       await loadPage(page);
       await loadStreaks();
@@ -289,27 +260,20 @@ function Results() {
     }
   };
 
-  // ===== TIMELINE =====
-  const buildTimeline = (data) => {
-    if (!Array.isArray(data)) return [];
+  const buildTimeline = (items) => {
+    if (!Array.isArray(items)) return [];
 
-    const sorted = [...data].sort(
-      (a, b) => new Date(b.date) - new Date(a.date),
-    );
-
+    const sorted = [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
     const result = [];
 
     for (let i = 0; i < sorted.length; i++) {
       const current = sorted[i];
       result.push({ type: "data", value: current });
-
       if (i === sorted.length - 1) break;
 
       const next = sorted[i + 1];
-
       const d1 = new Date(current.date);
       const d2 = new Date(next.date);
-
       const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
 
       if (diffDays > 1) {
@@ -330,29 +294,25 @@ function Results() {
     return result;
   };
 
-  // ===== UI =====
   return (
     <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
-      {/* HEADER */}
       <Box>
         <Typography variant="h4" fontWeight="bold">
-          Number Streak Dashboard
+          {vi.results.title}
         </Typography>
 
         <StreakGrid data={Object.values(streakMap)} />
       </Box>
 
-      {/* REBUILD */}
       <Button
         variant="contained"
         color="warning"
         onClick={handleRebuild}
         disabled={rebuilding}
       >
-        {rebuilding ? "Rebuilding..." : "Rebuild Streak"}
+        {rebuilding ? vi.results.rebuilding : vi.results.rebuild}
       </Button>
 
-      {/* FILTER */}
       <Stack direction="row" spacing={2}>
         <TextField
           type="date"
@@ -362,29 +322,24 @@ function Results() {
         />
 
         <Button variant="contained" onClick={loadByDate}>
-          Filter
+          {vi.common.filter}
         </Button>
 
         <Button variant="outlined" onClick={() => loadPage(1)}>
-          Reset
+          {vi.common.reset}
         </Button>
       </Stack>
 
       {error && <Alert severity="error">{error}</Alert>}
 
-      {/* FILTER MODE */}
       {isFilterMode &&
         data.map((item) => (
-          <Box
-            key={item.date}
-            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-          >
+          <Box key={item.date} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <ResultCard data={item} onDelete={handleDelete} />
             <RepeatInDayCard result={item} />
           </Box>
         ))}
 
-      {/* NORMAL MODE */}
       {!isFilterMode && data.length > 0 && page === 1 && (
         <StreakHighlightCard result={data[0]} streakMap={streakMap} />
       )}
@@ -396,7 +351,7 @@ function Results() {
               <Card key={idx}>
                 <CardContent>
                   <Typography color="orange">
-                    Missing: {item.start} → {item.end}
+                    {vi.results.missing}: {item.start} → {item.end}
                   </Typography>
                 </CardContent>
               </Card>
@@ -404,17 +359,13 @@ function Results() {
           }
 
           return (
-            <Box
-              key={item.value.id}
-              sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-            >
+            <Box key={item.value.id} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <ResultCard data={item.value} onDelete={handleDelete} />
               <RepeatInDayCard result={item.value} />
             </Box>
           );
         })}
 
-      {/* PAGINATION */}
       {!isFilterMode && totalPages > 1 && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
           <Pagination

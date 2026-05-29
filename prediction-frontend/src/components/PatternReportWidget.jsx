@@ -15,19 +15,20 @@ import { alpha, useTheme } from "@mui/material/styles";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 
 import { getLatestPatternReport, getPatternState } from "../api/patternApi";
+import { vi } from "../i18n/vi";
 
 const STATE_LABELS = {
-  STABLE: "Pattern ổn định",
-  SHIFTING: "Pattern đang dịch chuyển",
-  VOLATILE: "Pattern biến động mạnh",
-  INSUFFICIENT_DATA: "Chưa đủ dữ liệu",
+  STABLE: vi.patternState.STABLE,
+  SHIFTING: vi.patternState.SHIFTING,
+  VOLATILE: vi.patternState.VOLATILE,
+  INSUFFICIENT_DATA: vi.patternState.INSUFFICIENT_DATA,
 };
 
 const DEFAULT_SUMMARY = {
-  STABLE: "Pattern ổn định",
-  SHIFTING: "Pattern đang chuyển pha",
-  VOLATILE: "Pattern biến động mạnh",
-  INSUFFICIENT_DATA: "Chưa có report",
+  STABLE: vi.pattern.widgetStable,
+  SHIFTING: vi.pattern.widgetShifting,
+  VOLATILE: vi.pattern.widgetVolatile,
+  INSUFFICIENT_DATA: vi.pattern.noPatternReport,
 };
 
 function normalizePayload(payload) {
@@ -150,7 +151,7 @@ function PatternReportWidget({ dense = false }) {
       if (mountedRef.current) setReport(null);
     } catch (err) {
       console.error("Load pattern report error:", err);
-      if (mountedRef.current) setError("Không tải được Pattern");
+      if (mountedRef.current) setError(vi.pattern.loadError);
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -171,7 +172,7 @@ function PatternReportWidget({ dense = false }) {
   const summary =
     readFirst(report, ["summary", "message", "title", "description"]) ??
     DEFAULT_SUMMARY[state] ??
-    "Không có dữ liệu";
+    vi.common.noData;
   const boostCap = readFirst(report, [
     "boostCap",
     "boost_cap",
@@ -186,11 +187,11 @@ function PatternReportWidget({ dense = false }) {
     "generatedAt",
   ]);
 
-  const label = dense && state === "INSUFFICIENT_DATA" ? "NO DATA" : state;
+  const label = STATE_LABELS[state] ?? vi.patternState.INSUFFICIENT_DATA;
   const metaParts = [];
 
   if (boostCap !== undefined && boostCap !== null && boostCap !== "") {
-    metaParts.push(`boost ${formatNumber(boostCap, 2)}`);
+    metaParts.push(`Tăng cường ${formatNumber(boostCap, 2)}`);
   }
 
   if (mode) {
@@ -211,8 +212,8 @@ function PatternReportWidget({ dense = false }) {
   };
 
   const tooltipTitle = loading
-    ? "Đang tải Pattern"
-    : error || summary || "Mở chi tiết Pattern";
+    ? vi.pattern.widgetLoading
+    : error || summary || vi.pattern.widgetDetails;
 
   return (
     <Stack
@@ -324,7 +325,7 @@ function PatternReportWidget({ dense = false }) {
                 >
                   {metaParts.length > 0
                     ? metaParts.join(" · ")
-                    : "Click to open detail page"}
+                    : vi.pattern.widgetDetails}
                 </Typography>
               </Box>
             )}
@@ -336,7 +337,7 @@ function PatternReportWidget({ dense = false }) {
         </ButtonBase>
       </Tooltip>
 
-      <Tooltip title="Làm mới Pattern" arrow>
+      <Tooltip title={vi.pattern.refreshTooltip} arrow>
         <span>
           <IconButton
             size="small"
