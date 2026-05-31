@@ -50,6 +50,7 @@ export default function Header() {
     { label: vi.menu.input, path: "/input" },
     { label: vi.menu.prediction, path: "/prediction" },
     { label: vi.menu.intelligence, path: "/intelligence" },
+    { label: "Đánh Giá Hệ Thống", path: "/system-evaluation" },
     { label: vi.menu.history, path: "/history" },
     { label: vi.menu.bet, path: "/bet" },
   ];

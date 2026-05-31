@@ -11,6 +11,7 @@ import BetPage from "./pages/BetPage";
 import BetDetailPage from "./pages/BetDetailPage";
 import PatternReportPage from "./pages/PatternReportPage";
 import PredictionIntelligence from "./pages/PredictionIntelligence";
+import SystemEvaluation from "./pages/SystemEvaluation";
 
 
 
@@ -36,6 +37,7 @@ function App() {
                   <Route path="/bet/:date" element={<BetDetailPage />} />
                   <Route path="/pattern-report" element={<PatternReportPage />} />
                   <Route path="/intelligence" element={<PredictionIntelligence />} />
+                  <Route path="/system-evaluation" element={<SystemEvaluation />} />
                 </Routes>
               </MainLayout>
             </ProtectedRoute>
