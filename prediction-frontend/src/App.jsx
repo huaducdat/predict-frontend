@@ -12,6 +12,7 @@ import BetDetailPage from "./pages/BetDetailPage";
 import PatternReportPage from "./pages/PatternReportPage";
 import PredictionIntelligence from "./pages/PredictionIntelligence";
 import SystemEvaluation from "./pages/SystemEvaluation";
+import DecisionTrace from "./pages/DecisionTrace";
 
 
 
@@ -38,6 +39,7 @@ function App() {
                   <Route path="/pattern-report" element={<PatternReportPage />} />
                   <Route path="/intelligence" element={<PredictionIntelligence />} />
                   <Route path="/system-evaluation" element={<SystemEvaluation />} />
+                  <Route path="/decision-trace" element={<DecisionTrace />} />
                 </Routes>
               </MainLayout>
             </ProtectedRoute>

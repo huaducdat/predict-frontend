@@ -51,6 +51,7 @@ export default function Header() {
     { label: vi.menu.prediction, path: "/prediction" },
     { label: vi.menu.intelligence, path: "/intelligence" },
     { label: "Đánh Giá Hệ Thống", path: "/system-evaluation" },
+    { label: "Luồng quyết định", path: "/decision-trace" },
     { label: vi.menu.history, path: "/history" },
     { label: vi.menu.bet, path: "/bet" },
   ];
