@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_BASE_URL } from "./apiConfig";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: API_BASE_URL,
 });
 
 let isRedirecting = false;
@@ -23,7 +24,7 @@ api.interceptors.response.use(
   (err) => {
     const status = err.response?.status;
 
-    if ((status === 401 || status === 404) && !isRedirecting) {
+    if ((status === 401 || status === 403) && !isRedirecting) {
       isRedirecting = true;
 
       console.error("🔥 AUTH ERROR:", status, err.response?.data);

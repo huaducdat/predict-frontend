@@ -27,3 +27,12 @@ export const getSystemEvaluationRecommendationLatest = async (mode) => {
   });
   return res.data;
 };
+
+export const runSystemEvaluation = async (mode, targetDate) => {
+  const params = {};
+  if (mode) params.mode = mode;
+  if (targetDate) params.targetDate = targetDate;
+
+  const res = await api.post("/api/system-evaluation/run", null, { params });
+  return res.data;
+};

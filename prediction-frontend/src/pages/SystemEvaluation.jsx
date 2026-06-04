@@ -29,6 +29,7 @@ import {
   getSystemEvaluationMetricsLatest,
   getSystemEvaluationRecent,
   getSystemEvaluationRecommendationLatest,
+  runSystemEvaluation,
 } from "../api/systemEvaluationApi";
 import MetricLineChart from "../components/systemEvaluation/MetricLineChart";
 import ScoreCard from "../components/systemEvaluation/ScoreCard";
@@ -43,8 +44,8 @@ const HISTORY_SERIES = [
 ];
 
 const MODE_OPTIONS = [
-  { value: "SHORT_TERM", label: "Ngắn hạn" },
-  { value: "EXTENDED", label: "Dài hạn" },
+  { value: "SHORT_TERM", label: "NgÃ¡ÂºÂ¯n hÃ¡ÂºÂ¡n" },
+  { value: "EXTENDED", label: "DÃƒÂ i hÃ¡ÂºÂ¡n" },
 ];
 
 function normalizePayload(payload) {
@@ -196,6 +197,7 @@ export default function SystemEvaluation() {
   const [recommendation, setRecommendation] = useState(null);
   const [recentReports, setRecentReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -227,7 +229,7 @@ export default function SystemEvaluation() {
         setRecommendation(recommendationSnapshot);
 
         if (!hasSystemEvaluationData(latest) && !recent.length) {
-          setNotice("Chưa có System Evaluation report. Trang đang ở trạng thái empty.");
+          setNotice(latest?.message || "Chua co bao cao danh gia he thong. Bam Chay danh gia de tao bao cao.");
         }
 
         if (
@@ -236,13 +238,13 @@ export default function SystemEvaluation() {
           metricsRes.status === "rejected" &&
           recommendationRes.status === "rejected"
         ) {
-          setError("Không tải được dữ liệu System Evaluation. Kiểm tra backend hoặc token đăng nhập.");
+          setError("KhÃƒÂ´ng tÃ¡ÂºÂ£i Ã„â€˜Ã†Â°Ã¡Â»Â£c dÃ¡Â»Â¯ liÃ¡Â»â€¡u System Evaluation. KiÃ¡Â»Æ’m tra backend hoÃ¡ÂºÂ·c token Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p.");
         }
       }
     } catch (err) {
       console.error("Load system evaluation error:", err);
       if (mountedRef.current) {
-        setError("Không tải được dữ liệu System Evaluation.");
+        setError("KhÃƒÂ´ng tÃ¡ÂºÂ£i Ã„â€˜Ã†Â°Ã¡Â»Â£c dÃ¡Â»Â¯ liÃ¡Â»â€¡u System Evaluation.");
       }
     } finally {
       if (mountedRef.current) {
@@ -251,6 +253,29 @@ export default function SystemEvaluation() {
     }
   };
 
+  const handleRunEvaluation = async () => {
+    setRunning(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const report = await runSystemEvaluation(selectedMode);
+      if (mountedRef.current) {
+        setLatestReport(hasSystemEvaluationData(report) ? report : null);
+        setNotice("Da chay danh gia he thong.");
+      }
+      await loadData();
+    } catch (err) {
+      console.error("Run system evaluation error:", err);
+      if (mountedRef.current) {
+        setError("Khong chay duoc danh gia he thong. Kiem tra du lieu du doan/ket qua va backend log.");
+      }
+    } finally {
+      if (mountedRef.current) {
+        setRunning(false);
+      }
+    }
+  };
   useEffect(() => {
     mountedRef.current = true;
     void loadData();
@@ -280,7 +305,7 @@ export default function SystemEvaluation() {
   const summaryText = valueOrFallback(
     activeReport?.summaryText,
     recommendation?.summaryText,
-    "Chưa có tóm tắt hệ thống.",
+    "ChÃ†Â°a cÃƒÂ³ tÃƒÂ³m tÃ¡ÂºÂ¯t hÃ¡Â»â€¡ thÃ¡Â»â€˜ng.",
   );
   const recommendationText = valueOrFallback(activeReport?.recommendationText, recommendation?.recommendationText);
 
@@ -321,10 +346,10 @@ export default function SystemEvaluation() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              Đánh Giá Hệ Thống
+              Ã„ÂÃƒÂ¡nh GiÃƒÂ¡ HÃ¡Â»â€¡ ThÃ¡Â»â€˜ng
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              Tổng hợp độ tin cậy, ổn định và khuyến nghị vận hành từ System Evaluation backend.
+              TÃ¡Â»â€¢ng hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â„¢ tin cÃ¡ÂºÂ­y, Ã¡Â»â€¢n Ã„â€˜Ã¡Â»â€¹nh vÃƒÂ  khuyÃ¡ÂºÂ¿n nghÃ¡Â»â€¹ vÃ¡ÂºÂ­n hÃƒÂ nh tÃ¡Â»Â« System Evaluation backend.
             </Typography>
           </Box>
 
@@ -342,31 +367,42 @@ export default function SystemEvaluation() {
             ))}
           </Tabs>
 
-          <Button
-            variant="contained"
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshRoundedIcon />}
-            onClick={loadData}
-            disabled={loading}
-            sx={{
-              textTransform: "none",
-              borderRadius: 3,
-              px: 2.4,
-              background: "linear-gradient(135deg, #00c6ff, #14b86a)",
-            }}
-          >
-            {loading ? "Đang tải" : "Làm mới"}
-          </Button>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={running ? <CircularProgress size={16} /> : <AnalyticsRoundedIcon />}
+              onClick={handleRunEvaluation}
+              disabled={loading || running}
+              sx={{ textTransform: "none", borderRadius: 3, px: 2.2 }}
+            >
+              {running ? "Äang Ä‘Ã¡nh giÃ¡" : "Cháº¡y Ä‘Ã¡nh giÃ¡"}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshRoundedIcon />}
+              onClick={loadData}
+              disabled={loading || running}
+              sx={{
+                textTransform: "none",
+                borderRadius: 3,
+                px: 2.4,
+                background: "linear-gradient(135deg, #00c6ff, #14b86a)",
+              }}
+            >
+              {loading ? "Äang táº£i" : "LÃ m má»›i"}
+            </Button>
+          </Stack>
         </Stack>
 
         {error && <Alert severity="error">{error}</Alert>}
         {notice && !error && <Alert severity="info">{notice}</Alert>}
 
         {loading && !activeReport ? (
-          <SystemSectionCard title="Đang tải dữ liệu" subtitle="Đang gọi các API System Evaluation.">
+          <SystemSectionCard title="Ã„Âang tÃ¡ÂºÂ£i dÃ¡Â»Â¯ liÃ¡Â»â€¡u" subtitle="Ã„Âang gÃ¡Â»Âi cÃƒÂ¡c API System Evaluation.">
             <Stack direction="row" alignItems="center" spacing={1.2}>
               <CircularProgress size={20} />
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                Vui lòng đợi trong giây lát.
+                Vui lÃƒÂ²ng Ã„â€˜Ã¡Â»Â£i trong giÃƒÂ¢y lÃƒÂ¡t.
               </Typography>
             </Stack>
           </SystemSectionCard>
@@ -382,25 +418,25 @@ export default function SystemEvaluation() {
               <ScoreCard
                 label="Accuracy"
                 value={accuracyScore}
-                subtitle="Độ chính xác thực tế gần nhất"
+                subtitle="Ã„ÂÃ¡Â»â„¢ chÃƒÂ­nh xÃƒÂ¡c thÃ¡Â»Â±c tÃ¡ÂºÂ¿ gÃ¡ÂºÂ§n nhÃ¡ÂºÂ¥t"
                 icon={<AnalyticsRoundedIcon />}
               />
               <ScoreCard
                 label="Evaluation"
                 value={evaluationScore}
-                subtitle="Điểm đánh giá tổng hợp"
+                subtitle="Ã„ÂiÃ¡Â»Æ’m Ã„â€˜ÃƒÂ¡nh giÃƒÂ¡ tÃ¡Â»â€¢ng hÃ¡Â»Â£p"
                 icon={<PsychologyAltRoundedIcon />}
               />
               <ScoreCard
                 label="Stability"
                 value={stabilityScore}
-                subtitle="Mức ổn định tín hiệu"
+                subtitle="MÃ¡Â»Â©c Ã¡Â»â€¢n Ã„â€˜Ã¡Â»â€¹nh tÃƒÂ­n hiÃ¡Â»â€¡u"
                 icon={<ShieldRoundedIcon />}
               />
               <ScoreCard
                 label="Confidence"
                 value={confidenceScore}
-                subtitle="Độ tin cậy hiện tại"
+                subtitle="Ã„ÂÃ¡Â»â„¢ tin cÃ¡ÂºÂ­y hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i"
                 icon={<VerifiedRoundedIcon />}
               />
             </Box>
@@ -412,22 +448,22 @@ export default function SystemEvaluation() {
                 gap: 1.6,
               }}
             >
-              <StateCard title="Phase State" value={phaseState} subtitle="Trạng thái pha vận hành hiện tại." />
+              <StateCard title="Phase State" value={phaseState} subtitle="TrÃ¡ÂºÂ¡ng thÃƒÂ¡i pha vÃ¡ÂºÂ­n hÃƒÂ nh hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i." />
               <StateCard
                 title="Confidence State"
                 value={confidenceState}
-                subtitle="Phân loại mức tự tin của hệ thống."
+                subtitle="PhÃƒÂ¢n loÃ¡ÂºÂ¡i mÃ¡Â»Â©c tÃ¡Â»Â± tin cÃ¡Â»Â§a hÃ¡Â»â€¡ thÃ¡Â»â€˜ng."
               />
               <StateCard
                 title="Recommendation"
                 value={recommendationCode}
-                subtitle={recommendationText || "Khuyến nghị ngắn từ backend."}
+                subtitle={recommendationText || "KhuyÃ¡ÂºÂ¿n nghÃ¡Â»â€¹ ngÃ¡ÂºÂ¯n tÃ¡Â»Â« backend."}
               />
             </Box>
 
             <SystemSectionCard
-              title="Tóm Tắt Hệ Thống"
-              subtitle={`Nguồn mới nhất: ${formatDate(activeReport?.createdAt ?? activeReport?.targetDate)}`}
+              title="TÃƒÂ³m TÃ¡ÂºÂ¯t HÃ¡Â»â€¡ ThÃ¡Â»â€˜ng"
+              subtitle={`NguÃ¡Â»â€œn mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t: ${formatDate(activeReport?.createdAt ?? activeReport?.targetDate)}`}
             >
               <Typography variant="body1" sx={{ lineHeight: 1.7, color: theme.palette.text.primary }}>
                 {summaryText}
@@ -435,8 +471,8 @@ export default function SystemEvaluation() {
             </SystemSectionCard>
 
             <SystemSectionCard
-              title="Lý Do"
-              subtitle="Danh sách đã được parse từ reasonsJson string JSON, không hiển thị raw payload."
+              title="LÃƒÂ½ Do"
+              subtitle="Danh sÃƒÂ¡ch Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c parse tÃ¡Â»Â« reasonsJson string JSON, khÃƒÂ´ng hiÃ¡Â»Æ’n thÃ¡Â»â€¹ raw payload."
             >
               {reasons.length > 0 ? (
                 <Stack spacing={1}>
@@ -465,19 +501,19 @@ export default function SystemEvaluation() {
                     backgroundColor: "#F8FAFC",
                   }}
                 >
-                  Chưa có lý do cụ thể.
+                  ChÃ†Â°a cÃƒÂ³ lÃƒÂ½ do cÃ¡Â»Â¥ thÃ¡Â»Æ’.
                 </Box>
               )}
             </SystemSectionCard>
 
             <SystemSectionCard
               title="Confidence / Stability / Accuracy History"
-              subtitle="Nguồn dữ liệu: GET /api/system-evaluation/recent?limit=20"
+              subtitle="NguÃ¡Â»â€œn dÃ¡Â»Â¯ liÃ¡Â»â€¡u: GET /api/system-evaluation/recent?limit=20"
             >
               <MetricLineChart title="System Score History" rows={historyRows} series={HISTORY_SERIES} />
             </SystemSectionCard>
 
-            <SystemSectionCard title="Lịch Sử" subtitle="20 bản ghi System Evaluation gần nhất.">
+            <SystemSectionCard title="LÃ¡Â»â€¹ch SÃ¡Â»Â­" subtitle="20 bÃ¡ÂºÂ£n ghi System Evaluation gÃ¡ÂºÂ§n nhÃ¡ÂºÂ¥t.">
               {displayRows.length > 0 ? (
                 <TableContainer
                   sx={{
@@ -490,7 +526,7 @@ export default function SystemEvaluation() {
                   <Table stickyHeader size="small">
                     <TableHead>
                       <TableRow>
-                        {["Ngày", "Mode", "Phase", "Confidence", "Recommendation"].map((head) => (
+                        {["NgÃƒÂ y", "Mode", "Phase", "Confidence", "Recommendation"].map((head) => (
                           <TableCell
                             key={head}
                             sx={{
@@ -536,7 +572,7 @@ export default function SystemEvaluation() {
                             <TableCell>
                               <Chip
                                 size="small"
-                                label={`${rowConfidence} · ${formatPercent(row.confidenceScore)}`}
+                                label={`${rowConfidence} Ã‚Â· ${formatPercent(row.confidenceScore)}`}
                                 sx={{ fontWeight: 800, ...stateChipSx(rowConfidence, theme) }}
                               />
                             </TableCell>
@@ -560,7 +596,7 @@ export default function SystemEvaluation() {
                     backgroundColor: "#F8FAFC",
                   }}
                 >
-                  Chưa có bản ghi lịch sử.
+                  ChÃ†Â°a cÃƒÂ³ bÃ¡ÂºÂ£n ghi lÃ¡Â»â€¹ch sÃ¡Â»Â­.
                 </Box>
               )}
             </SystemSectionCard>
