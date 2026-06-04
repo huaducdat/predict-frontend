@@ -1,32 +1,36 @@
 import api from "./api";
 
-export const getPredictorDashboard = async () => {
-  const res = await api.get("/api/predictors/dashboard");
+export const getPredictorDashboard = async (mode) => {
+  const res = await api.get("/api/predictors/dashboard", {
+    params: mode ? { mode } : undefined,
+  });
   return res.data;
 };
 
-export const getPredictorDashboardHistory = async (limit = 30) => {
+export const getPredictorDashboardHistory = async (limit = 30, mode) => {
   const res = await api.get("/api/predictors/dashboard/history", {
-    params: { limit },
+    params: mode ? { limit, mode } : { limit },
   });
   return res.data;
 };
 
-export const getPredictorWeightHistory = async (limit = 30) => {
+export const getPredictorWeightHistory = async (limit = 30, mode) => {
   const res = await api.get("/api/predictors/weights/history", {
-    params: { limit },
+    params: mode ? { limit, mode } : { limit },
   });
   return res.data;
 };
 
-export const getSelfEvaluationLatest = async () => {
-  const res = await api.get("/api/self-evaluation/latest");
+export const getSelfEvaluationLatest = async (mode) => {
+  const res = await api.get("/api/self-evaluation/latest", {
+    params: mode ? { mode } : undefined,
+  });
   return res.data;
 };
 
-export const getSelfEvaluationRecent = async (limit = 20) => {
+export const getSelfEvaluationRecent = async (limit = 20, mode) => {
   const res = await api.get("/api/self-evaluation/recent", {
-    params: { limit },
+    params: mode ? { limit, mode } : { limit },
   });
   return res.data;
 };

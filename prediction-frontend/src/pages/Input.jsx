@@ -16,7 +16,7 @@ export default function Input() {
   const [numbers, setNumbers] = useState([]);
   const [special, setSpecial] = useState(null);
   const [date, setDate] = useState("");
-  const [mode, setMode] = useState("normal");
+  const [mode, setMode] = useState("special");
   const [loading, setLoading] = useState(false);
 
   const allNumbers = Array.from({ length: 100 }, (_, i) =>
@@ -48,6 +48,7 @@ export default function Input() {
     setNumbers([]);
     setSpecial(null);
     setDate("");
+    setMode("special");
   };
 
   const handleSubmit = async () => {

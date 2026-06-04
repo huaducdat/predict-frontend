@@ -61,9 +61,10 @@ function CombineExplainCard() {
       sx={{
         p: 2,
         borderRadius: 3,
-        backdropFilter: "blur(10px)",
-        background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
-        color: "white",
+        background: "#FFFFFF",
+        color: "#0F172A",
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 14px 36px rgba(37, 99, 235, 0.08)",
         mt: 2,
       }}
     >
@@ -80,7 +81,7 @@ function CombineExplainCard() {
         onChange={(e) => setSearch(e.target.value)}
         sx={{
           mb: 2,
-          input: { color: "white" },
+          input: { color: "#0F172A" },
           width: "100%",
         }}
       />
@@ -102,7 +103,8 @@ function CombineExplainCard() {
               sx={{
                 p: 1.5,
                 borderRadius: 2,
-                background: "#333",
+                background: "#F8FAFC",
+                border: "1px solid #E2E8F0",
                 textAlign: "center",
               }}
             >
@@ -121,7 +123,7 @@ function CombineExplainCard() {
                 <Typography
                   sx={{
                     fontSize: 10,
-                    color: "#bbb",
+                    color: "#475569",
                     mt: 0.5,
                   }}
                 >

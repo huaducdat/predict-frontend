@@ -88,7 +88,7 @@ function CombineResultCard() {
 
   if (!loading && data.length === 0) {
     return (
-      <Box sx={{ color: "white", mt: 2 }}>
+      <Box sx={{ color: "#0F172A", mt: 2 }}>
         <Typography>{vi.prediction.noCombineData}</Typography>
         <Button onClick={handleRun} sx={{ mt: 1 }}>
           {vi.prediction.runCombine}
@@ -102,9 +102,10 @@ function CombineResultCard() {
       sx={{
         p: 2,
         borderRadius: 3,
-        backdropFilter: "blur(10px)",
-        background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
-        color: "white",
+        background: "#FFFFFF",
+        color: "#0F172A",
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 14px 36px rgba(37, 99, 235, 0.08)",
         mt: 2,
       }}
     >
@@ -138,7 +139,7 @@ function CombineResultCard() {
         onChange={(e) => setSearch(e.target.value)}
         sx={{
           mb: 2,
-          input: { color: "white" },
+          input: { color: "#0F172A" },
           width: "100%",
         }}
       />
@@ -166,7 +167,7 @@ function CombineResultCard() {
           const isTop3 = indexInData === 2;
           const isTop10 = indexInData >= 0 && indexInData < 10;
 
-          let bg = "#333";
+          let bg = "#F8FAFC";
           let label = "";
 
           if (isTop1) {
@@ -179,7 +180,7 @@ function CombineResultCard() {
             bg = "linear-gradient(135deg, #ff9800, #ffb74d)";
             label = "⚡";
           } else if (isTop10) {
-            bg = "#ff9800";
+            bg = "#FFEDD5";
           }
 
           return (

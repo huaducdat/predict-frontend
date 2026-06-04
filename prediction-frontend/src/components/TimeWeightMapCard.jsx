@@ -16,9 +16,10 @@ function TimeWeightMapCard({ data }) {
       sx={{
         p: 2,
         borderRadius: 3,
-        backdropFilter: "blur(10px)",
-        background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
-        color: "white",
+        background: "#FFFFFF",
+        color: "#0F172A",
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 14px 36px rgba(37, 99, 235, 0.08)",
       }}
     >
       {/* HEADER */}
@@ -36,7 +37,7 @@ function TimeWeightMapCard({ data }) {
           size="small"
           onClick={() => setExpanded(!expanded)}
           sx={{
-            color: "#00e5ff",
+            color: "#2563EB",
             textTransform: "none",
             fontSize: 12,
           }}
@@ -67,7 +68,8 @@ function TimeWeightMapCard({ data }) {
                 px: 1,
                 py: 0.8,
                 borderRadius: 2,
-                background: "rgba(255,255,255,0.05)",
+                background: "#F8FAFC",
+                border: "1px solid #E2E8F0",
                 fontFamily: "Courier New",
                 fontSize: 12,
                 display: "flex",
@@ -75,7 +77,7 @@ function TimeWeightMapCard({ data }) {
                 transition: "0.2s",
 
                 "&:hover": {
-                  background: "rgba(255,255,255,0.1)",
+                  background: "#EEF4FF",
                 },
               }}
             >

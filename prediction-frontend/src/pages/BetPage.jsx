@@ -142,7 +142,7 @@ function BetPage() {
       <Paper
         sx={{
           p: 3,
-          borderRadius: 4,
+          borderRadius: 3,
           backdropFilter: "blur(12px)",
           background:
             "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,240,255,0.7))",

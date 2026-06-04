@@ -79,9 +79,10 @@ function PairGlobalCard() {
       sx={{
         p: 2,
         borderRadius: 3,
-        backdropFilter: "blur(10px)",
-        background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
-        color: "white",
+        background: "#FFFFFF",
+        color: "#0F172A",
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 14px 36px rgba(37, 99, 235, 0.08)",
       }}
     >
       {/* HEADER */}
@@ -113,7 +114,7 @@ function PairGlobalCard() {
             fullWidth
             sx={{
               mb: 2,
-              input: { color: "white" },
+              input: { color: "#0F172A" },
             }}
           />
 
@@ -125,7 +126,8 @@ function PairGlobalCard() {
                 mb: 1,
                 p: 1,
                 borderRadius: 2,
-                background: "rgba(255,255,255,0.05)",
+                background: "#F8FAFC",
+                border: "1px solid #E2E8F0",
               }}
             >
               {/* Pair */}
@@ -142,7 +144,9 @@ function PairGlobalCard() {
                       px: 1,
                       py: 0.5,
                       borderRadius: 1,
-                      background: "#000",
+                      background: "#EEF4FF",
+                      color: "#1D4ED8",
+                      border: "1px solid #BFDBFE",
                       fontSize: 12,
                     }}
                   >

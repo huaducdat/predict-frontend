@@ -1,16 +1,16 @@
 import {
   AppBar,
-  Toolbar,
-  Typography,
   Box,
   Button,
   IconButton,
   Menu,
   MenuItem,
+  Toolbar,
+  Typography,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -19,16 +19,27 @@ import { useState } from "react";
 import PatternReportWidget from "./PatternReportWidget";
 import { vi } from "../i18n/vi";
 
+const NAV_ITEMS = [
+  { label: vi.menu.home, path: "/" },
+  { label: "Nhập kết quả", path: "/input" },
+  { label: "Dự đoán", path: "/prediction" },
+  { label: "Kết quả", path: "/history" },
+  { label: "Cược", path: "/bet" },
+  { label: "Phân tích predictor", path: "/intelligence" },
+  { label: "Báo cáo pattern", path: "/pattern-report" },
+  { label: "Luồng quyết định", path: "/decision-trace" },
+  { label: "Đánh giá hệ thống", path: "/system-evaluation" },
+];
+
 export default function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
-
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleMenuOpen = (e) => {
-    setAnchorEl(e.currentTarget);
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
@@ -45,53 +56,55 @@ export default function Header() {
     navigate("/login");
   };
 
-  const navItems = [
-    { label: vi.menu.home, path: "/" },
-    { label: vi.menu.input, path: "/input" },
-    { label: vi.menu.prediction, path: "/prediction" },
-    { label: vi.menu.intelligence, path: "/intelligence" },
-    { label: "Đánh Giá Hệ Thống", path: "/system-evaluation" },
-    { label: "Luồng quyết định", path: "/decision-trace" },
-    { label: vi.menu.history, path: "/history" },
-    { label: vi.menu.bet, path: "/bet" },
-  ];
+  const isActive = (path) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <AppBar
-      position="static"
+      position="sticky"
       elevation={0}
       sx={{
-        background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
-        color: "gray",
+        top: 0,
+        zIndex: theme.zIndex.appBar,
+        background: "rgba(255,255,255,0.88)",
+        backdropFilter: "blur(14px)",
+        borderBottom: "1px solid #E2E8F0",
+        color: "#0F172A",
       }}
     >
       <Toolbar
         sx={{
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           gap: 2,
+          minHeight: 72,
+          px: { xs: 2, md: 3 },
+          py: { xs: 1, md: 1.2 },
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, minWidth: 0 }}>
           <Box
             sx={{
-              width: 42,
-              height: 42,
-              borderRadius: "8px",
-              background: "linear-gradient(135deg, #6a5cff, #00c6ff)",
+              width: 40,
+              height: 40,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, #2563EB, #0F766E)",
+              boxShadow: "0 12px 28px rgba(37,99,235,0.22)",
             }}
           />
-          <Typography variant="h6">{vi.app.name}</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 950, color: "#0F172A", whiteSpace: "nowrap" }}>
+            {vi.app.name}
+          </Typography>
         </Box>
 
         {isMobile ? (
           <>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <PatternReportWidget dense />
-
-              <IconButton onClick={handleMenuOpen} color="inherit">
+              <IconButton onClick={handleMenuOpen} sx={{ color: "#0F172A" }}>
                 <MenuIcon />
               </IconButton>
             </Box>
@@ -100,24 +113,18 @@ export default function Header() {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "right",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              {navItems.map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <MenuItem
                   key={item.path}
+                  selected={isActive(item.path)}
                   onClick={() => handleNavigate(item.path)}
                 >
                   {item.label}
                 </MenuItem>
               ))}
-
               <MenuItem onClick={handleLogout}>
                 <LogoutIcon sx={{ mr: 1 }} />
                 {vi.menu.logout}
@@ -128,19 +135,39 @@ export default function Header() {
           <Box
             sx={{
               display: "flex",
-              gap: 1.5,
+              flexWrap: "wrap",
+              gap: 1,
               alignItems: "center",
+              justifyContent: "flex-end",
               minWidth: 0,
+              maxWidth: "calc(100vw - 260px)",
             }}
           >
             <PatternReportWidget />
 
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <Button
                 key={item.path}
-                color="inherit"
-                onClick={() => navigate(item.path)}
-                sx={{ textTransform: "none" }}
+                onClick={() => handleNavigate(item.path)}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 999,
+                  px: { md: 1.2, lg: 1.55 },
+                  py: 0.72,
+                  minWidth: 0,
+                  color: isActive(item.path) ? "#0F172A" : "#475569",
+                  backgroundColor: isActive(item.path) ? "#EAF2FF" : "transparent",
+                  border: isActive(item.path) ? "1px solid #93C5FD" : "1px solid transparent",
+                  boxShadow: isActive(item.path) ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
+                  fontSize: { md: 13, lg: 14 },
+                  fontWeight: isActive(item.path) ? 900 : 700,
+                  whiteSpace: "nowrap",
+                  lineHeight: 1.2,
+                  "&:hover": {
+                    backgroundColor: "rgba(37,99,235,0.08)",
+                    color: "#1D4ED8",
+                  },
+                }}
               >
                 {item.label}
               </Button>
@@ -151,13 +178,15 @@ export default function Header() {
               startIcon={<LogoutIcon />}
               variant="contained"
               sx={{
-                borderRadius: 3,
+                borderRadius: 999,
                 textTransform: "none",
-                px: 2,
-                background: "linear-gradient(135deg, #4a4a4a, #2a2a2a)",
-                "&:hover": {
-                  background: "linear-gradient(135deg, #2a2a2a, #000)",
-                },
+                px: { md: 1.45, lg: 1.8 },
+                ml: 0.2,
+                fontSize: { md: 13, lg: 14 },
+                whiteSpace: "nowrap",
+                background: "#0F172A",
+                boxShadow: "0 12px 28px rgba(15,23,42,0.18)",
+                "&:hover": { background: "#1E293B" },
               }}
             >
               {vi.menu.logout}

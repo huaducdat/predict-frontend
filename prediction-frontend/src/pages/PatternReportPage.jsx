@@ -11,6 +11,8 @@ import {
   CircularProgress,
   Divider,
   Stack,
+  Tab,
+  Tabs,
   Table,
   TableBody,
   TableCell,
@@ -49,6 +51,10 @@ const METRIC_FIELDS = [
 ];
 
 const WEIGHT_KEYS = ["PAIR", "TIME", "FREQ", "POS", "REP", "STRK", "GAP"];
+const MODE_OPTIONS = [
+  { value: "SHORT_TERM", label: "Ngắn hạn" },
+  { value: "EXTENDED", label: "Dài hạn" },
+];
 
 function normalizePayload(payload) {
   const data = payload?.data ?? payload;
@@ -265,7 +271,7 @@ function stateTone(state, theme) {
       border: alpha(theme.palette.success.main, 0.32),
       bg: alpha(theme.palette.success.main, 0.12),
       chipBg: alpha(theme.palette.success.main, 0.18),
-      chipColor: theme.palette.success.light,
+      chipColor: theme.palette.success.dark,
     };
   }
 
@@ -274,7 +280,7 @@ function stateTone(state, theme) {
       border: alpha(theme.palette.warning.main, 0.32),
       bg: alpha(theme.palette.warning.main, 0.12),
       chipBg: alpha(theme.palette.warning.main, 0.2),
-      chipColor: theme.palette.warning.light,
+      chipColor: theme.palette.warning.dark,
     };
   }
 
@@ -283,7 +289,7 @@ function stateTone(state, theme) {
       border: alpha(theme.palette.error.main, 0.32),
       bg: alpha(theme.palette.error.main, 0.12),
       chipBg: alpha(theme.palette.error.main, 0.2),
-      chipColor: theme.palette.error.light,
+      chipColor: theme.palette.error.dark,
     };
   }
 
@@ -291,7 +297,7 @@ function stateTone(state, theme) {
     border: alpha(theme.palette.grey[500], 0.28),
     bg: alpha(theme.palette.grey[500], 0.12),
     chipBg: alpha(theme.palette.grey[500], 0.18),
-    chipColor: theme.palette.grey[300],
+    chipColor: theme.palette.grey[700],
   };
 }
 
@@ -303,11 +309,10 @@ function SectionCard({ title, subtitle, action, children, sx }) {
       elevation={0}
       sx={{
         borderRadius: 3,
-        border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
-        background:
-          "linear-gradient(135deg, rgba(18,20,28,0.96), rgba(10,12,18,0.92))",
-        backdropFilter: "blur(18px)",
-        color: "white",
+        border: `1px solid ${theme.palette.divider}`,
+        background: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+        boxShadow: `0 18px 50px ${alpha(theme.palette.primary.main, 0.08)}`,
         ...sx,
       }}
     >
@@ -318,7 +323,7 @@ function SectionCard({ title, subtitle, action, children, sx }) {
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.68)" }}>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                 {subtitle}
               </Typography>
             )}
@@ -340,14 +345,14 @@ function MetricTile({ label, value, theme, state }) {
         p: 1.5,
         borderRadius: 2,
         border: `1px solid ${tone.border}`,
-        backgroundColor: alpha(theme.palette.common.white, 0.05),
+        backgroundColor: "#F8FAFC",
       }}
     >
       <Typography
         variant="caption"
         sx={{
           display: "block",
-          color: "rgba(255,255,255,0.6)",
+          color: theme.palette.text.secondary,
           textTransform: "uppercase",
           letterSpacing: 0.4,
         }}
@@ -365,6 +370,7 @@ export default function PatternReportPage() {
   const theme = useTheme();
   const navigate = useNavigate();
   const mountedRef = useRef(true);
+  const [selectedMode, setSelectedMode] = useState("SHORT_TERM");
 
   const [latestReport, setLatestReport] = useState(null);
   const [stateSnapshot, setStateSnapshot] = useState(null);
@@ -382,9 +388,9 @@ export default function PatternReportPage() {
 
     try {
       const [latestRes, stateRes, recentRes] = await Promise.allSettled([
-        getLatestPatternReport(),
+        getLatestPatternReport(selectedMode),
         getPatternState(),
-        getRecentPatternReports(20),
+        getRecentPatternReports(20, selectedMode),
       ]);
 
       const latest = latestRes.status === "fulfilled" ? normalizePayload(latestRes.value) : null;
@@ -431,7 +437,7 @@ export default function PatternReportPage() {
     };
     // stable refs only
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedMode]);
 
   const headerReport =
     isUsableReport(latestReport) ? latestReport : isUsableReport(stateSnapshot) ? stateSnapshot : null;
@@ -479,7 +485,7 @@ export default function PatternReportPage() {
       : "trống";
 
   const topMeta = [
-    mode ? `${vi.mode.label} ${String(mode).toUpperCase()}` : null,
+    mode ? `${vi.mode.label} ${vi.mode[mode] ?? mode}` : null,
     boostCap !== undefined && boostCap !== null && boostCap !== "" ? `Tăng cường ${formatNumber(boostCap, 2)}` : null,
     createdAt ? formatDate(createdAt) : null,
     targetDate ? `${vi.table.targetDate} ${formatDate(targetDate)}` : null,
@@ -501,7 +507,7 @@ export default function PatternReportPage() {
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(circle at top left, rgba(106,92,255,0.14), transparent 34%), radial-gradient(circle at top right, rgba(0,198,255,0.12), transparent 28%), linear-gradient(180deg, rgba(8,10,16,0.35), rgba(8,10,16,0.1))",
+            "radial-gradient(circle at top left, rgba(37,99,235,0.12), transparent 34%), radial-gradient(circle at top right, rgba(22,163,74,0.1), transparent 28%), linear-gradient(180deg, rgba(248,250,252,0.78), rgba(244,247,251,0.28))",
           pointerEvents: "none",
         }}
       />
@@ -526,19 +532,33 @@ export default function PatternReportPage() {
               >
                 {vi.pattern.pageTitle}
               </Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)" }}>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                 {vi.pattern.pageSubtitle}
               </Typography>
             </Box>
 
             <Stack direction="row" spacing={1}>
+              <Tabs
+                value={selectedMode}
+                onChange={(_, value) => setSelectedMode(value)}
+                sx={{
+                  minHeight: 36,
+                  "& .MuiTab-root": { color: theme.palette.text.secondary, textTransform: "none", fontWeight: 800 },
+                  "& .Mui-selected": { color: `${theme.palette.primary.main} !important` },
+                }}
+              >
+                {MODE_OPTIONS.map((item) => (
+                  <Tab key={item.value} value={item.value} label={item.label} />
+                ))}
+              </Tabs>
+
               <Button
                 variant="outlined"
                 startIcon={<ArrowBackRoundedIcon />}
                 onClick={() => navigate(-1)}
                 sx={{
-                  color: "white",
-                  borderColor: alpha(theme.palette.common.white, 0.2),
+                  color: theme.palette.text.primary,
+                  borderColor: theme.palette.divider,
                   textTransform: "none",
                 }}
               >
@@ -570,7 +590,7 @@ export default function PatternReportPage() {
               loading && !headerReport ? (
                 <Stack direction="row" spacing={1} alignItems="center">
                   <CircularProgress size={18} />
-                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.65)" }}>
+                  <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                     {vi.pattern.loadingData}
                   </Typography>
                 </Stack>
@@ -599,7 +619,12 @@ export default function PatternReportPage() {
               </Stack>
 
               <Stack direction="row" flexWrap="wrap" gap={1}>
-                {mode && <Chip size="small" label={`${vi.mode.label}: ${String(mode).toUpperCase()}`} />}
+                {mode && (
+                  <Chip
+                    size="small"
+                    label={`${vi.mode.label}: ${vi.mode[String(mode).toUpperCase()] ?? String(mode).toUpperCase()}`}
+                  />
+                )}
                 {boostCap !== undefined && boostCap !== null && boostCap !== "" && (
                   <Chip size="small" label={`${vi.pattern.boostCap}: ${formatNumber(boostCap, 2)}`} />
                 )}
@@ -645,7 +670,7 @@ export default function PatternReportPage() {
                   ))}
                 </Box>
               ) : (
-                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   {vi.pattern.noMetrics}
                 </Typography>
               )}
@@ -672,8 +697,8 @@ export default function PatternReportPage() {
                       gap: 1.2,
                       p: 1.2,
                       borderRadius: 2,
-                      border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-                      backgroundColor: alpha(theme.palette.common.white, 0.04),
+                      border: `1px solid ${theme.palette.divider}`,
+                      backgroundColor: "#F8FAFC",
                     }}
                   >
                     <Chip
@@ -714,8 +739,8 @@ export default function PatternReportPage() {
                       sx={{
                         p: 1.2,
                         borderRadius: 2,
-                        border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-                        backgroundColor: alpha(theme.palette.common.white, 0.04),
+                        border: `1px solid ${theme.palette.divider}`,
+                        backgroundColor: "#F8FAFC",
                       }}
                     >
                       <Typography variant="body2">{reason}</Typography>
@@ -723,7 +748,7 @@ export default function PatternReportPage() {
                   ))}
                 </Stack>
               ) : (
-                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   {vi.pattern.noReasons}
                 </Typography>
               )}
@@ -747,15 +772,15 @@ export default function PatternReportPage() {
                       label={`${key}: ${formatMetricValue(value, key)}`}
                       sx={{
                         fontWeight: 700,
-                        color: "white",
-                        backgroundColor: alpha(theme.palette.common.white, 0.06),
-                        border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+                        color: theme.palette.text.primary,
+                        backgroundColor: "#F8FAFC",
+                        border: `1px solid ${theme.palette.divider}`,
                       }}
                     />
                   ))}
                 </Box>
               ) : (
-                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   {vi.pattern.noEffectiveWeights}
                 </Typography>
               )}
@@ -771,7 +796,8 @@ export default function PatternReportPage() {
                 sx={{
                   maxHeight: 540,
                   borderRadius: 2,
-                  border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+                  border: `1px solid ${theme.palette.divider}`,
+                  backgroundColor: theme.palette.background.paper,
                 }}
               >
                 <Table stickyHeader size="small">
@@ -782,8 +808,8 @@ export default function PatternReportPage() {
                           key={head}
                           sx={{
                             fontWeight: 800,
-                            backgroundColor: "#10131b",
-                            color: "white",
+                            backgroundColor: "#EEF4FF",
+                            color: theme.palette.text.primary,
                           }}
                         >
                           {head}
@@ -808,11 +834,11 @@ export default function PatternReportPage() {
                           key={`${rowCreatedAt ?? index}-${rowState}-${index}`}
                           sx={{
                             "&:nth-of-type(odd)": {
-                              backgroundColor: alpha(theme.palette.common.white, 0.02),
+                              backgroundColor: alpha(theme.palette.primary.main, 0.025),
                             },
                           }}
                         >
-                          <TableCell sx={{ whiteSpace: "nowrap", color: "white" }}>
+                          <TableCell sx={{ whiteSpace: "nowrap", color: theme.palette.text.primary }}>
                             {rowCreatedAt ? formatDate(rowCreatedAt) : "--"}
                           </TableCell>
                           <TableCell>
@@ -830,7 +856,7 @@ export default function PatternReportPage() {
                           <TableCell
                             sx={{
                               maxWidth: 420,
-                              color: "white",
+                              color: theme.palette.text.primary,
                               whiteSpace: "nowrap",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
@@ -838,15 +864,15 @@ export default function PatternReportPage() {
                           >
                             {rowSummary}
                           </TableCell>
-                          <TableCell sx={{ whiteSpace: "nowrap", color: "white" }}>
+                          <TableCell sx={{ whiteSpace: "nowrap", color: theme.palette.text.primary }}>
                             {rowBoost !== undefined && rowBoost !== null && rowBoost !== ""
                               ? formatNumber(rowBoost, 2)
                               : "--"}
                           </TableCell>
-                          <TableCell sx={{ whiteSpace: "nowrap", color: "white" }}>
-                            {rowMode ? String(rowMode).toUpperCase() : "--"}
+                          <TableCell sx={{ whiteSpace: "nowrap", color: theme.palette.text.primary }}>
+                            {rowMode ? vi.mode[String(rowMode).toUpperCase()] ?? String(rowMode).toUpperCase() : "--"}
                           </TableCell>
-                          <TableCell sx={{ whiteSpace: "nowrap", color: "white" }}>
+                          <TableCell sx={{ whiteSpace: "nowrap", color: theme.palette.text.primary }}>
                             {rowSource ? String(rowSource) : "--"}
                           </TableCell>
                         </TableRow>
@@ -860,9 +886,10 @@ export default function PatternReportPage() {
                 sx={{
                   p: 3,
                   borderRadius: 2,
-                  border: `1px dashed ${alpha(theme.palette.common.white, 0.16)}`,
+                  border: `1px dashed ${alpha(theme.palette.text.secondary, 0.28)}`,
                   textAlign: "center",
-                  color: "rgba(255,255,255,0.72)",
+                  color: theme.palette.text.secondary,
+                  backgroundColor: "#F8FAFC",
                 }}
               >
                 {vi.pattern.noRecentReports}

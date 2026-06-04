@@ -87,9 +87,10 @@ function TimeWeightGlobalCard({ date }) {
           sx={{
             p: 2,
             borderRadius: 3,
-            backdropFilter: "blur(10px)",
-            background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
-            color: "white",
+            background: "#FFFFFF",
+            color: "#0F172A",
+            border: "1px solid #E2E8F0",
+            boxShadow: "0 14px 36px rgba(37, 99, 235, 0.08)",
           }}
         >
           <Typography sx={{ mb: 2, fontWeight: "bold" }}>
@@ -107,8 +108,8 @@ function TimeWeightGlobalCard({ date }) {
             }}
             sx={{
               mb: 2,
-              input: { color: "white" },
-              fieldset: { borderColor: "#555" },
+              input: { color: "#0F172A" },
+              fieldset: { borderColor: "#CBD5E1" },
             }}
           />
 
@@ -138,7 +139,9 @@ function TimeWeightGlobalCard({ date }) {
                         width: 40,
                         textAlign: "center",
                         fontWeight: "bold",
-                        background: "#333",
+                        background: "#EEF4FF",
+                        color: "#1D4ED8",
+                        border: "1px solid #BFDBFE",
                         borderRadius: 1,
                         py: 0.5,
                       }}
@@ -155,7 +158,8 @@ function TimeWeightGlobalCard({ date }) {
                             px: 1.2,
                             py: 0.4,
                             borderRadius: 1,
-                            background: "rgba(255,255,255,0.1)",
+                            background: "#F8FAFC",
+                            border: "1px solid #E2E8F0",
                             fontSize: 12,
                           }}
                         >

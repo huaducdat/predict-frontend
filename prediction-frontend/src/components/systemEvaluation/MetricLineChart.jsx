@@ -50,8 +50,8 @@ export default function MetricLineChart({ title, rows, series }) {
       sx={{
         p: 1.4,
         borderRadius: 3,
-        border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-        backgroundColor: alpha(theme.palette.common.white, 0.035),
+        border: `1px solid ${theme.palette.divider}`,
+        backgroundColor: "#F8FAFC",
       }}
     >
       <Stack spacing={1}>
@@ -70,7 +70,7 @@ export default function MetricLineChart({ title, rows, series }) {
                     backgroundColor: item.color,
                   }}
                 />
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.68)" }}>
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                   {item.label}: {formatPercent(latest?.[item.field])}
                 </Typography>
               </Stack>
@@ -90,9 +90,9 @@ export default function MetricLineChart({ title, rows, series }) {
                       x2={WIDTH - PADDING}
                       y1={y}
                       y2={y}
-                      stroke="rgba(255,255,255,0.08)"
+                      stroke={alpha(theme.palette.text.secondary, 0.18)}
                     />
-                    <text x={4} y={y + 4} fill="rgba(255,255,255,0.45)" fontSize="11">
+                    <text x={4} y={y + 4} fill={theme.palette.text.secondary} fontSize="11">
                       {Math.round(tick * 100)}
                     </text>
                   </g>
@@ -120,7 +120,7 @@ export default function MetricLineChart({ title, rows, series }) {
                         cy={point.y}
                         r="3.4"
                         fill={item.color}
-                        stroke="#10131b"
+                        stroke={theme.palette.background.paper}
                         strokeWidth="1.5"
                       />
                     ))}
@@ -136,8 +136,9 @@ export default function MetricLineChart({ title, rows, series }) {
               display: "grid",
               placeItems: "center",
               borderRadius: 2,
-              border: `1px dashed ${alpha(theme.palette.common.white, 0.16)}`,
-              color: "rgba(255,255,255,0.68)",
+              border: `1px dashed ${alpha(theme.palette.text.secondary, 0.28)}`,
+              color: theme.palette.text.secondary,
+              backgroundColor: theme.palette.background.paper,
             }}
           >
             Chưa đủ dữ liệu lịch sử để vẽ biểu đồ.

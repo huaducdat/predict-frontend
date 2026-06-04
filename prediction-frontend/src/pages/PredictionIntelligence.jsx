@@ -35,6 +35,10 @@ import {
 import { labelFrom, vi } from "../i18n/vi";
 
 const PREDICTOR_ORDER = ["PAIR", "TIME", "FREQ", "POS", "REP", "STRK", "GAP"];
+const MODE_OPTIONS = [
+  { value: "SHORT_TERM", label: "Ngắn hạn" },
+  { value: "EXTENDED", label: "Dài hạn" },
+];
 
 function patternLabel(value) {
   return labelFrom(vi.patternState, value || "INSUFFICIENT_DATA");
@@ -64,27 +68,27 @@ function stateTone(state, theme) {
   const normalized = String(state || "INSUFFICIENT_DATA").toUpperCase();
   if (normalized === "STABLE") {
     return {
-      color: theme.palette.success.light,
+      color: theme.palette.success.dark,
       bg: alpha(theme.palette.success.main, 0.16),
       border: alpha(theme.palette.success.main, 0.34),
     };
   }
   if (normalized === "SHIFTING") {
     return {
-      color: theme.palette.warning.light,
+      color: theme.palette.warning.dark,
       bg: alpha(theme.palette.warning.main, 0.17),
       border: alpha(theme.palette.warning.main, 0.34),
     };
   }
   if (normalized === "VOLATILE") {
     return {
-      color: theme.palette.error.light,
+      color: theme.palette.error.dark,
       bg: alpha(theme.palette.error.main, 0.18),
       border: alpha(theme.palette.error.main, 0.36),
     };
   }
   return {
-    color: theme.palette.grey[300],
+    color: theme.palette.grey[700],
     bg: alpha(theme.palette.grey[500], 0.14),
     border: alpha(theme.palette.grey[500], 0.26),
   };
@@ -168,13 +172,11 @@ function SectionCard({ title, subtitle, children, action, sx }) {
     <Card
       elevation={0}
       sx={{
-        borderRadius: 4,
-        border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
-        background:
-          "linear-gradient(135deg, rgba(17,20,29,0.96), rgba(8,10,18,0.92))",
-        color: "white",
-        backdropFilter: "blur(18px)",
-        boxShadow: `0 20px 70px ${alpha(theme.palette.common.black, 0.28)}`,
+        borderRadius: 3,
+        border: `1px solid ${theme.palette.divider}`,
+        background: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+        boxShadow: `0 18px 50px ${alpha(theme.palette.primary.main, 0.08)}`,
         ...sx,
       }}
     >
@@ -186,7 +188,7 @@ function SectionCard({ title, subtitle, children, action, sx }) {
                 {title}
               </Typography>
               {subtitle && (
-                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.62)" }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   {subtitle}
                 </Typography>
               )}
@@ -213,13 +215,14 @@ function OverviewCard({ title, value, subtitle, icon, tone = "default" }) {
     <Card
       elevation={0}
       sx={{
-        borderRadius: 4,
+        borderRadius: 3,
         overflow: "hidden",
         position: "relative",
-        border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+        border: `1px solid ${theme.palette.divider}`,
         background:
-          "linear-gradient(145deg, rgba(18,22,35,0.98), rgba(9,12,20,0.95))",
-        color: "white",
+          "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))",
+        color: theme.palette.text.primary,
+        boxShadow: `0 18px 50px ${alpha(theme.palette.primary.main, 0.08)}`,
       }}
     >
       <Box
@@ -235,7 +238,7 @@ function OverviewCard({ title, value, subtitle, icon, tone = "default" }) {
       <CardContent sx={{ position: "relative", p: 2.2 }}>
         <Stack spacing={1.2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.62)", letterSpacing: 0.8 }}>
+            <Typography variant="caption" sx={{ color: theme.palette.text.secondary, letterSpacing: 0.8 }}>
               {title}
             </Typography>
             <Box
@@ -255,7 +258,7 @@ function OverviewCard({ title, value, subtitle, icon, tone = "default" }) {
           <Typography variant="h5" sx={{ fontWeight: 950 }}>
             {value || "--"}
           </Typography>
-          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)", minHeight: 40 }}>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, minHeight: 40 }}>
             {subtitle || vi.common.noData}
           </Typography>
         </Stack>
@@ -306,6 +309,7 @@ export default function PredictionIntelligence() {
   const [selfEvaluation, setSelfEvaluation] = useState(null);
   const [recentSelfEvaluation, setRecentSelfEvaluation] = useState([]);
   const [patternState, setPatternState] = useState(null);
+  const [selectedMode, setSelectedMode] = useState("SHORT_TERM");
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -322,11 +326,11 @@ export default function PredictionIntelligence() {
       recentSelfRes,
       patternRes,
     ] = await Promise.allSettled([
-      getPredictorDashboard(),
-      getPredictorDashboardHistory(30),
-      getPredictorWeightHistory(30),
-      getSelfEvaluationLatest(),
-      getSelfEvaluationRecent(10),
+      getPredictorDashboard(selectedMode),
+      getPredictorDashboardHistory(30, selectedMode),
+      getPredictorWeightHistory(30, selectedMode),
+      getSelfEvaluationLatest(selectedMode),
+      getSelfEvaluationRecent(10, selectedMode),
       getPatternStateSnapshot(),
     ]);
 
@@ -346,7 +350,7 @@ export default function PredictionIntelligence() {
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [selectedMode]);
 
   const predictors = useMemo(() => normalizeDashboardPredictors(dashboard), [dashboard]);
   const selfPayload = useMemo(() => parseJsonData(selfEvaluation), [selfEvaluation]);
@@ -409,25 +413,41 @@ export default function PredictionIntelligence() {
             >
               {vi.intelligence.title}
             </Typography>
-            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.68)" }}>
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
               {vi.intelligence.subtitle}
             </Typography>
           </Box>
 
-          <Button
-            variant="contained"
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshRoundedIcon />}
-            onClick={loadData}
-            disabled={loading}
-            sx={{
-              textTransform: "none",
-              borderRadius: 3,
-              px: 2.4,
-              background: "linear-gradient(135deg, #00c6ff, #6a5cff)",
-            }}
-          >
-            {loading ? vi.common.loadingShort : vi.common.refresh}
-          </Button>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} alignItems={{ xs: "stretch", sm: "center" }}>
+            <Tabs
+              value={selectedMode}
+              onChange={(_, value) => setSelectedMode(value)}
+              textColor="inherit"
+              indicatorColor="secondary"
+              sx={{
+                minHeight: 40,
+                "& .MuiTab-root": { minHeight: 40, textTransform: "none", fontWeight: 800 },
+              }}
+            >
+              {MODE_OPTIONS.map((item) => (
+                <Tab key={item.value} value={item.value} label={item.label} />
+              ))}
+            </Tabs>
+            <Button
+              variant="contained"
+              startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshRoundedIcon />}
+              onClick={loadData}
+              disabled={loading}
+              sx={{
+                textTransform: "none",
+                borderRadius: 3,
+                px: 2.4,
+                background: "linear-gradient(135deg, #00c6ff, #6a5cff)",
+              }}
+            >
+              {loading ? vi.common.loadingShort : vi.common.refresh}
+            </Button>
+          </Stack>
         </Stack>
 
         {error && <Alert severity="error">{error}</Alert>}
@@ -481,7 +501,7 @@ export default function PredictionIntelligence() {
             subtitle={vi.intelligence.predictorTableSubtitle}
             action={<DataChip label={patternLabel(activePatternState)} state={activePatternState} />}
           >
-            <TableContainer sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.common.white, 0.08)}` }}>
+            <TableContainer sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}`, backgroundColor: theme.palette.background.paper }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -496,7 +516,7 @@ export default function PredictionIntelligence() {
                       vi.table.effectiveWeight,
                       vi.table.dataStatus,
                     ].map((head) => (
-                      <TableCell key={head} sx={{ color: "white", fontWeight: 900, backgroundColor: "#10131b" }}>
+                      <TableCell key={head} sx={{ color: theme.palette.text.primary, fontWeight: 900, backgroundColor: "#EEF4FF" }}>
                         {head}
                       </TableCell>
                     ))}
@@ -505,16 +525,16 @@ export default function PredictionIntelligence() {
                 <TableBody>
                   {predictors.map((item) => (
                     <TableRow key={item.predictorKey}>
-                      <TableCell sx={{ color: "white", fontWeight: 900 }}>{predictorLabel(item.predictorKey)}</TableCell>
-                      <TableCell sx={{ color: "rgba(255,255,255,0.78)" }}>{speedLabel(item.speed)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatPercent(item.hit3)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatPercent(item.hit7)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatPercent(item.hit14)}</TableCell>
+                    <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 900 }}>{predictorLabel(item.predictorKey)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.secondary }}>{speedLabel(item.speed)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatPercent(item.hit3)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatPercent(item.hit7)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatPercent(item.hit14)}</TableCell>
                       <TableCell>
                         <Chip size="small" label={trendLabel(item.trend)} />
                       </TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatPercent(item.stability)}</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: 900 }}>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatPercent(item.stability)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 900 }}>
                         {formatPercent(item.effectiveWeight)}
                       </TableCell>
                       <TableCell>
@@ -524,7 +544,7 @@ export default function PredictionIntelligence() {
                   ))}
                   {!predictors.length && (
                     <TableRow>
-                      <TableCell colSpan={9} sx={{ color: "rgba(255,255,255,0.7)", textAlign: "center", py: 4 }}>
+                      <TableCell colSpan={9} sx={{ color: theme.palette.text.secondary, textAlign: "center", py: 4 }}>
                         {vi.intelligence.noPredictorData}
                       </TableCell>
                     </TableRow>
@@ -550,11 +570,11 @@ export default function PredictionIntelligence() {
                     gap: 1,
                     p: 1.2,
                     borderRadius: 2,
-                    backgroundColor: alpha(theme.palette.common.white, 0.05),
-                    border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+                    backgroundColor: "#F8FAFC",
+                    border: `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.62)" }}>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                     {label}
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 900 }}>
@@ -564,7 +584,7 @@ export default function PredictionIntelligence() {
               ))}
 
               <Box sx={{ p: 1.4, borderRadius: 2, backgroundColor: alpha(theme.palette.info.main, 0.08) }}>
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.62)" }}>
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                   {vi.intelligence.summary}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
@@ -573,7 +593,7 @@ export default function PredictionIntelligence() {
               </Box>
 
               <Box sx={{ p: 1.4, borderRadius: 2, backgroundColor: alpha(theme.palette.warning.main, 0.08) }}>
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.62)" }}>
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                   {vi.intelligence.recommendation}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
@@ -605,19 +625,19 @@ export default function PredictionIntelligence() {
                   sx={{
                     p: 1.5,
                     borderRadius: 3,
-                    border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
-                    backgroundColor: alpha(theme.palette.common.white, 0.045),
+                    border: `1px solid ${theme.palette.divider}`,
+                    backgroundColor: "#F8FAFC",
                   }}
                 >
                   <Stack spacing={0.8}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
                       {predictorLabel(key)}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)" }}>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                       {vi.table.base} {formatPercent(item?.baseWeight)} · {vi.table.performance}{" "}
                       {formatScore(item?.performanceFactor, 2)}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)" }}>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                       {vi.table.pattern} {formatScore(item?.patternFactor, 2)} · {vi.table.effective}{" "}
                       <strong>{formatPercent(item?.effectiveWeight)}</strong>
                     </Typography>
@@ -637,8 +657,8 @@ export default function PredictionIntelligence() {
             onChange={(_, value) => setActiveTab(value)}
             sx={{
               minHeight: 36,
-              "& .MuiTab-root": { color: "rgba(255,255,255,0.68)", textTransform: "none" },
-              "& .Mui-selected": { color: "#00c6ff !important" },
+              "& .MuiTab-root": { color: theme.palette.text.secondary, textTransform: "none", fontWeight: 800 },
+              "& .Mui-selected": { color: `${theme.palette.primary.main} !important` },
             }}
           >
             <Tab label={vi.intelligence.performanceHistory} />
@@ -646,7 +666,7 @@ export default function PredictionIntelligence() {
           </Tabs>
 
           {activeTab === 0 ? (
-            <TableContainer sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.common.white, 0.08)}` }}>
+            <TableContainer sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}`, backgroundColor: theme.palette.background.paper }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -659,7 +679,7 @@ export default function PredictionIntelligence() {
                       vi.table.effectiveWeight,
                       vi.table.trend,
                     ].map((head) => (
-                      <TableCell key={head} sx={{ color: "white", fontWeight: 900, backgroundColor: "#10131b" }}>
+                      <TableCell key={head} sx={{ color: theme.palette.text.primary, fontWeight: 900, backgroundColor: "#EEF4FF" }}>
                         {head}
                       </TableCell>
                     ))}
@@ -668,12 +688,12 @@ export default function PredictionIntelligence() {
                 <TableBody>
                   {performanceRows.slice(0, 80).map((row, index) => (
                     <TableRow key={`${row.predictorKey}-${row.snapshotId}-${index}`}>
-                      <TableCell sx={{ color: "white" }}>{formatDate(row.predictionDate)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatDate(row.targetDate)}</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: 900 }}>{predictorLabel(row.predictorKey)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatScore(row.score)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatPercent(row.hit7)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatPercent(row.effectiveWeight)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatDate(row.predictionDate)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatDate(row.targetDate)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 900 }}>{predictorLabel(row.predictorKey)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatScore(row.score)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatPercent(row.hit7)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatPercent(row.effectiveWeight)}</TableCell>
                       <TableCell>
                         <Chip size="small" label={trendLabel(row.trend)} />
                       </TableCell>
@@ -683,7 +703,7 @@ export default function PredictionIntelligence() {
               </Table>
             </TableContainer>
           ) : (
-            <TableContainer sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.common.white, 0.08)}` }}>
+            <TableContainer sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}`, backgroundColor: theme.palette.background.paper }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -697,7 +717,7 @@ export default function PredictionIntelligence() {
                       vi.table.pattern,
                       vi.table.effective,
                     ].map((head) => (
-                      <TableCell key={head} sx={{ color: "white", fontWeight: 900, backgroundColor: "#10131b" }}>
+                      <TableCell key={head} sx={{ color: theme.palette.text.primary, fontWeight: 900, backgroundColor: "#EEF4FF" }}>
                         {head}
                       </TableCell>
                     ))}
@@ -706,16 +726,16 @@ export default function PredictionIntelligence() {
                 <TableBody>
                   {weightRows.slice(0, 80).map((row, index) => (
                     <TableRow key={`${row.predictorKey}-${row.snapshotId}-${index}`}>
-                      <TableCell sx={{ color: "white" }}>{formatDate(row.predictionDate)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatDate(row.targetDate)}</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: 900 }}>{predictorLabel(row.predictorKey)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatDate(row.predictionDate)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatDate(row.targetDate)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 900 }}>{predictorLabel(row.predictorKey)}</TableCell>
                       <TableCell>
                         <DataChip label={patternLabel(row.patternState)} state={row.patternState} />
                       </TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatPercent(row.baseWeight)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatScore(row.performanceFactor, 2)}</TableCell>
-                      <TableCell sx={{ color: "white" }}>{formatScore(row.patternFactor, 2)}</TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: 900 }}>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatPercent(row.baseWeight)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatScore(row.performanceFactor, 2)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary }}>{formatScore(row.patternFactor, 2)}</TableCell>
+                      <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 900 }}>
                         {formatPercent(row.effectiveWeight)}
                       </TableCell>
                     </TableRow>
@@ -727,7 +747,7 @@ export default function PredictionIntelligence() {
         </SectionCard>
 
         {recentSelfEvaluation.length > 0 && (
-          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.48)" }}>
+          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
             {vi.intelligence.loadedReports}: {recentSelfEvaluation.length}
           </Typography>
         )}

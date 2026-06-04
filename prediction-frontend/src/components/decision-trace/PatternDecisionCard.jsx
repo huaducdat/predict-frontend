@@ -24,7 +24,7 @@ function ListBlock({ title, items, emptyText }) {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: "rgba(255,255,255,0.86)" }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: theme.palette.text.primary }}>
         {title}
       </Typography>
       {rows.length > 0 ? (
@@ -34,17 +34,17 @@ function ListBlock({ title, items, emptyText }) {
             sx={{
               p: 1.2,
               borderRadius: 2,
-              border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-              backgroundColor: alpha(theme.palette.common.white, 0.045),
+              border: `1px solid ${theme.palette.divider}`,
+              backgroundColor: "#F8FAFC",
             }}
           >
-            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)" }}>
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
               {item}
             </Typography>
           </Box>
         ))
       ) : (
-        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.58)" }}>
+        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
           {emptyText}
         </Typography>
       )}
@@ -64,7 +64,7 @@ export default function PatternDecisionCard({ data }) {
         <Chip
           label={translatePatternState(state)}
           sx={{
-            color: theme.palette.info.light,
+            color: theme.palette.primary.dark,
             backgroundColor: alpha(theme.palette.info.main, 0.16),
             border: `1px solid ${alpha(theme.palette.info.main, 0.32)}`,
             fontWeight: 900,
@@ -85,11 +85,11 @@ export default function PatternDecisionCard({ data }) {
             sx={{
               p: 1.35,
               borderRadius: 2,
-              border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-              backgroundColor: alpha(theme.palette.common.white, 0.04),
+              border: `1px solid ${theme.palette.divider}`,
+              backgroundColor: "#F8FAFC",
             }}
           >
-            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.56)" }}>
+            <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
               {label}
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 900 }}>

@@ -18,20 +18,20 @@ function directionSx(direction, theme) {
   const value = String(direction || "NEUTRAL").toUpperCase();
   if (value === "UP") {
     return {
-      color: theme.palette.success.light,
+      color: theme.palette.success.dark,
       backgroundColor: alpha(theme.palette.success.main, 0.14),
       border: `1px solid ${alpha(theme.palette.success.main, 0.32)}`,
     };
   }
   if (value === "DOWN") {
     return {
-      color: theme.palette.error.light,
+      color: theme.palette.error.dark,
       backgroundColor: alpha(theme.palette.error.main, 0.14),
       border: `1px solid ${alpha(theme.palette.error.main, 0.32)}`,
     };
   }
   return {
-    color: theme.palette.grey[300],
+    color: theme.palette.grey[700],
     backgroundColor: alpha(theme.palette.grey[500], 0.14),
     border: `1px solid ${alpha(theme.palette.grey[500], 0.26)}`,
   };
@@ -50,7 +50,7 @@ export default function WeightDecisionTable({ rows }) {
         <TableContainer
           sx={{
             borderRadius: 2,
-            border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+            border: `1px solid ${theme.palette.divider}`,
             overflowX: "auto",
           }}
         >
@@ -70,7 +70,7 @@ export default function WeightDecisionTable({ rows }) {
                 ].map((head) => (
                   <TableCell
                     key={head}
-                    sx={{ color: "white", fontWeight: 900, backgroundColor: "#10131b" }}
+                    sx={{ color: "#0F172A", fontWeight: 900, backgroundColor: "#EEF4FF" }}
                   >
                     {head}
                   </TableCell>
@@ -80,15 +80,17 @@ export default function WeightDecisionTable({ rows }) {
             <TableBody>
               {items.map((row) => (
                 <TableRow key={row?.predictorKey}>
-                  <TableCell sx={{ color: "white", fontWeight: 900 }}>{row?.predictorKey}</TableCell>
-                  <TableCell sx={{ color: "white" }}>{formatPercent(row?.baseWeight)}</TableCell>
-                  <TableCell sx={{ color: "white" }}>{formatFactor(row?.performanceFactor)}</TableCell>
-                  <TableCell sx={{ color: "white" }}>{formatFactor(row?.patternFactor)}</TableCell>
-                  <TableCell sx={{ color: "white" }}>{formatPercent(row?.rawEffectiveWeight)}</TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: 900 }}>
+                  <TableCell sx={{ color: "#0F172A", fontWeight: 900 }}>{row?.predictorKey}</TableCell>
+                  <TableCell sx={{ color: "#334155", fontFamily: "'Courier New', monospace" }}>{formatPercent(row?.baseWeight)}</TableCell>
+                  <TableCell sx={{ color: "#334155", fontFamily: "'Courier New', monospace" }}>{formatFactor(row?.performanceFactor)}</TableCell>
+                  <TableCell sx={{ color: "#334155", fontFamily: "'Courier New', monospace" }}>{formatFactor(row?.patternFactor)}</TableCell>
+                  <TableCell sx={{ color: "#334155", fontFamily: "'Courier New', monospace" }}>{formatPercent(row?.rawEffectiveWeight)}</TableCell>
+                  <TableCell sx={{ color: "#1D4ED8", fontWeight: 950, fontFamily: "'Courier New', monospace" }}>
                     {formatPercent(row?.effectiveWeight)}
                   </TableCell>
-                  <TableCell sx={{ color: "white" }}>{formatDeltaPercent(row?.deltaPercent)}</TableCell>
+                  <TableCell sx={{ color: row?.deltaPercent > 0 ? "#15803D" : row?.deltaPercent < 0 ? "#B91C1C" : "#475569", fontWeight: 900, fontFamily: "'Courier New', monospace" }}>
+                    {formatDeltaPercent(row?.deltaPercent)}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       size="small"
@@ -96,7 +98,7 @@ export default function WeightDecisionTable({ rows }) {
                       sx={{ fontWeight: 900, ...directionSx(row?.direction, theme) }}
                     />
                   </TableCell>
-                  <TableCell sx={{ color: "rgba(255,255,255,0.76)", minWidth: 220 }}>
+                  <TableCell sx={{ color: "#475569", minWidth: 220 }}>
                     {row?.explanation || "Chưa có giải thích"}
                   </TableCell>
                 </TableRow>
@@ -109,9 +111,9 @@ export default function WeightDecisionTable({ rows }) {
           sx={{
             p: 3,
             borderRadius: 2,
-            border: `1px dashed ${alpha(theme.palette.common.white, 0.16)}`,
+            border: `1px dashed ${theme.palette.divider}`,
             textAlign: "center",
-            color: "rgba(255,255,255,0.72)",
+            color: theme.palette.text.secondary,
           }}
         >
           <Typography>Chưa có dữ liệu điều chỉnh trọng số.</Typography>

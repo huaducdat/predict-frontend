@@ -55,7 +55,8 @@ export function translateMode(value) {
   const mode = String(value || "").toUpperCase();
   const labels = {
     SHORT_TERM: "Ngắn hạn",
-    EXTENDED: "Mở rộng",
+    EXTENDED: "Dài hạn",
+    LONG_TERM: "Dài hạn",
   };
   return labels[mode] || value || "Chưa có dữ liệu";
 }

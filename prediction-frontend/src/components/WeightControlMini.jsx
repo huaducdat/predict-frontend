@@ -128,7 +128,9 @@ function WeightControlMini() {
       sx={{
         p: 1.5,
         borderRadius: 2,
-        background: "rgba(255,255,255,0.05)",
+        background: "#F8FAFC",
+        border: "1px solid #E2E8F0",
+        color: "#0F172A",
         fontFamily: "Courier New",
       }}
     >

@@ -47,7 +47,7 @@ function Login() {
         sx={{
           p: 4,
           width: 340,
-          borderRadius: 4,
+          borderRadius: 3,
           background: "white",
           boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         }}

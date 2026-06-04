@@ -47,7 +47,8 @@ export const vi = {
   mode: {
     label: "Chế độ",
     SHORT_TERM: "Ngắn hạn",
-    EXTENDED: "Mở rộng",
+    EXTENDED: "Dài hạn",
+    LONG_TERM: "Dài hạn",
     SHORT: "Ngắn hạn",
     LONG: "Dài hạn",
   },

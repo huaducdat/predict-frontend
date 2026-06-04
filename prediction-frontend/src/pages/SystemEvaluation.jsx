@@ -7,6 +7,8 @@ import {
   Chip,
   CircularProgress,
   Stack,
+  Tab,
+  Tabs,
   Table,
   TableBody,
   TableCell,
@@ -32,11 +34,17 @@ import MetricLineChart from "../components/systemEvaluation/MetricLineChart";
 import ScoreCard from "../components/systemEvaluation/ScoreCard";
 import StateCard from "../components/systemEvaluation/StateCard";
 import SystemSectionCard from "../components/systemEvaluation/SystemSectionCard";
+import { vi } from "../i18n/vi";
 
 const HISTORY_SERIES = [
   { field: "confidenceScore", label: "Confidence", color: "#00c6ff" },
   { field: "stabilityScore", label: "Stability", color: "#14b86a" },
   { field: "accuracyScore", label: "Accuracy", color: "#ff9f1c" },
+];
+
+const MODE_OPTIONS = [
+  { value: "SHORT_TERM", label: "Ngắn hạn" },
+  { value: "EXTENDED", label: "Dài hạn" },
 ];
 
 function normalizePayload(payload) {
@@ -149,7 +157,7 @@ function stateChipSx(value, theme) {
 
   if (["STABLE", "HIGH_CONFIDENCE"].includes(state)) {
     return {
-      color: theme.palette.success.light,
+      color: theme.palette.success.dark,
       backgroundColor: alpha(theme.palette.success.main, 0.16),
       border: `1px solid ${alpha(theme.palette.success.main, 0.34)}`,
     };
@@ -157,7 +165,7 @@ function stateChipSx(value, theme) {
 
   if (["SHIFTING", "RECOVERING", "MEDIUM", "MEDIUM_CONFIDENCE", "PHASE_SHIFTING"].includes(state)) {
     return {
-      color: theme.palette.warning.light,
+      color: theme.palette.warning.dark,
       backgroundColor: alpha(theme.palette.warning.main, 0.17),
       border: `1px solid ${alpha(theme.palette.warning.main, 0.34)}`,
     };
@@ -165,14 +173,14 @@ function stateChipSx(value, theme) {
 
   if (["CHAOTIC", "LOW_CONFIDENCE", "LOW", "DO_NOT_TRUST"].includes(state)) {
     return {
-      color: theme.palette.error.light,
+      color: theme.palette.error.dark,
       backgroundColor: alpha(theme.palette.error.main, 0.18),
       border: `1px solid ${alpha(theme.palette.error.main, 0.36)}`,
     };
   }
 
   return {
-    color: theme.palette.grey[300],
+    color: theme.palette.grey[700],
     backgroundColor: alpha(theme.palette.grey[500], 0.14),
     border: `1px solid ${alpha(theme.palette.grey[500], 0.26)}`,
   };
@@ -181,6 +189,7 @@ function stateChipSx(value, theme) {
 export default function SystemEvaluation() {
   const theme = useTheme();
   const mountedRef = useRef(true);
+  const [selectedMode, setSelectedMode] = useState("SHORT_TERM");
 
   const [latestReport, setLatestReport] = useState(null);
   const [metrics, setMetrics] = useState(null);
@@ -199,10 +208,10 @@ export default function SystemEvaluation() {
 
     try {
       const [latestRes, recentRes, metricsRes, recommendationRes] = await Promise.allSettled([
-        getSystemEvaluationLatest(),
-        getSystemEvaluationRecent(20),
-        getSystemEvaluationMetricsLatest(),
-        getSystemEvaluationRecommendationLatest(),
+        getSystemEvaluationLatest(selectedMode),
+        getSystemEvaluationRecent(20, selectedMode),
+        getSystemEvaluationMetricsLatest(selectedMode),
+        getSystemEvaluationRecommendationLatest(selectedMode),
       ]);
 
       const latest = latestRes.status === "fulfilled" ? normalizePayload(latestRes.value) : null;
@@ -251,7 +260,7 @@ export default function SystemEvaluation() {
     };
     // stable refs and imported API functions only
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedMode]);
 
   const activeReport = latestReport ?? (recentReports.length ? recentReports[0] : null);
   const historyRows = useMemo(() => sortHistory(recentReports).slice(-20), [recentReports]);
@@ -314,10 +323,24 @@ export default function SystemEvaluation() {
             >
               Đánh Giá Hệ Thống
             </Typography>
-            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.68)" }}>
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
               Tổng hợp độ tin cậy, ổn định và khuyến nghị vận hành từ System Evaluation backend.
             </Typography>
           </Box>
+
+          <Tabs
+            value={selectedMode}
+            onChange={(_, value) => setSelectedMode(value)}
+            sx={{
+              minHeight: 40,
+              "& .MuiTab-root": { color: theme.palette.text.secondary, textTransform: "none", fontWeight: 800 },
+              "& .Mui-selected": { color: `${theme.palette.primary.main} !important` },
+            }}
+          >
+            {MODE_OPTIONS.map((item) => (
+              <Tab key={item.value} value={item.value} label={item.label} />
+            ))}
+          </Tabs>
 
           <Button
             variant="contained"
@@ -342,7 +365,7 @@ export default function SystemEvaluation() {
           <SystemSectionCard title="Đang tải dữ liệu" subtitle="Đang gọi các API System Evaluation.">
             <Stack direction="row" alignItems="center" spacing={1.2}>
               <CircularProgress size={20} />
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                 Vui lòng đợi trong giây lát.
               </Typography>
             </Stack>
@@ -406,7 +429,7 @@ export default function SystemEvaluation() {
               title="Tóm Tắt Hệ Thống"
               subtitle={`Nguồn mới nhất: ${formatDate(activeReport?.createdAt ?? activeReport?.targetDate)}`}
             >
-              <Typography variant="body1" sx={{ lineHeight: 1.7, color: "rgba(255,255,255,0.86)" }}>
+              <Typography variant="body1" sx={{ lineHeight: 1.7, color: theme.palette.text.primary }}>
                 {summaryText}
               </Typography>
             </SystemSectionCard>
@@ -423,8 +446,8 @@ export default function SystemEvaluation() {
                       sx={{
                         p: 1.25,
                         borderRadius: 2,
-                        border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-                        backgroundColor: alpha(theme.palette.common.white, 0.045),
+                        border: `1px solid ${theme.palette.divider}`,
+                        backgroundColor: "#F8FAFC",
                       }}
                     >
                       <Typography variant="body2">{reason}</Typography>
@@ -436,9 +459,10 @@ export default function SystemEvaluation() {
                   sx={{
                     p: 3,
                     borderRadius: 2,
-                    border: `1px dashed ${alpha(theme.palette.common.white, 0.16)}`,
+                    border: `1px dashed ${alpha(theme.palette.text.secondary, 0.28)}`,
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.72)",
+                    color: theme.palette.text.secondary,
+                    backgroundColor: "#F8FAFC",
                   }}
                 >
                   Chưa có lý do cụ thể.
@@ -459,7 +483,8 @@ export default function SystemEvaluation() {
                   sx={{
                     maxHeight: 540,
                     borderRadius: 3,
-                    border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+                    border: `1px solid ${theme.palette.divider}`,
+                    backgroundColor: theme.palette.background.paper,
                   }}
                 >
                   <Table stickyHeader size="small">
@@ -469,9 +494,9 @@ export default function SystemEvaluation() {
                           <TableCell
                             key={head}
                             sx={{
-                              color: "white",
+                              color: theme.palette.text.primary,
                               fontWeight: 900,
-                              backgroundColor: "#10131b",
+                              backgroundColor: "#EEF4FF",
                             }}
                           >
                             {head}
@@ -491,15 +516,15 @@ export default function SystemEvaluation() {
                             key={`${row.id ?? rowDate ?? index}-${index}`}
                             sx={{
                               "&:nth-of-type(odd)": {
-                                backgroundColor: alpha(theme.palette.common.white, 0.02),
+                                backgroundColor: alpha(theme.palette.primary.main, 0.025),
                               },
                             }}
                           >
-                            <TableCell sx={{ color: "white", whiteSpace: "nowrap" }}>
+                            <TableCell sx={{ color: theme.palette.text.primary, whiteSpace: "nowrap" }}>
                               {formatDate(rowDate)}
                             </TableCell>
-                            <TableCell sx={{ color: "white", whiteSpace: "nowrap" }}>
-                              {row.mode ?? "--"}
+                            <TableCell sx={{ color: theme.palette.text.primary, whiteSpace: "nowrap" }}>
+                              {row.mode ? vi.mode[String(row.mode).toUpperCase()] ?? String(row.mode).toUpperCase() : "--"}
                             </TableCell>
                             <TableCell>
                               <Chip
@@ -515,7 +540,7 @@ export default function SystemEvaluation() {
                                 sx={{ fontWeight: 800, ...stateChipSx(rowConfidence, theme) }}
                               />
                             </TableCell>
-                            <TableCell sx={{ color: "white", whiteSpace: "nowrap" }}>
+                            <TableCell sx={{ color: theme.palette.text.primary, whiteSpace: "nowrap" }}>
                               {rowRecommendation}
                             </TableCell>
                           </TableRow>
@@ -529,9 +554,10 @@ export default function SystemEvaluation() {
                   sx={{
                     p: 3,
                     borderRadius: 2,
-                    border: `1px dashed ${alpha(theme.palette.common.white, 0.16)}`,
+                    border: `1px dashed ${alpha(theme.palette.text.secondary, 0.28)}`,
                     textAlign: "center",
-                    color: "rgba(255,255,255,0.72)",
+                    color: theme.palette.text.secondary,
+                    backgroundColor: "#F8FAFC",
                   }}
                 >
                   Chưa có bản ghi lịch sử.

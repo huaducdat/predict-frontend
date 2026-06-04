@@ -22,11 +22,11 @@ export default function BoostDecisionCard({ data }) {
           sx={{
             p: 1.5,
             borderRadius: 2,
-            backgroundColor: alpha(theme.palette.common.white, 0.045),
-            border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+            backgroundColor: "#F8FAFC",
+            border: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.56)" }}>
+          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
             Trạng thái pattern
           </Typography>
           <Chip label={translatePatternState(data?.patternState)} sx={{ alignSelf: "flex-start", fontWeight: 900 }} />
@@ -36,11 +36,11 @@ export default function BoostDecisionCard({ data }) {
           sx={{
             p: 1.5,
             borderRadius: 2,
-            backgroundColor: alpha(theme.palette.common.white, 0.045),
-            border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+            backgroundColor: "#F8FAFC",
+            border: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.56)" }}>
+          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
             Giới hạn tăng cường đang dùng
           </Typography>
           <Typography variant="h5" sx={{ fontWeight: 900 }}>
@@ -52,17 +52,17 @@ export default function BoostDecisionCard({ data }) {
           sx={{
             p: 1.5,
             borderRadius: 2,
-            backgroundColor: alpha(theme.palette.common.white, 0.045),
-            border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+            backgroundColor: "#F8FAFC",
+            border: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.56)" }}>
+          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
             Tăng cường chi tiết
           </Typography>
-          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)" }}>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
             PAIR x TIME: {hasPairBoost ? formatFactor(data?.pairTimeBoost) : "Chưa có dữ liệu"}
           </Typography>
-          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)" }}>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
             REP x STRK: {hasRepeatBoost ? formatFactor(data?.repeatStreakBoost) : "Chưa có dữ liệu"}
           </Typography>
         </Stack>
@@ -77,7 +77,7 @@ export default function BoostDecisionCard({ data }) {
             backgroundColor: alpha(theme.palette.warning.main, 0.08),
           }}
         >
-          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.78)" }}>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
             {note}
           </Typography>
         </Box>

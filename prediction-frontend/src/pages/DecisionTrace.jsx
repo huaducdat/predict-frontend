@@ -7,6 +7,8 @@ import {
   Chip,
   CircularProgress,
   Stack,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
@@ -15,10 +17,7 @@ import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 
-import {
-  getLatestDecisionTrace,
-  getRecentDecisionTrace,
-} from "../api/decisionTraceApi";
+import { getLatestDecisionTrace, getRecentDecisionTrace } from "../api/decisionTraceApi";
 import BoostDecisionCard from "../components/decision-trace/BoostDecisionCard";
 import NumberContributionTable from "../components/decision-trace/NumberContributionTable";
 import PatternDecisionCard from "../components/decision-trace/PatternDecisionCard";
@@ -32,6 +31,11 @@ import {
 } from "../components/decision-trace/format";
 import SystemSectionCard from "../components/systemEvaluation/SystemSectionCard";
 
+const MODE_OPTIONS = [
+  { value: "SHORT_TERM", label: "Ngắn hạn" },
+  { value: "EXTENDED", label: "Dài hạn" },
+];
+
 function normalizePayload(payload) {
   const data = payload?.data ?? payload;
   if (Array.isArray(data)) return data[0] ?? null;
@@ -42,13 +46,11 @@ function normalizePayload(payload) {
 function normalizeList(payload) {
   const data = payload?.data ?? payload;
   if (Array.isArray(data)) return data;
-
   if (data && typeof data === "object") {
     for (const key of ["content", "items", "list", "reports", "results", "data"]) {
       if (Array.isArray(data[key])) return data[key];
     }
   }
-
   return [];
 }
 
@@ -63,7 +65,7 @@ function hasTraceData(trace) {
   );
 }
 
-function OverviewItem({ icon, label, value }) {
+function OverviewItem({ icon, label, value, accent = false }) {
   const theme = useTheme();
 
   return (
@@ -71,10 +73,10 @@ function OverviewItem({ icon, label, value }) {
       spacing={1}
       sx={{
         p: 1.6,
-        borderRadius: 2,
+        borderRadius: 3,
         minHeight: 112,
-        border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-        backgroundColor: alpha(theme.palette.common.white, 0.045),
+        border: `1px solid ${accent ? alpha(theme.palette.primary.main, 0.24) : theme.palette.divider}`,
+        backgroundColor: accent ? alpha(theme.palette.primary.main, 0.08) : "#F8FAFC",
       }}
     >
       <Box
@@ -84,16 +86,16 @@ function OverviewItem({ icon, label, value }) {
           borderRadius: 2,
           display: "grid",
           placeItems: "center",
-          color: "white",
-          background: "linear-gradient(135deg, #00c6ff, #14b86a)",
+          color: accent ? theme.palette.primary.dark : theme.palette.text.secondary,
+          background: accent ? alpha(theme.palette.primary.main, 0.12) : "#EEF4FF",
         }}
       >
         {icon}
       </Box>
-      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.56)" }}>
+      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
         {label}
       </Typography>
-      <Typography variant="body1" sx={{ color: "white", fontWeight: 900 }}>
+      <Typography variant="body1" sx={{ color: theme.palette.text.primary, fontWeight: 900 }}>
         {value || "Chưa có dữ liệu"}
       </Typography>
     </Stack>
@@ -103,9 +105,9 @@ function OverviewItem({ icon, label, value }) {
 export default function DecisionTrace() {
   const theme = useTheme();
   const mountedRef = useRef(true);
-
   const [latest, setLatest] = useState(null);
   const [recent, setRecent] = useState([]);
+  const [mode, setMode] = useState("SHORT_TERM");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -119,21 +121,19 @@ export default function DecisionTrace() {
 
     try {
       const [latestResult, recentResult] = await Promise.allSettled([
-        getLatestDecisionTrace(),
-        getRecentDecisionTrace(20),
+        getLatestDecisionTrace(mode),
+        getRecentDecisionTrace(20, mode),
       ]);
 
-      const latestTrace =
-        latestResult.status === "fulfilled" ? normalizePayload(latestResult.value) : null;
-      const recentTrace =
-        recentResult.status === "fulfilled" ? normalizeList(recentResult.value) : [];
+      const latestTrace = latestResult.status === "fulfilled" ? normalizePayload(latestResult.value) : null;
+      const recentTrace = recentResult.status === "fulfilled" ? normalizeList(recentResult.value) : [];
 
       if (mountedRef.current) {
         setLatest(hasTraceData(latestTrace) ? latestTrace : null);
         setRecent(Array.isArray(recentTrace) ? recentTrace : []);
 
         if (!hasTraceData(latestTrace) && !recentTrace.length) {
-          setNotice("Chưa có dữ liệu luồng quyết định.");
+          setNotice("Chưa có dữ liệu luồng quyết định cho mode này.");
         }
 
         if (latestResult.status === "rejected" && recentResult.status === "rejected") {
@@ -155,43 +155,23 @@ export default function DecisionTrace() {
   useEffect(() => {
     mountedRef.current = true;
     void loadData();
-
     return () => {
       mountedRef.current = false;
     };
-    // imported API functions are stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mode]);
 
   const activeTrace = latest ?? (recent.length > 0 ? recent[0] : null);
   const recentRows = useMemo(() => (recent.length > 0 ? recent : activeTrace ? [activeTrace] : []), [
     activeTrace,
     recent,
   ]);
-
   const patternState = activeTrace?.patternState ?? activeTrace?.patternDecision?.state;
   const boostCap = activeTrace?.boostDecision?.boostCapUsed;
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        p: { xs: 1.5, md: 3 },
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "radial-gradient(circle at 12% 0%, rgba(0,198,255,0.15), transparent 28%), radial-gradient(circle at 86% 12%, rgba(20,184,106,0.13), transparent 30%), radial-gradient(circle at 52% 100%, rgba(255,159,28,0.12), transparent 34%)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <Stack spacing={2.4} sx={{ position: "relative", zIndex: 1, maxWidth: 1500, mx: "auto" }}>
+    <Box sx={{ minHeight: "100vh", p: { xs: 1.5, md: 3 } }}>
+      <Stack spacing={2.4} sx={{ maxWidth: 1500, mx: "auto" }}>
         <Stack
           direction={{ xs: "column", md: "row" }}
           justifyContent="space-between"
@@ -199,47 +179,47 @@ export default function DecisionTrace() {
           spacing={2}
         >
           <Box>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 950,
-                letterSpacing: 0,
-                background: "linear-gradient(90deg, #00c6ff, #14b86a, #ff9f1c)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
+            <Typography variant="h4" sx={{ color: "#0F172A", fontWeight: 950 }}>
               Luồng quyết định
             </Typography>
-            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.68)" }}>
-              Theo dõi cách hệ thống điều chỉnh mẫu, trọng số và tăng cường trong lần dự đoán gần nhất.
+            <Typography variant="body2" sx={{ color: "#475569", maxWidth: 760 }}>
+              Trang này cho biết vì sao hệ thống tăng/giảm weight của từng predictor trong từng mode dự đoán.
             </Typography>
           </Box>
 
-          <Button
-            variant="contained"
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshRoundedIcon />}
-            onClick={loadData}
-            disabled={loading}
-            sx={{
-              textTransform: "none",
-              borderRadius: 3,
-              px: 2.4,
-              background: "linear-gradient(135deg, #00c6ff, #14b86a)",
-            }}
-          >
-            {loading ? "Đang tải" : "Làm mới"}
-          </Button>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} alignItems={{ xs: "stretch", sm: "center" }}>
+            <Tabs
+              value={mode}
+              onChange={(_, value) => setMode(value)}
+              sx={{
+                minHeight: 40,
+                "& .MuiTab-root": { minHeight: 40, textTransform: "none", fontWeight: 800 },
+              }}
+            >
+              {MODE_OPTIONS.map((item) => (
+                <Tab key={item.value} value={item.value} label={item.label} />
+              ))}
+            </Tabs>
+            <Button
+              variant="contained"
+              startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshRoundedIcon />}
+              onClick={loadData}
+              disabled={loading}
+              sx={{ textTransform: "none", borderRadius: 999, px: 2.4 }}
+            >
+              {loading ? "Đang tải" : "Làm mới"}
+            </Button>
+          </Stack>
         </Stack>
 
         {error && <Alert severity="error">{error}</Alert>}
         {notice && !error && <Alert severity="info">{notice}</Alert>}
 
         {loading && !activeTrace ? (
-          <SystemSectionCard title="Đang tải dữ liệu" subtitle="Đang gọi API luồng quyết định.">
+          <SystemSectionCard title="Đang tải dữ liệu" subtitle="Đang gọi API luồng quyết định theo mode đã chọn.">
             <Stack direction="row" alignItems="center" spacing={1.2}>
               <CircularProgress size={20} />
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                 Vui lòng đợi trong giây lát.
               </Typography>
             </Stack>
@@ -253,9 +233,9 @@ export default function DecisionTrace() {
                 <Chip
                   label={translatePatternState(patternState)}
                   sx={{
-                    color: theme.palette.info.light,
-                    backgroundColor: alpha(theme.palette.info.main, 0.16),
-                    border: `1px solid ${alpha(theme.palette.info.main, 0.32)}`,
+                    color: theme.palette.primary.dark,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.26)}`,
                     fontWeight: 900,
                   }}
                 />
@@ -270,38 +250,31 @@ export default function DecisionTrace() {
               >
                 <OverviewItem
                   icon={<AccountTreeRoundedIcon />}
-                  label="Trạng thái mẫu"
+                  label="Trạng thái pattern"
                   value={translatePatternState(patternState)}
+                  accent
                 />
-                <OverviewItem
-                  icon={<TuneRoundedIcon />}
-                  label="Chế độ"
-                  value={translateMode(activeTrace?.mode)}
-                />
+                <OverviewItem icon={<TuneRoundedIcon />} label="Chế độ" value={translateMode(activeTrace?.mode)} />
                 <OverviewItem
                   icon={<AccountTreeRoundedIcon />}
                   label="Ngày dự đoán / mục tiêu"
                   value={`${formatDate(activeTrace?.predictionDate)} / ${formatDate(activeTrace?.targetDate)}`}
                 />
-                <OverviewItem
-                  icon={<BoltRoundedIcon />}
-                  label="Giới hạn tăng cường đang dùng"
-                  value={formatFactor(boostCap)}
-                />
+                <OverviewItem icon={<BoltRoundedIcon />} label="Boost cap đang dùng" value={formatFactor(boostCap)} />
               </Box>
 
               <Box
                 sx={{
-                  p: 1.4,
-                  borderRadius: 2,
-                  border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-                  backgroundColor: alpha(theme.palette.common.white, 0.04),
+                  p: 1.6,
+                  borderRadius: 3,
+                  border: `1px solid ${theme.palette.divider}`,
+                  backgroundColor: "#F8FAFC",
                 }}
               >
-                <Typography variant="subtitle2" sx={{ color: "rgba(255,255,255,0.62)", mb: 0.5 }}>
+                <Typography variant="subtitle2" sx={{ color: theme.palette.text.secondary, mb: 0.5 }}>
                   Tóm tắt
                 </Typography>
-                <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.84)", lineHeight: 1.65 }}>
+                <Typography variant="body1" sx={{ color: theme.palette.text.primary, lineHeight: 1.65 }}>
                   {activeTrace?.summary || "Chưa có dữ liệu"}
                 </Typography>
               </Box>

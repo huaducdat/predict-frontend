@@ -195,7 +195,7 @@ function PatternReportWidget({ dense = false }) {
   }
 
   if (mode) {
-    metaParts.push(String(mode).toUpperCase());
+    metaParts.push(vi.mode[String(mode).toUpperCase()] ?? String(mode).toUpperCase());
   }
 
   if (createdAt) {
@@ -238,13 +238,11 @@ function PatternReportWidget({ dense = false }) {
                     ? alpha(theme.palette.error.main, 0.35)
                     : alpha(theme.palette.grey[500], 0.28)
             }`,
-            background:
-              "linear-gradient(135deg, rgba(16,18,24,0.96), rgba(26,28,36,0.8))",
-            backdropFilter: "blur(16px)",
+            background: "rgba(255,255,255,0.92)",
             px: dense ? 1 : 1.25,
             py: dense ? 0.5 : 0.75,
-            color: "rgba(255,255,255,0.92)",
-            boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
+            color: theme.palette.text.primary,
+            boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.1)}`,
             textAlign: "left",
             cursor: "pointer",
             transition: "transform 0.2s ease, border-color 0.2s ease",
@@ -270,12 +268,12 @@ function PatternReportWidget({ dense = false }) {
                 fontWeight: 700,
                 color:
                   state === "STABLE"
-                    ? theme.palette.success.light
+                    ? theme.palette.success.dark
                     : state === "SHIFTING"
-                      ? theme.palette.warning.light
+                      ? theme.palette.warning.dark
                       : state === "VOLATILE"
-                        ? theme.palette.error.light
-                        : theme.palette.grey[300],
+                        ? theme.palette.error.dark
+                        : theme.palette.grey[700],
                 backgroundColor:
                   state === "STABLE"
                     ? alpha(theme.palette.success.main, 0.18)
@@ -307,7 +305,7 @@ function PatternReportWidget({ dense = false }) {
                     display: "block",
                     fontWeight: 700,
                     lineHeight: 1.1,
-                    color: "rgba(255,255,255,0.92)",
+                    color: theme.palette.text.primary,
                   }}
                   noWrap
                 >
@@ -319,7 +317,7 @@ function PatternReportWidget({ dense = false }) {
                   sx={{
                     display: "block",
                     lineHeight: 1.1,
-                    color: "rgba(255,255,255,0.68)",
+                    color: theme.palette.text.secondary,
                   }}
                   noWrap
                 >
@@ -344,11 +342,11 @@ function PatternReportWidget({ dense = false }) {
             onClick={handleRefresh}
             disabled={loading}
             sx={{
-              color: "rgba(255,255,255,0.72)",
-              border: `1px solid ${alpha(theme.palette.common.white, 0.14)}`,
-              backgroundColor: alpha(theme.palette.common.white, 0.04),
+              color: theme.palette.text.secondary,
+              border: `1px solid ${theme.palette.divider}`,
+              backgroundColor: "#FFFFFF",
               "&:hover": {
-                backgroundColor: alpha(theme.palette.common.white, 0.08),
+                backgroundColor: "#EEF4FF",
               },
             }}
           >

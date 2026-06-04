@@ -19,13 +19,17 @@ export default function RecentDecisionTrace({ rows, fallback }) {
   const sourceRows = Array.isArray(rows) && rows.length > 0 ? rows : fallback ? [fallback] : [];
 
   return (
-    <SystemSectionCard title="Lịch sử luồng quyết định" subtitle="20 decision trace gần nhất nếu backend có dữ liệu.">
+    <SystemSectionCard
+      title="Lịch sử luồng quyết định"
+      subtitle="20 decision trace gần nhất nếu backend có dữ liệu."
+    >
       {sourceRows.length > 0 ? (
         <TableContainer
           sx={{
             maxHeight: 540,
             borderRadius: 2,
-            border: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+            border: `1px solid ${theme.palette.divider}`,
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Table stickyHeader size="small">
@@ -34,7 +38,11 @@ export default function RecentDecisionTrace({ rows, fallback }) {
                 {["Thời gian", "Mẫu", "Chế độ", "Tóm tắt", "Số dòng trọng số", "Giới hạn tăng cường"].map((head) => (
                   <TableCell
                     key={head}
-                    sx={{ color: "white", fontWeight: 900, backgroundColor: "#10131b" }}
+                    sx={{
+                      color: theme.palette.text.primary,
+                      fontWeight: 900,
+                      backgroundColor: "#EEF4FF",
+                    }}
                   >
                     {head}
                   </TableCell>
@@ -43,8 +51,15 @@ export default function RecentDecisionTrace({ rows, fallback }) {
             </TableHead>
             <TableBody>
               {sourceRows.map((row, index) => (
-                <TableRow key={`${row?.id ?? row?.createdAt ?? index}-${index}`}>
-                  <TableCell sx={{ color: "white", whiteSpace: "nowrap" }}>
+                <TableRow
+                  key={`${row?.id ?? row?.createdAt ?? index}-${index}`}
+                  sx={{
+                    "&:nth-of-type(odd)": {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.025),
+                    },
+                  }}
+                >
+                  <TableCell sx={{ color: theme.palette.text.primary, whiteSpace: "nowrap" }}>
                     {formatDate(row?.createdAt ?? row?.targetDate ?? row?.predictionDate)}
                   </TableCell>
                   <TableCell>
@@ -54,14 +69,14 @@ export default function RecentDecisionTrace({ rows, fallback }) {
                       sx={{ fontWeight: 900 }}
                     />
                   </TableCell>
-                  <TableCell sx={{ color: "white", whiteSpace: "nowrap" }}>
+                  <TableCell sx={{ color: theme.palette.text.primary, whiteSpace: "nowrap" }}>
                     {translateMode(row?.mode)}
                   </TableCell>
-                  <TableCell sx={{ color: "rgba(255,255,255,0.76)", minWidth: 280 }}>
+                  <TableCell sx={{ color: theme.palette.text.secondary, minWidth: 280 }}>
                     {row?.summary || "Chưa có dữ liệu"}
                   </TableCell>
-                  <TableCell sx={{ color: "white" }}>{row?.weightDecisions?.length ?? 0}</TableCell>
-                  <TableCell sx={{ color: "white" }}>
+                  <TableCell sx={{ color: theme.palette.text.primary }}>{row?.weightDecisions?.length ?? 0}</TableCell>
+                  <TableCell sx={{ color: theme.palette.text.primary }}>
                     {formatFactor(row?.boostDecision?.boostCapUsed)}
                   </TableCell>
                 </TableRow>
@@ -74,9 +89,10 @@ export default function RecentDecisionTrace({ rows, fallback }) {
           sx={{
             p: 3,
             borderRadius: 2,
-            border: `1px dashed ${alpha(theme.palette.common.white, 0.16)}`,
+            border: `1px dashed ${alpha(theme.palette.text.secondary, 0.28)}`,
             textAlign: "center",
-            color: "rgba(255,255,255,0.72)",
+            color: theme.palette.text.secondary,
+            backgroundColor: "#F8FAFC",
           }}
         >
           <Typography>Chưa có lịch sử luồng quyết định.</Typography>

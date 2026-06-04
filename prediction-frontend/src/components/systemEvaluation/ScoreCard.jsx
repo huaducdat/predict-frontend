@@ -6,24 +6,24 @@ function scoreTone(value, theme) {
 
   if (Number.isFinite(score) && score >= 0.7) {
     return {
-      name: "HIGH",
-      colors: ["#14b86a", "#88e08f"],
-      text: theme.palette.success.light,
+      name: "Cao",
+      colors: ["#16A34A", "#86EFAC"],
+      text: theme.palette.success.dark,
     };
   }
 
   if (Number.isFinite(score) && score >= 0.45) {
     return {
-      name: "MEDIUM",
-      colors: ["#ff9f1c", "#ffd166"],
-      text: theme.palette.warning.light,
+      name: "Trung bình",
+      colors: ["#D97706", "#FCD34D"],
+      text: theme.palette.warning.dark,
     };
   }
 
   return {
-    name: "LOW",
-    colors: ["#ff4d6d", "#ff9f9f"],
-    text: theme.palette.error.light,
+    name: "Thấp",
+    colors: ["#DC2626", "#FCA5A5"],
+    text: theme.palette.error.dark,
   };
 }
 
@@ -44,13 +44,13 @@ export default function ScoreCard({ label, value, subtitle, icon }) {
     <Card
       elevation={0}
       sx={{
-        borderRadius: 4,
+        borderRadius: 3,
         overflow: "hidden",
         position: "relative",
-        border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
-        background:
-          "linear-gradient(145deg, rgba(18,22,35,0.98), rgba(9,12,20,0.95))",
-        color: "white",
+        border: `1px solid ${theme.palette.divider}`,
+        background: "linear-gradient(145deg, #FFFFFF, #F8FAFC)",
+        color: theme.palette.text.primary,
+        boxShadow: `0 18px 46px ${alpha(theme.palette.common.black, 0.08)}`,
       }}
     >
       <Box
@@ -60,7 +60,7 @@ export default function ScoreCard({ label, value, subtitle, icon }) {
           width: 190,
           height: 190,
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${alpha(tone.colors[0], 0.36)}, transparent 68%)`,
+          background: `radial-gradient(circle, ${alpha(tone.colors[0], 0.16)}, transparent 68%)`,
         }}
       />
       <CardContent sx={{ position: "relative", p: 2.2 }}>
@@ -68,7 +68,7 @@ export default function ScoreCard({ label, value, subtitle, icon }) {
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography
               variant="caption"
-              sx={{ color: "rgba(255,255,255,0.62)", letterSpacing: 0.9 }}
+              sx={{ color: theme.palette.text.secondary, letterSpacing: 0 }}
             >
               {label}
             </Typography>
@@ -97,7 +97,7 @@ export default function ScoreCard({ label, value, subtitle, icon }) {
               sx={{
                 height: 7,
                 borderRadius: 999,
-                backgroundColor: alpha(theme.palette.common.white, 0.08),
+                backgroundColor: alpha(theme.palette.grey[400], 0.18),
                 "& .MuiLinearProgress-bar": {
                   borderRadius: 999,
                   background: `linear-gradient(90deg, ${tone.colors[0]}, ${tone.colors[1]})`,
@@ -107,7 +107,7 @@ export default function ScoreCard({ label, value, subtitle, icon }) {
           </Stack>
 
           <Stack direction="row" justifyContent="space-between" spacing={1}>
-            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)", minHeight: 20 }}>
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, minHeight: 20 }}>
               {subtitle}
             </Typography>
             <Typography variant="caption" sx={{ color: tone.text, fontWeight: 900 }}>

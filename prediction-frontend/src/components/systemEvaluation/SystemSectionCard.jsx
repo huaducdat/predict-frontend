@@ -8,13 +8,12 @@ export default function SystemSectionCard({ title, subtitle, action, children, s
     <Card
       elevation={0}
       sx={{
-        borderRadius: 4,
-        border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
-        background:
-          "linear-gradient(135deg, rgba(17,20,29,0.96), rgba(8,10,18,0.92))",
-        color: "white",
-        backdropFilter: "blur(18px)",
-        boxShadow: `0 20px 70px ${alpha(theme.palette.common.black, 0.28)}`,
+        borderRadius: 3,
+        border: `1px solid ${alpha(theme.palette.divider, 0.95)}`,
+        background: "rgba(255,255,255,0.92)",
+        color: theme.palette.text.primary,
+        backdropFilter: "blur(8px)",
+        boxShadow: `0 18px 46px ${alpha(theme.palette.common.black, 0.08)}`,
         ...sx,
       }}
     >
@@ -31,7 +30,7 @@ export default function SystemSectionCard({ title, subtitle, action, children, s
                 {title}
               </Typography>
               {subtitle && (
-                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.62)" }}>
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                   {subtitle}
                 </Typography>
               )}
