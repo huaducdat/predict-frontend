@@ -24,7 +24,7 @@ api.interceptors.response.use(
   (err) => {
     const status = err.response?.status;
 
-    if ((status === 401 || status === 403) && !isRedirecting) {
+    if (status === 401 && !isRedirecting) {
       isRedirecting = true;
 
       console.error("🔥 AUTH ERROR:", status, err.response?.data);

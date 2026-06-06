@@ -134,21 +134,44 @@ function PatternReportWidget({ dense = false }) {
     }
 
     try {
-      const latest = normalizePayload(await getLatestPatternReport());
+      let stateSnapshot = null;
+      let latest = null;
+
+      try {
+        stateSnapshot = normalizePayload(await getPatternState());
+      } catch (stateErr) {
+        console.error("Load pattern state error:", stateErr);
+      }
+
+      if (isUsableReport(stateSnapshot)) {
+        try {
+          latest = normalizePayload(await getLatestPatternReport());
+        } catch (latestErr) {
+          console.error("Load latest pattern report metadata error:", latestErr);
+        }
+
+        const stateValue = readFirst(stateSnapshot, ["state", "status", "patternState"]);
+        if (mountedRef.current) {
+          setReport({
+            ...(isUsableReport(latest) ? latest : {}),
+            ...stateSnapshot,
+            state: stateValue,
+          });
+        }
+        return;
+      }
+
+      latest = normalizePayload(await getLatestPatternReport());
 
       if (isUsableReport(latest)) {
         if (mountedRef.current) setReport(latest);
         return;
       }
 
-      const state = normalizePayload(await getPatternState());
-
-      if (isUsableReport(state)) {
-        if (mountedRef.current) setReport(state);
-        return;
+      if (mountedRef.current) {
+        setReport(null);
+        setError(vi.pattern.loadError);
       }
-
-      if (mountedRef.current) setReport(null);
     } catch (err) {
       console.error("Load pattern report error:", err);
       if (mountedRef.current) setError(vi.pattern.loadError);

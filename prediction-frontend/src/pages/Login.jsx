@@ -79,14 +79,21 @@ function Login() {
           size="small"
           sx={{ mb: 3 }}
           onChange={(e) => setPassword(e.target.value)}
-          InputProps={{
-            endAdornment: (
+          slotProps={{
+            input: {
+              endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPass(!showPass)}>
+                <IconButton
+                  aria-label={showPass ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  edge="end"
+                  onClick={() => setShowPass(!showPass)}
+                  onMouseDown={(event) => event.preventDefault()}
+                >
                   {showPass ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
-            ),
+              ),
+            },
           }}
         />
 

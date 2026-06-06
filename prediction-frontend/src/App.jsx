@@ -13,6 +13,8 @@ import PatternReportPage from "./pages/PatternReportPage";
 import PredictionIntelligence from "./pages/PredictionIntelligence";
 import SystemEvaluation from "./pages/SystemEvaluation";
 import DecisionTrace from "./pages/DecisionTrace";
+import Account from "./pages/Account";
+import AdminUsers from "./pages/AdminUsers";
 
 
 
@@ -40,6 +42,8 @@ function App() {
                   <Route path="/intelligence" element={<PredictionIntelligence />} />
                   <Route path="/system-evaluation" element={<SystemEvaluation />} />
                   <Route path="/decision-trace" element={<DecisionTrace />} />
+                  <Route path="/account" element={<Account />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
                 </Routes>
               </MainLayout>
             </ProtectedRoute>

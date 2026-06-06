@@ -15,9 +15,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PatternReportWidget from "./PatternReportWidget";
 import { vi } from "../i18n/vi";
+import { getMe } from "../api/authApi";
 
 const NAV_ITEMS = [
   { label: vi.menu.home, path: "/" },
@@ -37,6 +38,29 @@ export default function Header() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        setUser(await getMe());
+      } catch (err) {
+        console.error("Load current user error:", err);
+      }
+    };
+
+    void loadUser();
+  }, []);
+
+  const navItems = useMemo(() => {
+    const items = [...NAV_ITEMS, { label: "Tai khoan", path: "/account" }];
+
+    if (user?.role === "ADMIN") {
+      items.push({ label: "Quan ly user", path: "/admin/users" });
+    }
+
+    return items;
+  }, [user?.role]);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -116,7 +140,7 @@ export default function Header() {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              {NAV_ITEMS.map((item) => (
+              {navItems.map((item) => (
                 <MenuItem
                   key={item.path}
                   selected={isActive(item.path)}
@@ -145,7 +169,7 @@ export default function Header() {
           >
             <PatternReportWidget />
 
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <Button
                 key={item.path}
                 onClick={() => handleNavigate(item.path)}
