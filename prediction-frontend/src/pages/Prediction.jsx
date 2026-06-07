@@ -32,6 +32,7 @@ import PredictionSourceResultCard from "../components/PredictionSourceResultCard
 import TimeWeightGlobalCard from "../components/TimeWeightGlobalCard";
 import PairGlobalCard from "../components/PairGlobalCard";
 import PositionCard from "../components/PositionCard";
+import { dispatchPatternStateUpdated } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 const MODE_OPTIONS = [
@@ -431,7 +432,7 @@ function Prediction() {
     }
   };
 
-  const loadPage = async (mode) => {
+  const loadPage = async () => {
     await loadBundles();
   };
 
@@ -445,6 +446,7 @@ function Prediction() {
         EXTENDED: res?.longTerm ?? null,
       });
       setModeRecommendation(res?.modeRecommendation ?? null);
+      dispatchPatternStateUpdated();
       await loadSource(selectedMode);
     } catch (e) {
       console.error("Run all combine failed:", e);
@@ -455,7 +457,7 @@ function Prediction() {
   };
 
   useEffect(() => {
-    void loadPage(selectedMode);
+    void loadPage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

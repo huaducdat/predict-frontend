@@ -20,6 +20,7 @@ import {
 
 import StreakGrid from "../components/StreakGrid";
 import { rebuildStreaks } from "../api/streakApi";
+import { dispatchPatternStateUpdated } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 const formatNumber = (n) => n?.toString().padStart(2, "0");
@@ -235,6 +236,7 @@ function Results() {
 
     try {
       await deleteResultByDate(targetDate);
+      dispatchPatternStateUpdated();
       if (isFilterMode) {
         setIsFilterMode(false);
         loadPage(1);

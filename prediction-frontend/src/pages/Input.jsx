@@ -10,6 +10,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { createResult } from "../api/resultApi";
+import { dispatchPatternStateUpdated } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 export default function Input() {
@@ -70,6 +71,7 @@ export default function Input() {
         force: false,
       });
 
+      dispatchPatternStateUpdated();
       alert(vi.input.saved);
       resetForm();
     } catch (err) {
@@ -85,6 +87,7 @@ export default function Input() {
               force: true,
             });
 
+            dispatchPatternStateUpdated();
             alert(vi.input.overwriteSaved);
             resetForm();
           } catch (e) {

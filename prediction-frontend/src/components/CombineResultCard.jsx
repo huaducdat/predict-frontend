@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { loadCombine, runCombine } from "../api/combineApi";
+import { dispatchPatternStateUpdated } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 function CombineResultCard() {
@@ -56,6 +57,7 @@ function CombineResultCard() {
 
       await runCombine();
 
+      dispatchPatternStateUpdated();
       setMessage(
         vi.prediction.combineRunMessage,
       );

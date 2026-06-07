@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -15,6 +15,7 @@ import { alpha, useTheme } from "@mui/material/styles";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 
 import { getLatestPatternReport, getPatternState } from "../api/patternApi";
+import { PATTERN_STATE_UPDATED_EVENT } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 const STATE_LABELS = {
@@ -122,13 +123,19 @@ function PatternReportWidget({ dense = false }) {
   const navigate = useNavigate();
   const theme = useTheme();
   const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
 
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadReport = async () => {
-    if (mountedRef.current) {
+  const loadPatternState = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
+    const canUpdate = () => mountedRef.current && requestIdRef.current === requestId;
+
+    if (canUpdate()) {
       setLoading(true);
       setError("");
     }
@@ -151,7 +158,7 @@ function PatternReportWidget({ dense = false }) {
         }
 
         const stateValue = readFirst(stateSnapshot, ["state", "status", "patternState"]);
-        if (mountedRef.current) {
+        if (canUpdate()) {
           setReport({
             ...(isUsableReport(latest) ? latest : {}),
             ...stateSnapshot,
@@ -164,32 +171,38 @@ function PatternReportWidget({ dense = false }) {
       latest = normalizePayload(await getLatestPatternReport());
 
       if (isUsableReport(latest)) {
-        if (mountedRef.current) setReport(latest);
+        if (canUpdate()) setReport(latest);
         return;
       }
 
-      if (mountedRef.current) {
+      if (canUpdate()) {
         setReport(null);
         setError(vi.pattern.loadError);
       }
     } catch (err) {
       console.error("Load pattern report error:", err);
-      if (mountedRef.current) setError(vi.pattern.loadError);
+      if (canUpdate()) setError(vi.pattern.loadError);
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (canUpdate()) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
-    void loadReport();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadPatternState();
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(PATTERN_STATE_UPDATED_EVENT, loadPatternState);
+    }
 
     return () => {
       mountedRef.current = false;
+      if (typeof window !== "undefined") {
+        window.removeEventListener(PATTERN_STATE_UPDATED_EVENT, loadPatternState);
+      }
     };
-    // stable refs and imported API calls only
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadPatternState]);
 
   const state = normalizeState(readFirst(report, ["state", "status", "patternState"]));
   const summary =
@@ -231,7 +244,7 @@ function PatternReportWidget({ dense = false }) {
 
   const handleRefresh = async (event) => {
     event.stopPropagation();
-    await loadReport();
+    await loadPatternState();
   };
 
   const tooltipTitle = loading
