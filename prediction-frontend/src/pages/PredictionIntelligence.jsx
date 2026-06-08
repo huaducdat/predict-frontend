@@ -32,6 +32,7 @@ import {
   getSelfEvaluationLatest,
   getSelfEvaluationRecent,
 } from "../api/intelligenceApi";
+import { PATTERN_STATE_UPDATED_EVENT } from "../events/patternStateEvents";
 import { labelFrom, vi } from "../i18n/vi";
 
 const PREDICTOR_ORDER = ["PAIR", "TIME", "FREQ", "POS", "REP", "STRK", "GAP"];
@@ -50,6 +51,12 @@ function predictorLabel(value) {
 
 function trendLabel(value) {
   return labelFrom(vi.trend, value || "UNKNOWN");
+}
+
+function trendSummaryLabel(value, fallbackRow) {
+  if (isKnownValue(value)) return trendLabel(value);
+  if (fallbackRow) return dataStatusLabel(fallbackRow.dataStatus);
+  return trendLabel(value);
 }
 
 function dataStatusLabel(value) {
@@ -132,6 +139,55 @@ function calculateScore(item) {
   return hit3 * 0.45 + hit7 * 0.35 + hit14 * 0.15 + stability * 0.05;
 }
 
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== "";
+}
+
+function readFirst(source, keys) {
+  if (!source || typeof source !== "object") return undefined;
+  for (const key of keys) {
+    if (hasValue(source[key])) return source[key];
+  }
+  return undefined;
+}
+
+function isKnownValue(value) {
+  if (!hasValue(value)) return false;
+  const normalized = String(value).toUpperCase();
+  return normalized !== "UNKNOWN" && normalized !== "INSUFFICIENT_DATA";
+}
+
+function activePredictorRows(rows) {
+  return rows.filter((item) => {
+    const status = String(item.dataStatus ?? "").toUpperCase();
+    return status === "ACTIVE" || item.hasPerformanceData || Number(item.sampleSize ?? 0) > 0;
+  });
+}
+
+function weightedScore(item) {
+  const effectiveWeight = Number(item?.effectiveWeight);
+  if (Number.isFinite(effectiveWeight)) return effectiveWeight;
+
+  const calculated = calculateScore(item);
+  return Number.isFinite(calculated) ? calculated : -Infinity;
+}
+
+function deriveBestPredictor(rows) {
+  if (!rows.length) return null;
+  return [...rows].sort((a, b) => weightedScore(b) - weightedScore(a))[0] ?? null;
+}
+
+function deriveWatchPredictor(rows) {
+  const candidates = activePredictorRows(rows);
+  if (!candidates.length) return null;
+  return [...candidates].sort((a, b) => weightedScore(a) - weightedScore(b))[0] ?? null;
+}
+
+function devLog(label, payload) {
+  if (!import.meta.env.DEV) return;
+  console.debug(`[${new Date().toISOString()}] ${label}`, payload ?? "");
+}
+
 function parseJsonData(report) {
   if (!report?.jsonData) return null;
   if (typeof report.jsonData === "object") return report.jsonData;
@@ -182,7 +238,7 @@ function SectionCard({ title, subtitle, children, action, sx }) {
     >
       <CardContent sx={{ p: 2.4, "&:last-child": { pb: 2.4 } }}>
         <Stack spacing={1.7}>
-          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
+          <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 900 }}>
                 {title}
@@ -237,7 +293,7 @@ function OverviewCard({ title, value, subtitle, icon, tone = "default" }) {
       />
       <CardContent sx={{ position: "relative", p: 2.2 }}>
         <Stack spacing={1.2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
             <Typography variant="caption" sx={{ color: theme.palette.text.secondary, letterSpacing: 0.8 }}>
               {title}
             </Typography>
@@ -334,12 +390,20 @@ export default function PredictionIntelligence() {
       getPatternStateSnapshot(),
     ]);
 
+    devLog("PREDICTOR DASHBOARD REFRESH", dashboardRes);
+    devLog("SELF EVALUATION REFRESH", selfRes);
+
     if (dashboardRes.status === "fulfilled") setDashboard(dashboardRes.value);
     if (perfHistoryRes.status === "fulfilled") setPerformanceHistory(perfHistoryRes.value);
     if (weightHistoryRes.status === "fulfilled") setWeightHistory(weightHistoryRes.value);
     if (selfRes.status === "fulfilled") setSelfEvaluation(selfRes.value);
     if (recentSelfRes.status === "fulfilled") setRecentSelfEvaluation(recentSelfRes.value ?? []);
     if (patternRes.status === "fulfilled") setPatternState(normalizePatternState(patternRes.value));
+
+    if (import.meta.env.DEV) {
+      console.debug("[PredictionIntelligence] dashboard payload", dashboardRes);
+      console.debug("[PredictionIntelligence] self evaluation payload", selfRes);
+    }
 
     if (dashboardRes.status === "rejected" && selfRes.status === "rejected") {
       setError(vi.intelligence.loadError);
@@ -352,26 +416,62 @@ export default function PredictionIntelligence() {
     void loadData();
   }, [selectedMode]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handlePatternStateUpdated = () => {
+      void loadData();
+    };
+
+    window.addEventListener(PATTERN_STATE_UPDATED_EVENT, handlePatternStateUpdated);
+
+    return () => {
+      window.removeEventListener(PATTERN_STATE_UPDATED_EVENT, handlePatternStateUpdated);
+    };
+  }, [selectedMode]);
+
   const predictors = useMemo(() => normalizeDashboardPredictors(dashboard), [dashboard]);
   const selfPayload = useMemo(() => parseJsonData(selfEvaluation), [selfEvaluation]);
   const ranking = selfPayload?.ranking ?? [];
   const activePatternState =
     dashboard?.patternState ?? selfPayload?.patternState ?? selfEvaluation?.patternState ?? patternState;
-  const best = selfEvaluation?.bestPredictor ?? selfPayload?.bestPredictor ?? ranking[0]?.predictorKey;
+  const fallbackBestRow = useMemo(() => deriveBestPredictor(predictors), [predictors]);
+  const fallbackWatchRow = useMemo(() => deriveWatchPredictor(predictors), [predictors]);
+  const best =
+    readFirst(selfEvaluation, ["bestPredictor"]) ??
+    readFirst(selfPayload, ["bestPredictor"]) ??
+    ranking[0]?.predictorKey ??
+    fallbackBestRow?.predictorKey;
   const worst =
-    selfEvaluation?.worstPredictor ??
-    selfPayload?.worstPredictor ??
-    ranking[ranking.length - 1]?.predictorKey;
-  const bestRow = ranking.find((row) => row.predictorKey === best);
-  const worstRow = ranking.find((row) => row.predictorKey === worst);
+    readFirst(selfEvaluation, ["worstPredictor", "weakestPredictor"]) ??
+    readFirst(selfPayload, ["worstPredictor", "weakestPredictor"]) ??
+    ranking[ranking.length - 1]?.predictorKey ??
+    fallbackWatchRow?.predictorKey;
+  const bestRankingRow = ranking.find((row) => row.predictorKey === best);
+  const worstRankingRow = ranking.find((row) => row.predictorKey === worst);
+  const bestDashboardRow = predictors.find((row) => row.predictorKey === best);
+  const worstDashboardRow = predictors.find((row) => row.predictorKey === worst);
   const performanceRows = useMemo(() => flattenHistory(performanceHistory), [performanceHistory]);
   const weightRows = useMemo(() => flattenHistory(weightHistory), [weightHistory]);
-  const displayMode = dashboard?.mode ?? selfEvaluation?.mode;
+  const displayMode = dashboard?.mode ?? selfEvaluation?.mode ?? selectedMode;
+  const shortTermScore = readFirst(selfEvaluation, ["shortTermScore"]) ?? readFirst(selfPayload, ["shortTermScore"]);
+  const longTermScore =
+    readFirst(selfEvaluation, ["extendedScore", "longTermScore"]) ??
+    readFirst(selfPayload, ["extendedScore", "longTermScore"]);
+  const bestScore = hasValue(bestRankingRow?.score)
+    ? formatScore(bestRankingRow.score)
+    : formatPercent(bestDashboardRow?.effectiveWeight);
+  const worstScore = hasValue(worstRankingRow?.score)
+    ? formatScore(worstRankingRow.score)
+    : formatPercent(worstDashboardRow?.effectiveWeight);
+  const bestTrend = isKnownValue(bestRankingRow?.trend) ? bestRankingRow.trend : bestDashboardRow?.trend;
+  const worstTrend = isKnownValue(worstRankingRow?.trend) ? worstRankingRow.trend : worstDashboardRow?.trend;
 
+  const fallbackModeScore = formatPercent(fallbackBestRow?.effectiveWeight);
   const modeSummary = [
     `${vi.mode.label}: ${modeLabel(displayMode)}`,
-    `${vi.mode.SHORT_TERM} ${formatScore(selfEvaluation?.shortTermScore ?? selfPayload?.shortTermScore)}`,
-    `${vi.mode.EXTENDED} ${formatScore(selfEvaluation?.extendedScore ?? selfPayload?.extendedScore)}`,
+    `${vi.mode.SHORT_TERM} ${hasValue(shortTermScore) ? formatScore(shortTermScore) : fallbackModeScore}`,
+    `${vi.mode.EXTENDED} ${hasValue(longTermScore) ? formatScore(longTermScore) : fallbackModeScore}`,
   ].join(" · ");
 
   return (
@@ -396,9 +496,11 @@ export default function PredictionIntelligence() {
       <Stack spacing={2.4} sx={{ position: "relative", zIndex: 1, maxWidth: 1500, mx: "auto" }}>
         <Stack
           direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "center" }}
           spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "center" },
+          }}
         >
           <Box>
             <Typography
@@ -418,7 +520,7 @@ export default function PredictionIntelligence() {
             </Typography>
           </Box>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} alignItems={{ xs: "stretch", sm: "center" }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} sx={{ alignItems: { xs: "stretch", sm: "center" } }}>
             <Tabs
               value={selectedMode}
               onChange={(_, value) => setSelectedMode(value)}
@@ -469,14 +571,14 @@ export default function PredictionIntelligence() {
           <OverviewCard
             title={vi.intelligence.bestPredictor}
             value={predictorLabel(best)}
-            subtitle={`${vi.table.score} ${formatScore(bestRow?.score)} · ${vi.table.trend} ${trendLabel(bestRow?.trend)}`}
+            subtitle={`${vi.table.score} ${bestScore} · ${vi.table.trend} ${trendSummaryLabel(bestTrend, bestDashboardRow)}`}
             icon={<TrendingUpRoundedIcon />}
             tone="good"
           />
           <OverviewCard
             title={vi.intelligence.worstPredictor}
             value={predictorLabel(worst)}
-            subtitle={`${vi.table.score} ${formatScore(worstRow?.score)} · ${vi.table.trend} ${trendLabel(worstRow?.trend)}`}
+            subtitle={`${vi.table.score} ${worstScore} · ${vi.table.trend} ${trendSummaryLabel(worstTrend, worstDashboardRow)}`}
             icon={<WarningAmberRoundedIcon />}
             tone="danger"
           />

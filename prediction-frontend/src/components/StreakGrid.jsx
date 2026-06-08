@@ -3,13 +3,14 @@ import {
   Card,
   CardContent,
   Typography,
-  CircularProgress,
-  Alert,
 } from "@mui/material";
 import { vi } from "../i18n/vi";
 
 function StreakGrid({ data = [], onSelect }) {
-  const streakMap = new Map(data.map((item) => [item.number, item]));
+  const safeData = Array.isArray(data)
+    ? data.filter((item) => item && typeof item === "object")
+    : [];
+  const streakMap = new Map(safeData.map((item) => [Number(item.number), item]));
 
   const numbers = Array.from({ length: 100 }, (_, i) => {
     return (
@@ -51,7 +52,7 @@ function StreakGrid({ data = [], onSelect }) {
   };
 
   return (
-    <Box sx={{ mt: 2, overflowX: "auto", pb: 1, background:"#00000010", padding: 1, borderRadius: 1,}}>
+    <Box sx={{ mt: 2, overflowX: "auto", pb: 1, background: "#00000010", padding: 1, borderRadius: 1 }}>
       <Box
         sx={{
           display: "grid",
@@ -63,12 +64,19 @@ function StreakGrid({ data = [], onSelect }) {
         }}
       >
         {numbers.map((item) => {
-          const style = getStyle(item.currentStreak);
+          const currentStreak = Number.isFinite(Number(item.currentStreak))
+            ? Number(item.currentStreak)
+            : 0;
+          const maxStreak = Number.isFinite(Number(item.maxStreak))
+            ? Number(item.maxStreak)
+            : 0;
+          const number = Number.isFinite(Number(item.number)) ? Number(item.number) : 0;
+          const style = getStyle(currentStreak);
 
           return (
             <Card
-              key={item.number}
-              onClick={() => onSelect?.(item.number)}
+              key={number}
+              onClick={() => onSelect?.(number)}
               sx={{
                 borderRadius: 3,
                 textAlign: "center",
@@ -83,18 +91,18 @@ function StreakGrid({ data = [], onSelect }) {
             >
               <CardContent sx={{ py: 2 }}>
                 <Typography fontWeight="bold">
-                  {String(item.number).padStart(2, "0")}
+                  {String(number).padStart(2, "0")}
                 </Typography>
 
                 <Typography
                   variant="body2"
                   sx={{ mt: 1, fontWeight: 700, color: style.color }}
                 >
-                  🔥 {item.currentStreak}
+                  {currentStreak}
                 </Typography>
 
                 <Typography variant="caption" color="text.secondary">
-                  {vi.results.streak} tối đa {item.maxStreak}
+                  {vi.results.streak} toi da {maxStreak}
                 </Typography>
               </CardContent>
             </Card>

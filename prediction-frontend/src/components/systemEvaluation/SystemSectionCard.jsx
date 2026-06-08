@@ -21,9 +21,11 @@ export default function SystemSectionCard({ title, subtitle, action, children, s
         <Stack spacing={1.7}>
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            alignItems={{ xs: "flex-start", sm: "flex-start" }}
-            justifyContent="space-between"
             spacing={1.5}
+            sx={{
+              alignItems: { xs: "flex-start", sm: "flex-start" },
+              justifyContent: "space-between",
+            }}
           >
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 900 }}>

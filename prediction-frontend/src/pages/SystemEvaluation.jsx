@@ -331,9 +331,11 @@ export default function SystemEvaluation() {
       <Stack spacing={2.4} sx={{ position: "relative", zIndex: 1, maxWidth: 1500, mx: "auto" }}>
         <Stack
           direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "center" }}
           spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "center" },
+          }}
         >
           <Box>
             <Typography
@@ -399,7 +401,7 @@ export default function SystemEvaluation() {
 
         {loading && !activeReport ? (
           <SystemSectionCard title="Ã„Âang tÃ¡ÂºÂ£i dÃ¡Â»Â¯ liÃ¡Â»â€¡u" subtitle="Ã„Âang gÃ¡Â»Âi cÃƒÂ¡c API System Evaluation.">
-            <Stack direction="row" alignItems="center" spacing={1.2}>
+            <Stack direction="row" spacing={1.2} sx={{ alignItems: "center" }}>
               <CircularProgress size={20} />
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                 Vui lÃƒÂ²ng Ã„â€˜Ã¡Â»Â£i trong giÃƒÂ¢y lÃƒÂ¡t.

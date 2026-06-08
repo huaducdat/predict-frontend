@@ -1,9 +1,24 @@
 import { useState } from "react";
 import { vi } from "../i18n/vi";
 
-function PositionCard({ data }) {
-  if (!data) return null;
+function normalizeNumberRows(value) {
+  return Array.isArray(value)
+    ? value.filter((item) => item && typeof item === "object")
+    : [];
+}
 
+function formatNumber(n) {
+  const value = Number(n);
+  return Number.isFinite(value) ? String(value).padStart(2, "0") : "--";
+}
+
+function formatScore(score) {
+  const value = Number(score);
+  return Number.isFinite(value) ? value.toFixed(2) : "--";
+}
+
+function PositionCard({ data }) {
+  const safeData = data && typeof data === "object" && !Array.isArray(data) ? data : {};
   const WINDOW_SIZE = 10;
 
   const formatGroup = (g) => {
@@ -14,28 +29,35 @@ function PositionCard({ data }) {
       .padStart(2, "0")}`;
   };
 
-  const context = data["-1"];
-  const global = Object.entries(data).filter(([k]) => k !== "-1");
+  const context = normalizeNumberRows(safeData["-1"]);
+  const global = Object.entries(safeData)
+    .filter(([k]) => k !== "-1")
+    .map(([group, numbers]) => [group, normalizeNumberRows(numbers)])
+    .filter(([, numbers]) => numbers.length > 0);
 
   return (
     <div style={{ marginBottom: 30 }}>
       <h3>{vi.predictor.POS}</h3>
 
-      {/* 🔥 CONTEXT */}
-      {context && (
+      {context.length > 0 && (
         <ContextRow numbers={context} windowSize={WINDOW_SIZE} />
       )}
 
-      {/* 🔹 GLOBAL */}
-      {global.map(([group, numbers]) => (
-        <GroupRow
-          key={group}
-          group={Number(group)}
-          numbers={numbers}
-          formatGroup={formatGroup}
-          windowSize={WINDOW_SIZE}
-        />
-      ))}
+      {global.length === 0 && context.length === 0 ? (
+        <div style={{ color: "#64748B", fontSize: 13 }}>
+          {vi.common.noData || "Chua co du lieu"}
+        </div>
+      ) : (
+        global.map(([group, numbers]) => (
+          <GroupRow
+            key={group}
+            group={Number(group)}
+            numbers={numbers}
+            formatGroup={formatGroup}
+            windowSize={WINDOW_SIZE}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -57,7 +79,7 @@ function ContextRow({ numbers, windowSize }) {
           onClick={() => setStart(Math.max(0, start - windowSize))}
           disabled={start === 0}
         >
-          ◀
+          &lt;
         </button>
 
         <span style={{ margin: "0 10px" }}>
@@ -70,7 +92,7 @@ function ContextRow({ numbers, windowSize }) {
           }
           disabled={end >= numbers.length}
         >
-          ▶
+          &gt;
         </button>
       </div>
 
@@ -80,12 +102,12 @@ function ContextRow({ numbers, windowSize }) {
 
           let bg = "#333";
 
-          if (globalIndex < 3) bg = "#ff4d4f";      // 🔴 top 3
-          else if (globalIndex < 10) bg = "#faad14"; // 🟡 top 10
+          if (globalIndex < 3) bg = "#ff4d4f";
+          else if (globalIndex < 10) bg = "#faad14";
 
           return (
             <div
-              key={n.number}
+              key={`${n.number ?? "unknown"}-${globalIndex}`}
               style={{
                 width: 55,
                 padding: 6,
@@ -97,10 +119,10 @@ function ContextRow({ numbers, windowSize }) {
                 fontWeight: "bold",
               }}
             >
-              <div>{n.number.toString().padStart(2, "0")}</div>
+              <div>{formatNumber(n.number)}</div>
 
               <div style={{ fontSize: 10, opacity: 0.7 }}>
-                {n.score.toFixed(2)}
+                {formatScore(n.score)}
               </div>
             </div>
           );
@@ -125,7 +147,7 @@ function GroupRow({ group, numbers, formatGroup, windowSize }) {
           onClick={() => setStart(Math.max(0, start - windowSize))}
           disabled={start === 0}
         >
-          ◀
+          &lt;
         </button>
 
         <span style={{ margin: "0 10px" }}>
@@ -138,7 +160,7 @@ function GroupRow({ group, numbers, formatGroup, windowSize }) {
           }
           disabled={end >= numbers.length}
         >
-          ▶
+          &gt;
         </button>
       </div>
 
@@ -153,7 +175,7 @@ function GroupRow({ group, numbers, formatGroup, windowSize }) {
 
           return (
             <div
-              key={n.number}
+              key={`${n.number ?? "unknown"}-${globalIndex}`}
               style={{
                 width: 50,
                 padding: 6,
@@ -164,10 +186,10 @@ function GroupRow({ group, numbers, formatGroup, windowSize }) {
                 fontSize: 12,
               }}
             >
-              <div>{n.number.toString().padStart(2, "0")}</div>
+              <div>{formatNumber(n.number)}</div>
 
               <div style={{ fontSize: 10, opacity: 0.7 }}>
-                {n.score.toFixed(2)}
+                {formatScore(n.score)}
               </div>
             </div>
           );

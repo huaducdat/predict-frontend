@@ -1,67 +1,79 @@
 import { vi } from "../i18n/vi";
 
 function PairCard({ data }) {
-  if (!Array.isArray(data)) return null;
+  const rows = Array.isArray(data)
+    ? data.filter((item) => item && typeof item === "object")
+    : [];
 
-  // 🔥 format chuẩn toàn hệ thống
   const formatScore = (score) => {
-    return Number(score.toFixed(3));
+    const value = Number(score);
+    return Number.isFinite(value) ? Number(value.toFixed(3)) : "--";
   };
 
-  const formatNumber = (n) => n.toString().padStart(2, "0");
+  const formatNumber = (n) => {
+    const value = Number(n);
+    return Number.isFinite(value) ? String(value).padStart(2, "0") : "--";
+  };
 
   return (
     <div>
       <h3>{vi.predictor.PAIR}</h3>
 
-      <div style={{ maxHeight: 400, overflowY: "auto" }}>
-        {data.map((item) => (
-          <div key={item.number} style={{ marginBottom: 14 }}>
+      {rows.length === 0 ? (
+        <div style={{ color: "#64748B", fontSize: 13 }}>
+          {vi.common.noData || "Chua co du lieu"}
+        </div>
+      ) : (
+        <div style={{ maxHeight: 400, overflowY: "auto" }}>
+          {rows.map((item, itemIndex) => {
+            const sources = Array.isArray(item.sources) ? item.sources : [];
 
-            {/* 🔥 NUMBER */}
-            <b style={{ fontSize: 16 }}>
-              {formatNumber(item.number)}{" "}
-              <span style={{ fontSize: 12, color: "#aaa" }}>
-                ({formatScore(item.score)})
-              </span>
-            </b>
+            return (
+              <div key={`${item.number ?? "unknown"}-${itemIndex}`} style={{ marginBottom: 14 }}>
+                <b style={{ fontSize: 16 }}>
+                  {formatNumber(item.number)}{" "}
+                  <span style={{ fontSize: 12, color: "#aaa" }}>
+                    ({formatScore(item.score)})
+                  </span>
+                </b>
 
-            {/* 🔥 SOURCES (PAIR) */}
-            <div
-              style={{
-                display: "flex",
-                gap: 6,
-                marginTop: 6,
-                flexWrap: "wrap",
-              }}
-            >
-              {item.sources.slice(0, 5).map((s, i) => (
                 <div
-                  key={s.pair} // ✅ tránh dùng index
                   style={{
-                    padding: 6,
-                    borderRadius: 6,
-                    background:
-                      i === 0
-                        ? "#ff4d4f"
-                        : i < 3
-                        ? "#faad14"
-                        : "#222",
-                    color: "white",
-                    fontSize: 11,
+                    display: "flex",
+                    gap: 6,
+                    marginTop: 6,
+                    flexWrap: "wrap",
                   }}
                 >
-                  {s.pair}
+                  {sources.filter(Boolean).slice(0, 5).map((s, i) => (
+                    <div
+                      key={`${s?.pair ?? "unknown"}-${i}`}
+                      style={{
+                        padding: 6,
+                        borderRadius: 6,
+                        background:
+                          i === 0
+                            ? "#ff4d4f"
+                            : i < 3
+                            ? "#faad14"
+                            : "#222",
+                        color: "white",
+                        fontSize: 11,
+                      }}
+                    >
+                      {s?.pair || "--"}
 
-                  <div style={{ fontSize: 9 }}>
-                    {formatScore(s.score)}
-                  </div>
+                      <div style={{ fontSize: 9 }}>
+                        {formatScore(s?.score)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

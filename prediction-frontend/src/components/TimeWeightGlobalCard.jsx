@@ -16,18 +16,23 @@ function TimeWeightGlobalCard({ date }) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState("");
 
-  // ===== FORMAT SCORE =====
   const formatScore = (score) => {
-    return Number(score.toFixed(3)); // 🔥 fix chính
+    const value = Number(score);
+    return Number.isFinite(value) ? Number(value.toFixed(3)) : "--";
   };
 
-  // ===== NORMALIZE =====
+  const formatNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? String(num).padStart(2, "0") : "--";
+  };
+
   const normalize = (raw) => {
     const result = {};
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
 
-    Object.entries(raw || {}).forEach(([k, v]) => {
+    Object.entries(source).forEach(([k, v]) => {
       if (Array.isArray(v)) {
-        result[k] = v;
+        result[k] = v.filter((item) => item && typeof item === "object");
       } else if (v && typeof v === "object") {
         result[k] = Object.entries(v).map(([num, score]) => ({
           number: Number(num),
@@ -41,7 +46,6 @@ function TimeWeightGlobalCard({ date }) {
     return result;
   };
 
-  // ===== FETCH =====
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -51,6 +55,7 @@ function TimeWeightGlobalCard({ date }) {
       setData(clean);
     } catch (e) {
       console.error(e);
+      setData({});
     } finally {
       setLoading(false);
     }
@@ -62,7 +67,6 @@ function TimeWeightGlobalCard({ date }) {
     }
   }, [date, visible]);
 
-  // ===== FILTER =====
   let entries = data ? Object.entries(data) : [];
 
   if (search !== "") {
@@ -97,7 +101,6 @@ function TimeWeightGlobalCard({ date }) {
             {vi.predictor.TIME}
           </Typography>
 
-          {/* SEARCH */}
           <TextField
             size="small"
             placeholder={vi.common.searchNumber}
@@ -117,10 +120,18 @@ function TimeWeightGlobalCard({ date }) {
 
           {!loading && data && (
             <>
+              {list.length === 0 && search === "" && (
+                <Typography sx={{ mt: 1, opacity: 0.7 }}>
+                  {vi.common.noData || "Chua co du lieu"}
+                </Typography>
+              )}
+
               {list.map(([source, targets]) => {
-                const sorted = targets
+                const safeTargets = Array.isArray(targets) ? targets : [];
+                const sorted = safeTargets
                   .slice()
-                  .sort((a, b) => b.score - a.score)
+                  .filter((item) => item && typeof item === "object")
+                  .sort((a, b) => Number(b.score) - Number(a.score))
                   .slice(0, 3);
 
                 return (
@@ -133,7 +144,6 @@ function TimeWeightGlobalCard({ date }) {
                       gap: 1,
                     }}
                   >
-                    {/* SOURCE */}
                     <Box
                       sx={{
                         width: 40,
@@ -146,14 +156,13 @@ function TimeWeightGlobalCard({ date }) {
                         py: 0.5,
                       }}
                     >
-                      {source.toString().padStart(2, "0")}
+                      {formatNumber(source)}
                     </Box>
 
-                    {/* TARGETS */}
                     <Box sx={{ display: "flex", gap: 1 }}>
-                      {sorted.map((t) => (
+                      {sorted.map((t, index) => (
                         <Box
-                          key={t.number}
+                          key={`${t?.number ?? "unknown"}-${index}`}
                           sx={{
                             px: 1.2,
                             py: 0.4,
@@ -163,8 +172,7 @@ function TimeWeightGlobalCard({ date }) {
                             fontSize: 12,
                           }}
                         >
-                          {t.number.toString().padStart(2, "0")} (
-                          {formatScore(t.score)})
+                          {formatNumber(t?.number)} ({formatScore(t?.score)})
                         </Box>
                       ))}
                     </Box>
@@ -172,7 +180,7 @@ function TimeWeightGlobalCard({ date }) {
                 );
               })}
 
-              {search === "" && (
+              {search === "" && entries.length > 20 && (
                 <Button
                   size="small"
                   onClick={() => setExpanded(!expanded)}

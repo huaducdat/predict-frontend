@@ -43,6 +43,13 @@ function PredictionSourceResultCard({ date }) {
     );
   }
 
+  const formatNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? String(num).padStart(2, "0") : "--";
+  };
+
+  const numbers = Array.isArray(result.numbers) ? result.numbers : [];
+
   return (
     <Card
       sx={{
@@ -72,7 +79,7 @@ function PredictionSourceResultCard({ date }) {
           }}
         >
           <Typography variant="h3" sx={{ fontWeight: "bold", letterSpacing: 2 }}>
-            {result.singleNumber.toString().padStart(2, "0")}
+            {formatNumber(result.singleNumber)}
           </Typography>
 
           <Typography sx={{ fontSize: 12, opacity: 0.6 }}>
@@ -81,7 +88,7 @@ function PredictionSourceResultCard({ date }) {
         </Box>
 
         <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-          {result.numbers.map((n, i) => (
+          {numbers.map((n, i) => (
             <Box
               key={i}
               sx={{
@@ -92,7 +99,7 @@ function PredictionSourceResultCard({ date }) {
                 fontSize: 13,
               }}
             >
-              {n.toString().padStart(2, "0")}
+              {formatNumber(n)}
             </Box>
           ))}
         </Box>

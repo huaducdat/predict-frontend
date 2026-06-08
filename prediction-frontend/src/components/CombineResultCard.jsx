@@ -8,7 +8,6 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { loadCombine, runCombine } from "../api/combineApi";
-import { dispatchPatternStateUpdated } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 function CombineResultCard() {
@@ -21,16 +20,19 @@ function CombineResultCard() {
 
   // 🔥 FORMAT %
   const formatPercent = (score) => {
-    return Number((score * 100).toFixed(3));
+    const value = Number(score);
+    return Number.isFinite(value) ? Number((value * 100).toFixed(3)) : "--";
   };
 
-  const formatNumber = (n) => n.toString().padStart(2, "0");
+  const formatNumber = (n) => {
+    const value = Number(n);
+    return Number.isFinite(value) ? String(value).padStart(2, "0") : "--";
+  };
 
   // ===== NORMALIZE =====
   const normalizeData = (res) => {
-    if (Array.isArray(res)) return res;
-    if (res && Array.isArray(res.data)) return res.data;
-    return [];
+    const rows = Array.isArray(res) ? res : res && Array.isArray(res.data) ? res.data : [];
+    return rows.filter((item) => item && typeof item === "object");
   };
 
   // ===== LOAD =====
@@ -57,7 +59,6 @@ function CombineResultCard() {
 
       await runCombine();
 
-      dispatchPatternStateUpdated();
       setMessage(
         vi.prediction.combineRunMessage,
       );

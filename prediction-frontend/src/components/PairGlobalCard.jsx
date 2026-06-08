@@ -17,21 +17,38 @@ function PairGlobalCard() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
 
-  // 🔥 FORMAT SCORE CHUẨN TOÀN HỆ
+  const normalizeRows = (value) =>
+    Array.isArray(value)
+      ? value
+          .filter((item) => item && typeof item === "object")
+          .map((item, index) => ({
+            pair: typeof item.pair === "string" ? item.pair : "",
+            targets: Array.isArray(item.targets) ? item.targets : [],
+            fallbackKey: `pair-global-${index}`,
+          }))
+      : [];
+
   const formatScore = (score) => {
-    return Number(score.toFixed(3));
+    const value = Number(score);
+    return Number.isFinite(value) ? Number(value.toFixed(3)) : "--";
   };
 
-  const formatNumber = (n) => n.toString().padStart(2, "0");
+  const formatNumber = (n) => {
+    const value = Number(n);
+    return Number.isFinite(value) ? String(value).padStart(2, "0") : "--";
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const res = await loadPairGlobal();
-      setData(res);
-      setFiltered(res);
+      const rows = normalizeRows(res);
+      setData(rows);
+      setFiltered(rows);
     } catch (e) {
       console.error(e);
+      setData([]);
+      setFiltered([]);
     } finally {
       setLoading(false);
     }
@@ -41,7 +58,6 @@ function PairGlobalCard() {
     fetchData();
   }, []);
 
-  // 🔍 SEARCH
   useEffect(() => {
     if (!search) {
       setFiltered(data);
@@ -51,7 +67,7 @@ function PairGlobalCard() {
     const s = search.trim();
 
     const result = data.filter((item) => {
-      const [a, b] = item.pair.split("-");
+      const [a = "", b = ""] = item.pair.split("-");
 
       if (s.length <= 2) {
         return a.includes(s) || b.includes(s);
@@ -70,7 +86,6 @@ function PairGlobalCard() {
   }, [search, data]);
 
   if (loading) return <CircularProgress />;
-  if (!data || data.length === 0) return null;
 
   const list = expanded ? filtered : filtered.slice(0, 20);
 
@@ -85,7 +100,6 @@ function PairGlobalCard() {
         boxShadow: "0 14px 36px rgba(37, 99, 235, 0.08)",
       }}
     >
-      {/* HEADER */}
       <Box
         sx={{
           display: "flex",
@@ -100,12 +114,11 @@ function PairGlobalCard() {
           {vi.predictor.PAIR}
         </Typography>
 
-        <Typography sx={{ fontSize: 12 }}>{open ? "▲" : "▼"}</Typography>
+        <Typography sx={{ fontSize: 12 }}>{open ? "^" : "v"}</Typography>
       </Box>
 
       {open && (
         <>
-          {/* SEARCH */}
           <TextField
             size="small"
             placeholder={vi.common.searchPairOrNumber}
@@ -118,47 +131,49 @@ function PairGlobalCard() {
             }}
           />
 
-          {/* LIST */}
-          {list.map((item) => (
-            <Box
-              key={item.pair} // ✅ không dùng index
-              sx={{
-                mb: 1,
-                p: 1,
-                borderRadius: 2,
-                background: "#F8FAFC",
-                border: "1px solid #E2E8F0",
-              }}
-            >
-              {/* Pair */}
-              <Typography sx={{ fontWeight: "bold", mb: 0.5 }}>
-                {item.pair}
-              </Typography>
+          {list.length === 0 ? (
+            <Typography variant="body2" sx={{ color: "#64748B" }}>
+              {vi.common.noData || "Chua co du lieu"}
+            </Typography>
+          ) : (
+            list.map((item) => (
+              <Box
+                key={item.pair || item.fallbackKey}
+                sx={{
+                  mb: 1,
+                  p: 1,
+                  borderRadius: 2,
+                  background: "#F8FAFC",
+                  border: "1px solid #E2E8F0",
+                }}
+              >
+                <Typography sx={{ fontWeight: "bold", mb: 0.5 }}>
+                  {item.pair || "--"}
+                </Typography>
 
-              {/* Targets */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {item.targets.slice(0, 5).map((t) => (
-                  <Box
-                    key={t.number}
-                    sx={{
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      background: "#EEF4FF",
-                      color: "#1D4ED8",
-                      border: "1px solid #BFDBFE",
-                      fontSize: 12,
-                    }}
-                  >
-                    {formatNumber(t.number)} ({formatScore(t.score)})
-                  </Box>
-                ))}
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {item.targets.filter(Boolean).slice(0, 5).map((t, index) => (
+                    <Box
+                      key={`${t?.number ?? "unknown"}-${index}`}
+                      sx={{
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        background: "#EEF4FF",
+                        color: "#1D4ED8",
+                        border: "1px solid #BFDBFE",
+                        fontSize: 12,
+                      }}
+                    >
+                      {formatNumber(t?.number)} ({formatScore(t?.score)})
+                    </Box>
+                  ))}
+                </Box>
               </Box>
-            </Box>
-          ))}
+            ))
+          )}
 
-          {/* EXPAND */}
-          {search === "" && (
+          {search === "" && data.length > 20 && (
             <Button
               size="small"
               onClick={() => setExpanded(!expanded)}

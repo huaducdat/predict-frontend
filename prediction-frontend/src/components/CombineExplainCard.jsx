@@ -14,22 +14,32 @@ function CombineExplainCard() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🔥 FORMAT %
   const formatPercent = (score) => {
-    return Number((score * 100).toFixed(3));
+    const value = Number(score);
+    return Number.isFinite(value) ? Number((value * 100).toFixed(3)) : "--";
   };
 
-  const formatNumber = (n) => n.toString().padStart(2, "0");
+  const formatNumber = (n) => {
+    const value = Number(n);
+    return Number.isFinite(value) ? String(value).padStart(2, "0") : "--";
+  };
 
-  // ===== LOAD =====
+  const normalizeRows = (value) =>
+    Array.isArray(value)
+      ? value.filter((item) => item && typeof item === "object")
+      : [];
+
   const fetchData = async () => {
     try {
       setLoading(true);
       const res = await loadCombineExplain();
-      setData(res || []);
-      setFiltered(res || []);
+      const rows = normalizeRows(res);
+      setData(rows);
+      setFiltered(rows);
     } catch (e) {
       console.error(e);
+      setData([]);
+      setFiltered([]);
     } finally {
       setLoading(false);
     }
@@ -39,14 +49,13 @@ function CombineExplainCard() {
     fetchData();
   }, []);
 
-  // ===== SEARCH =====
   useEffect(() => {
     if (!search) {
       setFiltered(data);
     } else {
       setFiltered(
         data.filter((item) =>
-          item.number.toString().includes(search)
+          formatNumber(item.number).includes(search)
         )
       );
     }
@@ -68,12 +77,10 @@ function CombineExplainCard() {
         mt: 2,
       }}
     >
-      {/* HEADER */}
       <Typography variant="h6" mb={2}>
         {vi.prediction.combineExplain}
       </Typography>
 
-      {/* SEARCH */}
       <TextField
         size="small"
         placeholder={vi.common.searchNumber}
@@ -86,7 +93,6 @@ function CombineExplainCard() {
         }}
       />
 
-      {/* LIST */}
       <Box
         sx={{
           display: "grid",
@@ -94,45 +100,48 @@ function CombineExplainCard() {
           gap: 1,
         }}
       >
-        {filtered.slice(0, 20).map((item) => {
-          const reasons = item.reasons?.slice(0, 2) || [];
+        {filtered.length === 0 ? (
+          <Typography variant="body2" sx={{ color: "#64748B" }}>
+            {vi.common.noData || "Chua co du lieu"}
+          </Typography>
+        ) : (
+          filtered.slice(0, 20).map((item, index) => {
+            const reasons = Array.isArray(item.reasons) ? item.reasons.slice(0, 2) : [];
 
-          return (
-            <Box
-              key={item.number}
-              sx={{
-                p: 1.5,
-                borderRadius: 2,
-                background: "#F8FAFC",
-                border: "1px solid #E2E8F0",
-                textAlign: "center",
-              }}
-            >
-              {/* NUMBER */}
-              <Typography sx={{ fontWeight: "bold" }}>
-                {formatNumber(item.number)}
-              </Typography>
-
-              {/* SCORE */}
-              <Typography sx={{ fontSize: 12 }}>
-                {formatPercent(item.score)}%
-              </Typography>
-
-              {/* REASONS */}
-              {reasons.length > 0 && (
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    color: "#475569",
-                    mt: 0.5,
-                  }}
-                >
-                  {reasons.join(" + ")}
+            return (
+              <Box
+                key={`${item.number ?? "unknown"}-${index}`}
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  background: "#F8FAFC",
+                  border: "1px solid #E2E8F0",
+                  textAlign: "center",
+                }}
+              >
+                <Typography sx={{ fontWeight: "bold" }}>
+                  {formatNumber(item.number)}
                 </Typography>
-              )}
-            </Box>
-          );
-        })}
+
+                <Typography sx={{ fontSize: 12 }}>
+                  {formatPercent(item.score)}%
+                </Typography>
+
+                {reasons.length > 0 && (
+                  <Typography
+                    sx={{
+                      fontSize: 10,
+                      color: "#475569",
+                      mt: 0.5,
+                    }}
+                  >
+                    {reasons.join(" + ")}
+                  </Typography>
+                )}
+              </Box>
+            );
+          })
+        )}
       </Box>
     </Box>
   );

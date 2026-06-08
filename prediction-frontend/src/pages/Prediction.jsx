@@ -32,7 +32,6 @@ import PredictionSourceResultCard from "../components/PredictionSourceResultCard
 import TimeWeightGlobalCard from "../components/TimeWeightGlobalCard";
 import PairGlobalCard from "../components/PairGlobalCard";
 import PositionCard from "../components/PositionCard";
-import { dispatchPatternStateUpdated } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 const MODE_OPTIONS = [
@@ -167,7 +166,7 @@ function ModeBundleCard({ bundle }) {
         sx={PRIMARY_CARD_SX}
       >
         <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
             <Chip label={modeLabel(bundle?.mode)} sx={{ fontWeight: 800 }} />
             <Chip
               label={bundle?.patternState ? String(bundle.patternState).toUpperCase() : "INSUFFICIENT_DATA"}
@@ -199,7 +198,7 @@ function ModeBundleCard({ bundle }) {
         sx={SURFACE_CARD_SX}
       >
         <Stack spacing={1.8}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+          <Stack direction="row" gap={1} sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 900 }}>
                 Luồng quyết định
@@ -294,7 +293,7 @@ function ModeRecommendationCard({ recommendation }) {
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
           <Chip
             label={`Khuyến nghị: ${recommendationLabel(recommendation.recommendedMode)}`}
             sx={{ fontWeight: 900 }}
@@ -446,7 +445,6 @@ function Prediction() {
         EXTENDED: res?.longTerm ?? null,
       });
       setModeRecommendation(res?.modeRecommendation ?? null);
-      dispatchPatternStateUpdated();
       await loadSource(selectedMode);
     } catch (e) {
       console.error("Run all combine failed:", e);
@@ -481,9 +479,11 @@ function Prediction() {
       <Stack spacing={2.5}>
         <Stack
           direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "center" }}
           spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "center" },
+          }}
         >
           <Box>
             <Typography
@@ -503,7 +503,7 @@ function Prediction() {
             </Typography>
           </Box>
 
-          <Stack spacing={0.7} alignItems={{ xs: "stretch", md: "flex-end" }}>
+          <Stack spacing={0.7} sx={{ alignItems: { xs: "stretch", md: "flex-end" } }}>
             <Button
               variant="contained"
               onClick={handleRunAll}
@@ -542,7 +542,7 @@ function Prediction() {
             </Tabs>
 
             {loadingBundles && !activeBundle && (
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ py: 1 }}>
+              <Stack direction="row" spacing={1} sx={{ py: 1, alignItems: "center" }}>
                 <CircularProgress size={18} />
                 <Typography variant="body2">Đang chạy cả hai mode...</Typography>
               </Stack>
@@ -563,7 +563,7 @@ function Prediction() {
           }}
         >
           <Stack spacing={1.5}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+            <Stack direction="row" gap={1} sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 900 }}>
                   Nguồn dự đoán thô
@@ -577,7 +577,7 @@ function Prediction() {
                 </Typography>
               </Box>
 
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 <Chip label={modeLabel(selectedMode)} />
                 {(loadingSource || running) && <CircularProgress size={18} />}
               </Stack>

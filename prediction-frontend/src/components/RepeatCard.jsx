@@ -5,10 +5,20 @@ import { vi } from "../i18n/vi";
 function RepeatCard({ data }) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!data || !data["-1"]) return null;
+  const fullList = Array.isArray(data?.["-1"])
+    ? data["-1"].filter((item) => item && typeof item === "object")
+    : [];
+  const list = expanded ? fullList : fullList.slice(0, 5);
 
-  const fullList = data["-1"];
-  const list = expanded ? fullList : fullList.slice(0, 5); // 🔥 mặc định top 5
+  const formatNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? String(num).padStart(2, "0") : "--";
+  };
+
+  const formatScore = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num.toFixed(2) : "--";
+  };
 
   return (
     <Box
@@ -21,7 +31,6 @@ function RepeatCard({ data }) {
         boxShadow: "0 14px 36px rgba(37, 99, 235, 0.08)",
       }}
     >
-      {/* HEADER */}
       <Box
         sx={{
           display: "flex",
@@ -32,55 +41,58 @@ function RepeatCard({ data }) {
       >
         <Typography variant="h6">{vi.predictor.REP}</Typography>
 
-        <Button
-          size="small"
-          onClick={() => setExpanded(!expanded)}
-          sx={{
-            color: "#2563EB",
-            textTransform: "none",
-            fontSize: 12,
-          }}
-        >
-          {expanded ? vi.common.collapse : vi.common.viewMore}
-        </Button>
-      </Box>
-
-      {/* LIST */}
-      <Stack spacing={1}>
-        {list.map((item, index) => (
-          <Box
-            key={item.number}
+        {fullList.length > 5 && (
+          <Button
+            size="small"
+            onClick={() => setExpanded(!expanded)}
             sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              px: 2,
-              py: 1,
-              borderRadius: 2,
-
-              background:
-                index < 3
-                  ? "linear-gradient(135deg, #ff9800, #ff5722)"
-                  : "#F8FAFC",
-
-              transition: "0.2s",
+              color: "#2563EB",
+              textTransform: "none",
+              fontSize: 12,
             }}
           >
-            {/* NUMBER */}
-            <Typography
+            {expanded ? vi.common.collapse : vi.common.viewMore}
+          </Button>
+        )}
+      </Box>
+
+      <Stack spacing={1}>
+        {list.length === 0 ? (
+          <Typography variant="body2" sx={{ color: "#64748B" }}>
+            {vi.common.noData || "Chua co du lieu"}
+          </Typography>
+        ) : (
+          list.map((item, index) => (
+            <Box
+              key={`${item.number ?? "unknown"}-${index}`}
               sx={{
-                fontFamily: "Courier New",
-                fontWeight: "bold",
+                display: "flex",
+                justifyContent: "space-between",
+                px: 2,
+                py: 1,
+                borderRadius: 2,
+                background:
+                  index < 3
+                    ? "linear-gradient(135deg, #ff9800, #ff5722)"
+                    : "#F8FAFC",
+                transition: "0.2s",
               }}
             >
-              #{index + 1} — {item.number.toString().padStart(2, "0")}
-            </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Courier New",
+                  fontWeight: "bold",
+                }}
+              >
+                #{index + 1} - {formatNumber(item.number)}
+              </Typography>
 
-            {/* SCORE */}
-            <Typography sx={{ opacity: 0.8 }}>
-              {item.score.toFixed(2)}
-            </Typography>
-          </Box>
-        ))}
+              <Typography sx={{ opacity: 0.8 }}>
+                {formatScore(item.score)}
+              </Typography>
+            </Box>
+          ))
+        )}
       </Stack>
     </Box>
   );

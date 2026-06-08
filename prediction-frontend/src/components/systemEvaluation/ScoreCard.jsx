@@ -65,7 +65,7 @@ export default function ScoreCard({ label, value, subtitle, icon }) {
       />
       <CardContent sx={{ position: "relative", p: 2.2 }}>
         <Stack spacing={1.25}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
             <Typography
               variant="caption"
               sx={{ color: theme.palette.text.secondary, letterSpacing: 0 }}
@@ -106,7 +106,7 @@ export default function ScoreCard({ label, value, subtitle, icon }) {
             />
           </Stack>
 
-          <Stack direction="row" justifyContent="space-between" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary, minHeight: 20 }}>
               {subtitle}
             </Typography>

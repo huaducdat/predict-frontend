@@ -32,6 +32,9 @@ const DEFAULT_SUMMARY = {
   INSUFFICIENT_DATA: vi.pattern.noPatternReport,
 };
 
+const PATTERN_REPORT_MODE_STORAGE_KEY = "patternReportMode";
+const PATTERN_REPORT_MODE_CHANGED_EVENT = "pattern-report-mode-changed";
+
 function normalizePayload(payload) {
   const data = payload?.data ?? payload;
 
@@ -119,13 +122,25 @@ function formatDate(value) {
   }).format(date);
 }
 
-function PatternReportWidget({ dense = false }) {
+function readStoredPatternMode() {
+  if (typeof window === "undefined") return "SHORT_TERM";
+  return window.localStorage.getItem(PATTERN_REPORT_MODE_STORAGE_KEY) || "SHORT_TERM";
+}
+
+function devLog(label, payload) {
+  if (!import.meta.env.DEV) return;
+  console.debug(`[${new Date().toISOString()}] ${label}`, payload ?? "");
+}
+
+function PatternReportWidget({ dense = false, mode: modeProp }) {
   const navigate = useNavigate();
   const theme = useTheme();
   const mountedRef = useRef(true);
   const requestIdRef = useRef(0);
 
-  const [report, setReport] = useState(null);
+  const [currentMode, setCurrentMode] = useState(modeProp || readStoredPatternMode());
+  const [stateSnapshot, setStateSnapshot] = useState(null);
+  const [latestReport, setLatestReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -141,43 +156,40 @@ function PatternReportWidget({ dense = false }) {
     }
 
     try {
-      let stateSnapshot = null;
-      let latest = null;
+      let nextStateSnapshot = null;
+      let nextLatestReport = null;
 
       try {
-        stateSnapshot = normalizePayload(await getPatternState());
+        nextStateSnapshot = normalizePayload(await getPatternState());
       } catch (stateErr) {
         console.error("Load pattern state error:", stateErr);
       }
 
-      if (isUsableReport(stateSnapshot)) {
-        try {
-          latest = normalizePayload(await getLatestPatternReport());
-        } catch (latestErr) {
-          console.error("Load latest pattern report metadata error:", latestErr);
-        }
-
-        const stateValue = readFirst(stateSnapshot, ["state", "status", "patternState"]);
-        if (canUpdate()) {
-          setReport({
-            ...(isUsableReport(latest) ? latest : {}),
-            ...stateSnapshot,
-            state: stateValue,
-          });
-        }
-        return;
+      try {
+        nextLatestReport = normalizePayload(await getLatestPatternReport(currentMode));
+      } catch (latestErr) {
+        console.error("Load latest pattern report metadata error:", latestErr);
       }
 
-      latest = normalizePayload(await getLatestPatternReport());
-
-      if (isUsableReport(latest)) {
-        if (canUpdate()) setReport(latest);
-        return;
+      if (import.meta.env.DEV) {
+        devLog("PATTERN STATE REFRESH", nextStateSnapshot);
+        devLog("PATTERN REPORT REFRESH", {
+          mode: currentMode,
+          payload: nextLatestReport,
+        });
+        console.debug("[PatternReportWidget] state payload", nextStateSnapshot);
+        console.debug("[PatternReportWidget] latest report payload", {
+          mode: currentMode,
+          payload: nextLatestReport,
+        });
       }
 
       if (canUpdate()) {
-        setReport(null);
-        setError(vi.pattern.loadError);
+        setStateSnapshot(isUsableReport(nextStateSnapshot) ? nextStateSnapshot : null);
+        setLatestReport(isUsableReport(nextLatestReport) ? nextLatestReport : null);
+        if (!isUsableReport(nextStateSnapshot) && !isUsableReport(nextLatestReport)) {
+          setError(vi.pattern.loadError);
+        }
       }
     } catch (err) {
       console.error("Load pattern report error:", err);
@@ -185,7 +197,7 @@ function PatternReportWidget({ dense = false }) {
     } finally {
       if (canUpdate()) setLoading(false);
     }
-  }, []);
+  }, [currentMode]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -204,19 +216,41 @@ function PatternReportWidget({ dense = false }) {
     };
   }, [loadPatternState]);
 
-  const state = normalizeState(readFirst(report, ["state", "status", "patternState"]));
+  useEffect(() => {
+    if (modeProp) {
+      setCurrentMode(modeProp);
+      return undefined;
+    }
+
+    const handleModeChanged = () => {
+      setCurrentMode(readStoredPatternMode());
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(PATTERN_REPORT_MODE_CHANGED_EVENT, handleModeChanged);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener(PATTERN_REPORT_MODE_CHANGED_EVENT, handleModeChanged);
+      }
+    };
+  }, [modeProp]);
+
+  const state = normalizeState(readFirst(stateSnapshot, ["state", "status", "patternState"]));
   const summary =
-    readFirst(report, ["summary", "message", "title", "description"]) ??
+    readFirst(latestReport, ["summary", "message", "title", "description"]) ??
+    readFirst(stateSnapshot, ["summary", "message", "title", "description"]) ??
     DEFAULT_SUMMARY[state] ??
     vi.common.noData;
-  const boostCap = readFirst(report, [
+  const boostCap = readFirst(latestReport, [
     "boostCap",
     "boost_cap",
     "boost",
     "boostLimit",
   ]);
-  const mode = readFirst(report, ["mode", "patternMode", "reportMode"]);
-  const createdAt = readFirst(report, [
+  const reportMode = readFirst(latestReport, ["mode", "patternMode", "reportMode"]) ?? currentMode;
+  const createdAt = readFirst(latestReport, [
     "createdAt",
     "created_at",
     "timestamp",
@@ -230,8 +264,8 @@ function PatternReportWidget({ dense = false }) {
     metaParts.push(`Tăng cường ${formatNumber(boostCap, 2)}`);
   }
 
-  if (mode) {
-    metaParts.push(vi.mode[String(mode).toUpperCase()] ?? String(mode).toUpperCase());
+  if (reportMode) {
+    metaParts.push(vi.mode[String(reportMode).toUpperCase()] ?? String(reportMode).toUpperCase());
   }
 
   if (createdAt) {
@@ -254,9 +288,8 @@ function PatternReportWidget({ dense = false }) {
   return (
     <Stack
       direction="row"
-      alignItems="center"
       spacing={0.5}
-      sx={{ minWidth: 0, maxWidth: dense ? 180 : 340 }}
+      sx={{ minWidth: 0, maxWidth: dense ? 180 : 340, alignItems: "center" }}
     >
       <Tooltip title={tooltipTitle} arrow disableInteractive>
         <ButtonBase
@@ -290,9 +323,8 @@ function PatternReportWidget({ dense = false }) {
         >
           <Stack
             direction="row"
-            alignItems="center"
             spacing={1}
-            sx={{ minWidth: 0, width: "100%" }}
+            sx={{ minWidth: 0, width: "100%", alignItems: "center" }}
           >
             <Chip
               size="small"

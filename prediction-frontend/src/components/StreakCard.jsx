@@ -5,10 +5,20 @@ import { vi } from "../i18n/vi";
 function StreakCard({ data }) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!data || !data["-1"]) return null;
-
-  const fullList = data["-1"];
+  const fullList = Array.isArray(data?.["-1"])
+    ? data["-1"].filter((item) => item && typeof item === "object")
+    : [];
   const list = expanded ? fullList : fullList.slice(0, 12);
+
+  const formatNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? String(num).padStart(2, "0") : "--";
+  };
+
+  const formatScore = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num.toFixed(2) : "--";
+  };
 
   return (
     <Box
@@ -22,7 +32,6 @@ function StreakCard({ data }) {
         position: "relative",
       }}
     >
-      {/* HEADER */}
       <Box
         sx={{
           display: "flex",
@@ -35,77 +44,80 @@ function StreakCard({ data }) {
           {vi.predictor.STRK}
         </Typography>
 
-        <Button
-          size="small"
-          onClick={() => setExpanded(!expanded)}
-          sx={{
-            color: "#2563EB",
-            textTransform: "none",
-            fontSize: 12,
-            minWidth: 0,
-            px: 1,
-            py: 0.5,
-          }}
-        >
-          {expanded ? vi.common.collapse : vi.common.viewMore}
-        </Button>
-      </Box>
-
-      {/* GRID */}
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 1,
-
-          maxHeight: expanded ? 300 : 100,
-          overflow: "hidden",
-          transition: "all 0.3s ease",
-        }}
-      >
-        {list.map((item) => (
-          <Box
-            key={item.number}
+        {fullList.length > 12 && (
+          <Button
+            size="small"
+            onClick={() => setExpanded(!expanded)}
             sx={{
-              minWidth: 40,
-              px: 1.2,
-              py: 0.8,
-              borderRadius: 2,
-              textAlign: "center",
-              fontFamily: "Courier New",
-              fontVariantNumeric: "tabular-nums",
-              fontWeight: "bold",
-              fontSize: 13,
-              background: "linear-gradient(135deg, #00e676, #00c853)",
-              color: "#000",
-              cursor: "pointer",
-              userSelect: "none",
-              transition: "0.2s",
-              "&:hover": {
-                transform: "scale(1.1)",
-                background: "linear-gradient(135deg, #00e5ff, #00bcd4)",
-              },
+              color: "#2563EB",
+              textTransform: "none",
+              fontSize: 12,
+              minWidth: 0,
+              px: 1,
+              py: 0.5,
             }}
           >
-            {/* NUMBER */}
-            <div>{item.number.toString().padStart(2, "0")}</div>
-
-            {/* SCORE */}
-            <div
-              style={{
-                fontSize: 10,
-                opacity: 0.7,
-                marginTop: 2,
-              }}
-            >
-              {item.score.toFixed(2)}
-            </div>
-          </Box>
-        ))}
+            {expanded ? vi.common.collapse : vi.common.viewMore}
+          </Button>
+        )}
       </Box>
 
-      {/* FADE khi chưa expand */}
-      {!expanded && (
+      {list.length === 0 ? (
+        <Typography variant="body2" sx={{ color: "#64748B" }}>
+          {vi.common.noData || "Chua co du lieu"}
+        </Typography>
+      ) : (
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1,
+            maxHeight: expanded ? 300 : 100,
+            overflow: "hidden",
+            transition: "all 0.3s ease",
+          }}
+        >
+          {list.map((item, index) => (
+            <Box
+              key={`${item.number ?? "unknown"}-${index}`}
+              sx={{
+                minWidth: 40,
+                px: 1.2,
+                py: 0.8,
+                borderRadius: 2,
+                textAlign: "center",
+                fontFamily: "Courier New",
+                fontVariantNumeric: "tabular-nums",
+                fontWeight: "bold",
+                fontSize: 13,
+                background: "linear-gradient(135deg, #00e676, #00c853)",
+                color: "#000",
+                cursor: "pointer",
+                userSelect: "none",
+                transition: "0.2s",
+                "&:hover": {
+                  transform: "scale(1.1)",
+                  background: "linear-gradient(135deg, #00e5ff, #00bcd4)",
+                },
+              }}
+            >
+              <div>{formatNumber(item.number)}</div>
+
+              <div
+                style={{
+                  fontSize: 10,
+                  opacity: 0.7,
+                  marginTop: 2,
+                }}
+              >
+                {formatScore(item.score)}
+              </div>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {!expanded && list.length > 0 && fullList.length > 12 && (
         <Box
           sx={{
             position: "absolute",

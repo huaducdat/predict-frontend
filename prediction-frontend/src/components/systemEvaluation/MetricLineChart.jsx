@@ -55,13 +55,13 @@ export default function MetricLineChart({ title, rows, series }) {
       }}
     >
       <Stack spacing={1}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
             {title}
           </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
             {series.map((item) => (
-              <Stack key={item.field} direction="row" spacing={0.6} alignItems="center">
+              <Stack key={item.field} direction="row" spacing={0.6} sx={{ alignItems: "center" }}>
                 <Box
                   sx={{
                     width: 9,

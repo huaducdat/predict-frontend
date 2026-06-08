@@ -158,7 +158,7 @@ function BetDetailPage() {
                     : "#f5f5f5",
               }}
             >
-              <Stack direction="row" alignItems="center">
+              <Stack direction="row" sx={{ alignItems: "center" }}>
                 <Box sx={{ width: 60 }}>{String(i.number).padStart(2, "0")}</Box>
                 <Box sx={{ width: 80 }}>{i.point}</Box>
                 <Box

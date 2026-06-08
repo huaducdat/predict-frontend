@@ -30,6 +30,7 @@ import {
   getPatternState,
   getRecentPatternReports,
 } from "../api/patternApi";
+import { PATTERN_STATE_UPDATED_EVENT } from "../events/patternStateEvents";
 import { vi } from "../i18n/vi";
 
 const STATE_LABELS = {
@@ -51,6 +52,8 @@ const METRIC_FIELDS = [
 ];
 
 const WEIGHT_KEYS = ["PAIR", "TIME", "FREQ", "POS", "REP", "STRK", "GAP"];
+const PATTERN_REPORT_MODE_STORAGE_KEY = "patternReportMode";
+const PATTERN_REPORT_MODE_CHANGED_EVENT = "pattern-report-mode-changed";
 const MODE_OPTIONS = [
   { value: "SHORT_TERM", label: "Ngắn hạn" },
   { value: "EXTENDED", label: "Dài hạn" },
@@ -265,6 +268,11 @@ function normalizeWeights(raw) {
   return [];
 }
 
+function devLog(label, payload) {
+  if (!import.meta.env.DEV) return;
+  console.debug(`[${new Date().toISOString()}] ${label}`, payload ?? "");
+}
+
 function stateTone(state, theme) {
   if (state === "STABLE") {
     return {
@@ -397,6 +405,14 @@ export default function PatternReportPage() {
       const snapshot = stateRes.status === "fulfilled" ? normalizePayload(stateRes.value) : null;
       const recent = recentRes.status === "fulfilled" ? normalizeList(recentRes.value) : [];
 
+      devLog("PATTERN STATE REFRESH", stateRes);
+      devLog("PATTERN REPORT REFRESH", latestRes);
+
+      if (import.meta.env.DEV) {
+        console.debug("[PatternReportPage] state payload", stateRes);
+        console.debug("[PatternReportPage] latest report payload", latestRes);
+      }
+
       if (mountedRef.current) {
         setLatestReport(isUsableReport(latest) ? latest : null);
         setStateSnapshot(isUsableReport(snapshot) ? snapshot : null);
@@ -430,6 +446,10 @@ export default function PatternReportPage() {
 
   useEffect(() => {
     mountedRef.current = true;
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(PATTERN_REPORT_MODE_STORAGE_KEY, selectedMode);
+      window.dispatchEvent(new Event(PATTERN_REPORT_MODE_CHANGED_EVENT));
+    }
     void loadData();
 
     return () => {
@@ -439,25 +459,41 @@ export default function PatternReportPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMode]);
 
-  const headerReport =
-    isUsableReport(latestReport) ? latestReport : isUsableReport(stateSnapshot) ? stateSnapshot : null;
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
 
-  const state = normalizeState(readFirst(headerReport, ["state", "status", "patternState"]));
+    const handlePatternStateUpdated = () => {
+      void loadData();
+    };
+
+    window.addEventListener(PATTERN_STATE_UPDATED_EVENT, handlePatternStateUpdated);
+
+    return () => {
+      window.removeEventListener(PATTERN_STATE_UPDATED_EVENT, handlePatternStateUpdated);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMode]);
+
+  const stateSource = isUsableReport(stateSnapshot) ? stateSnapshot : null;
+  const reportSource = isUsableReport(latestReport) ? latestReport : null;
+  const headerReport = stateSource ?? reportSource;
+
+  const state = normalizeState(readFirst(stateSource, ["state", "status", "patternState"]));
   const tone = stateTone(state, theme);
   const summary =
-    readFirst(headerReport, ["summary", "message", "title", "description"]) ??
+    readFirst(stateSource, ["summary", "message", "title", "description"]) ??
     vi.pattern.noPatternReport;
-  const mode = readFirst(headerReport, ["mode", "patternMode", "reportMode"]);
-  const boostCap = readFirst(headerReport, ["boostCap", "boost_cap", "boost", "boostLimit"]);
-  const createdAt = readFirst(headerReport, ["createdAt", "created_at", "timestamp", "generatedAt"]);
-  const targetDate = readFirst(headerReport, ["targetDate", "target_date", "date"]);
-  const source = readFirst(headerReport, ["source", "origin", "generatedBy", "service", "reportSource"]);
-  const metricsSource = readFirst(headerReport, ["metrics", "detail", "details"]) ?? headerReport;
+  const mode = readFirst(reportSource, ["mode", "patternMode", "reportMode"]);
+  const boostCap = readFirst(reportSource, ["boostCap", "boost_cap", "boost", "boostLimit"]);
+  const createdAt = readFirst(reportSource, ["createdAt", "created_at", "timestamp", "generatedAt"]);
+  const targetDate = readFirst(reportSource, ["targetDate", "target_date", "date"]);
+  const source = readFirst(reportSource, ["source", "origin", "generatedBy", "service", "reportSource"]);
+  const metricsSource = readFirst(reportSource, ["metrics", "detail", "details"]) ?? reportSource;
   const reasons = normalizeReasons(
-    readFirst(headerReport, ["reasons", "reasonList", "reason", "signals"]),
+    readFirst(reportSource, ["reasons", "reasonList", "reason", "signals"]),
   );
   const effectiveWeights = normalizeWeights(
-    readFirst(headerReport, [
+    readFirst(reportSource, [
       "effectiveWeights",
       "effective_weights",
       "weights",
@@ -516,9 +552,11 @@ export default function PatternReportPage() {
         <Stack spacing={2}>
           <Stack
             direction={{ xs: "column", md: "row" }}
-            alignItems={{ xs: "flex-start", md: "center" }}
-            justifyContent="space-between"
             spacing={2}
+            sx={{
+              alignItems: { xs: "flex-start", md: "center" },
+              justifyContent: "space-between",
+            }}
           >
             <Box>
               <Typography
@@ -588,7 +626,7 @@ export default function PatternReportPage() {
             subtitle={vi.pattern.headerCardSubtitle}
             action={
               loading && !headerReport ? (
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <CircularProgress size={18} />
                   <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                     {vi.pattern.loadingData}
@@ -601,7 +639,7 @@ export default function PatternReportPage() {
               <Stack
                 direction={{ xs: "column", md: "row" }}
                 spacing={1.5}
-                alignItems={{ xs: "flex-start", md: "center" }}
+                sx={{ alignItems: { xs: "flex-start", md: "center" } }}
               >
                 <Chip
                   label={vi.patternState[state] ?? state}
@@ -618,7 +656,7 @@ export default function PatternReportPage() {
                 </Typography>
               </Stack>
 
-              <Stack direction="row" flexWrap="wrap" gap={1}>
+              <Stack direction="row" gap={1} sx={{ flexWrap: "wrap" }}>
                 {mode && (
                   <Chip
                     size="small"

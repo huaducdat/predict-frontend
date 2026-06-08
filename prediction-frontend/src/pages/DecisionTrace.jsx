@@ -174,9 +174,11 @@ export default function DecisionTrace() {
       <Stack spacing={2.4} sx={{ maxWidth: 1500, mx: "auto" }}>
         <Stack
           direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "center" }}
           spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "center" },
+          }}
         >
           <Box>
             <Typography variant="h4" sx={{ color: "#0F172A", fontWeight: 950 }}>
@@ -187,7 +189,7 @@ export default function DecisionTrace() {
             </Typography>
           </Box>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} alignItems={{ xs: "stretch", sm: "center" }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} sx={{ alignItems: { xs: "stretch", sm: "center" } }}>
             <Tabs
               value={mode}
               onChange={(_, value) => setMode(value)}
@@ -217,7 +219,7 @@ export default function DecisionTrace() {
 
         {loading && !activeTrace ? (
           <SystemSectionCard title="Đang tải dữ liệu" subtitle="Đang gọi API luồng quyết định theo mode đã chọn.">
-            <Stack direction="row" alignItems="center" spacing={1.2}>
+            <Stack direction="row" spacing={1.2} sx={{ alignItems: "center" }}>
               <CircularProgress size={20} />
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                 Vui lòng đợi trong giây lát.
