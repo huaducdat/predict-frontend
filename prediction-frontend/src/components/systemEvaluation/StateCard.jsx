@@ -9,25 +9,22 @@ function stateTone(value, theme) {
       color: theme.palette.success.dark,
       bg: alpha(theme.palette.success.main, 0.15),
       border: alpha(theme.palette.success.main, 0.34),
-      glow: alpha(theme.palette.success.main, 0.28),
     };
   }
 
-  if (["SHIFTING", "RECOVERING", "MEDIUM", "MEDIUM_CONFIDENCE", "PHASE_SHIFTING"].includes(state)) {
+  if (["SHIFTING", "RECOVERING", "MEDIUM", "MEDIUM_CONFIDENCE", "PHASE_SHIFTING", "TRANSITION"].includes(state)) {
     return {
       color: theme.palette.warning.dark,
       bg: alpha(theme.palette.warning.main, 0.16),
       border: alpha(theme.palette.warning.main, 0.35),
-      glow: alpha(theme.palette.warning.main, 0.26),
     };
   }
 
-  if (["CHAOTIC", "LOW_CONFIDENCE", "LOW", "DO_NOT_TRUST"].includes(state)) {
+  if (["CHAOTIC", "LOW_CONFIDENCE", "LOW", "DO_NOT_TRUST", "VOLATILE"].includes(state)) {
     return {
       color: theme.palette.error.dark,
       bg: alpha(theme.palette.error.main, 0.17),
       border: alpha(theme.palette.error.main, 0.36),
-      glow: alpha(theme.palette.error.main, 0.28),
     };
   }
 
@@ -35,13 +32,13 @@ function stateTone(value, theme) {
     color: theme.palette.grey[700],
     bg: alpha(theme.palette.grey[500], 0.14),
     border: alpha(theme.palette.grey[500], 0.26),
-    glow: alpha(theme.palette.grey[500], 0.16),
   };
 }
 
-export default function StateCard({ title, value, subtitle }) {
+export default function StateCard({ title, value, subtitle, formatValue }) {
   const theme = useTheme();
   const tone = stateTone(value, theme);
+  const label = formatValue ? formatValue(value) : value || "--";
 
   return (
     <Card
@@ -75,7 +72,7 @@ export default function StateCard({ title, value, subtitle }) {
             {title}
           </Typography>
           <Chip
-            label={value || "--"}
+            label={label}
             sx={{
               alignSelf: "flex-start",
               color: tone.color,
@@ -86,7 +83,7 @@ export default function StateCard({ title, value, subtitle }) {
             }}
           />
           <Typography variant="body2" sx={{ color: theme.palette.text.secondary, minHeight: 40 }}>
-            {subtitle || "Chưa có mô tả bổ sung."}
+            {subtitle || "Chua co mo ta bo sung."}
           </Typography>
         </Stack>
       </CardContent>

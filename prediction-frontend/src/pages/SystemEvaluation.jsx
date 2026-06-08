@@ -35,18 +35,54 @@ import MetricLineChart from "../components/systemEvaluation/MetricLineChart";
 import ScoreCard from "../components/systemEvaluation/ScoreCard";
 import StateCard from "../components/systemEvaluation/StateCard";
 import SystemSectionCard from "../components/systemEvaluation/SystemSectionCard";
-import { vi } from "../i18n/vi";
 
 const HISTORY_SERIES = [
-  { field: "confidenceScore", label: "Confidence", color: "#00c6ff" },
-  { field: "stabilityScore", label: "Stability", color: "#14b86a" },
-  { field: "accuracyScore", label: "Accuracy", color: "#ff9f1c" },
+  { field: "confidenceScore", label: "Do tin cay", color: "#00c6ff" },
+  { field: "stabilityScore", label: "Do on dinh", color: "#14b86a" },
+  { field: "accuracyScore", label: "Do chinh xac", color: "#ff9f1c" },
 ];
 
 const MODE_OPTIONS = [
-  { value: "SHORT_TERM", label: "NgÃ¡ÂºÂ¯n hÃ¡ÂºÂ¡n" },
-  { value: "EXTENDED", label: "DÃƒÂ i hÃ¡ÂºÂ¡n" },
+  { value: "SHORT_TERM", label: "Ngan han" },
+  { value: "EXTENDED", label: "Dai han" },
 ];
+
+const MODE_LABELS = {
+  SHORT_TERM: "Ngan han",
+  LONG_TERM: "Dai han",
+  EXTENDED: "Dai han",
+};
+
+const STATE_LABELS = {
+  STABLE: "On dinh",
+  VOLATILE: "Bien dong manh",
+  SHIFTING: "Dang thay doi",
+  TRANSITION: "Dang thay doi",
+  PHASE_SHIFTING: "Dang thay doi",
+  RECOVERING: "Dang phuc hoi",
+  CHAOTIC: "Hon loan",
+  UNKNOWN: "Chua xac dinh",
+  HIGH_CONFIDENCE: "Do tin cay cao",
+  MEDIUM_CONFIDENCE: "Do tin cay trung binh",
+  LOW_CONFIDENCE: "Do tin cay thap",
+  MEDIUM: "Trung binh",
+  LOW: "Thap",
+  DO_NOT_TRUST: "Khong nen tin",
+};
+
+const RECOMMENDATION_LABELS = {
+  TRUST: "Co the tin",
+  USE: "Co the dung",
+  USE_SHORT_TERM: "Uu tien ngan han",
+  USE_LONG_TERM: "Uu tien dai han",
+  USE_EXTENDED: "Uu tien dai han",
+  WATCH: "Can theo doi",
+  MONITOR: "Can theo doi",
+  WAIT: "Cho them du lieu",
+  HOLD: "Tam giu",
+  DO_NOT_TRUST: "Khong nen tin",
+  UNKNOWN: "Chua xac dinh",
+};
 
 function normalizePayload(payload) {
   const data = payload?.data ?? payload;
@@ -153,6 +189,49 @@ function valueOrFallback(...values) {
   return values.find((value) => value !== undefined && value !== null);
 }
 
+function labelFromMap(value, labels) {
+  if (value === undefined || value === null || value === "") return "Chua xac dinh";
+  const key = String(value).toUpperCase();
+  return labels[key] ?? "Chua xac dinh";
+}
+
+function modeLabel(value) {
+  return labelFromMap(value, MODE_LABELS);
+}
+
+function stateLabel(value) {
+  return labelFromMap(value, STATE_LABELS);
+}
+
+function recommendationLabel(value) {
+  return labelFromMap(value, RECOMMENDATION_LABELS);
+}
+
+function sanitizeBackendText(value, fallback = "Chua co du lieu hien thi.") {
+  if (!value || typeof value !== "string") return fallback;
+
+  return value
+    .replaceAll("System Evaluation", "danh gia he thong")
+    .replaceAll("summary", "tom tat")
+    .replaceAll("from backend", "tu may chu")
+    .replaceAll("backend", "may chu")
+    .replaceAll("Recommendation Phase", "giai doan de xuat")
+    .replaceAll("Recommendation", "De xuat")
+    .replaceAll("Confidence", "Do tin cay")
+    .replaceAll("Stability", "Do on dinh")
+    .replaceAll("Accuracy", "Do chinh xac")
+    .replaceAll("Recent Overlap", "Do trung lap gan day")
+    .replaceAll("Active Overlap", "Do trung lap kich hoat")
+    .replaceAll("Short Term", "Ngan han")
+    .replaceAll("Long Term", "Dai han")
+    .replaceAll("Stable", "On dinh")
+    .replaceAll("Volatile", "Bien dong manh")
+    .replaceAll("Unknown", "Chua xac dinh")
+    .replaceAll(" is low", " thap")
+    .replaceAll(" is stable", " on dinh")
+    .replaceAll(" ready", " san sang");
+}
+
 function stateChipSx(value, theme) {
   const state = String(value || "").toUpperCase();
 
@@ -164,7 +243,7 @@ function stateChipSx(value, theme) {
     };
   }
 
-  if (["SHIFTING", "RECOVERING", "MEDIUM", "MEDIUM_CONFIDENCE", "PHASE_SHIFTING"].includes(state)) {
+  if (["SHIFTING", "RECOVERING", "MEDIUM", "MEDIUM_CONFIDENCE", "PHASE_SHIFTING", "TRANSITION"].includes(state)) {
     return {
       color: theme.palette.warning.dark,
       backgroundColor: alpha(theme.palette.warning.main, 0.17),
@@ -172,7 +251,7 @@ function stateChipSx(value, theme) {
     };
   }
 
-  if (["CHAOTIC", "LOW_CONFIDENCE", "LOW", "DO_NOT_TRUST"].includes(state)) {
+  if (["CHAOTIC", "LOW_CONFIDENCE", "LOW", "DO_NOT_TRUST", "VOLATILE"].includes(state)) {
     return {
       color: theme.palette.error.dark,
       backgroundColor: alpha(theme.palette.error.main, 0.18),
@@ -238,13 +317,13 @@ export default function SystemEvaluation() {
           metricsRes.status === "rejected" &&
           recommendationRes.status === "rejected"
         ) {
-          setError("KhÃƒÂ´ng tÃ¡ÂºÂ£i Ã„â€˜Ã†Â°Ã¡Â»Â£c dÃ¡Â»Â¯ liÃ¡Â»â€¡u System Evaluation. KiÃ¡Â»Æ’m tra backend hoÃ¡ÂºÂ·c token Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p.");
+          setError("Khong tai duoc du lieu danh gia he thong. Kiem tra may chu hoac ma dang nhap.");
         }
       }
     } catch (err) {
       console.error("Load system evaluation error:", err);
       if (mountedRef.current) {
-        setError("KhÃƒÂ´ng tÃ¡ÂºÂ£i Ã„â€˜Ã†Â°Ã¡Â»Â£c dÃ¡Â»Â¯ liÃ¡Â»â€¡u System Evaluation.");
+        setError("Khong tai duoc du lieu danh gia he thong.");
       }
     } finally {
       if (mountedRef.current) {
@@ -268,7 +347,7 @@ export default function SystemEvaluation() {
     } catch (err) {
       console.error("Run system evaluation error:", err);
       if (mountedRef.current) {
-        setError("Khong chay duoc danh gia he thong. Kiem tra du lieu du doan/ket qua va backend log.");
+        setError("Khong chay duoc danh gia he thong. Kiem tra du lieu du doan, ket qua va nhat ky may chu.");
       }
     } finally {
       if (mountedRef.current) {
@@ -276,6 +355,7 @@ export default function SystemEvaluation() {
       }
     }
   };
+
   useEffect(() => {
     mountedRef.current = true;
     void loadData();
@@ -283,7 +363,6 @@ export default function SystemEvaluation() {
     return () => {
       mountedRef.current = false;
     };
-    // stable refs and imported API functions only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMode]);
 
@@ -302,12 +381,14 @@ export default function SystemEvaluation() {
   const phaseState = valueOrFallback(activeReport?.phaseState, recommendation?.phaseState);
   const confidenceState = valueOrFallback(activeReport?.confidenceState, recommendation?.confidenceState);
   const recommendationCode = valueOrFallback(activeReport?.recommendation, recommendation?.recommendation);
-  const summaryText = valueOrFallback(
-    activeReport?.summaryText,
-    recommendation?.summaryText,
-    "ChÃ†Â°a cÃƒÂ³ tÃƒÂ³m tÃ¡ÂºÂ¯t hÃ¡Â»â€¡ thÃ¡Â»â€˜ng.",
+  const summaryText = sanitizeBackendText(
+    valueOrFallback(activeReport?.summaryText, recommendation?.summaryText),
+    "Chua co tom tat he thong.",
   );
-  const recommendationText = valueOrFallback(activeReport?.recommendationText, recommendation?.recommendationText);
+  const recommendationText = sanitizeBackendText(
+    valueOrFallback(activeReport?.recommendationText, recommendation?.recommendationText),
+    "De xuat ngan tu backend.",
+  );
 
   return (
     <Box
@@ -342,16 +423,16 @@ export default function SystemEvaluation() {
               variant="h4"
               sx={{
                 fontWeight: 950,
-                letterSpacing: -0.8,
+                letterSpacing: 0,
                 background: "linear-gradient(90deg, #00c6ff, #14b86a, #ff9f1c)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
             >
-              Ã„ÂÃƒÂ¡nh GiÃƒÂ¡ HÃ¡Â»â€¡ ThÃ¡Â»â€˜ng
+              Danh gia he thong
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              TÃ¡Â»â€¢ng hÃ¡Â»Â£p Ã„â€˜Ã¡Â»â„¢ tin cÃ¡ÂºÂ­y, Ã¡Â»â€¢n Ã„â€˜Ã¡Â»â€¹nh vÃƒÂ  khuyÃ¡ÂºÂ¿n nghÃ¡Â»â€¹ vÃ¡ÂºÂ­n hÃƒÂ nh tÃ¡Â»Â« System Evaluation backend.
+              Tong hop do tin cay, do on dinh va de xuat van hanh tu may chu danh gia he thong.
             </Typography>
           </Box>
 
@@ -377,7 +458,7 @@ export default function SystemEvaluation() {
               disabled={loading || running}
               sx={{ textTransform: "none", borderRadius: 3, px: 2.2 }}
             >
-              {running ? "Äang Ä‘Ã¡nh giÃ¡" : "Cháº¡y Ä‘Ã¡nh giÃ¡"}
+              {running ? "Dang danh gia" : "Chay danh gia"}
             </Button>
             <Button
               variant="contained"
@@ -391,7 +472,7 @@ export default function SystemEvaluation() {
                 background: "linear-gradient(135deg, #00c6ff, #14b86a)",
               }}
             >
-              {loading ? "Äang táº£i" : "LÃ m má»›i"}
+              {loading ? "Dang tai" : "Lam moi"}
             </Button>
           </Stack>
         </Stack>
@@ -400,11 +481,11 @@ export default function SystemEvaluation() {
         {notice && !error && <Alert severity="info">{notice}</Alert>}
 
         {loading && !activeReport ? (
-          <SystemSectionCard title="Ã„Âang tÃ¡ÂºÂ£i dÃ¡Â»Â¯ liÃ¡Â»â€¡u" subtitle="Ã„Âang gÃ¡Â»Âi cÃƒÂ¡c API System Evaluation.">
+          <SystemSectionCard title="Dang tai du lieu" subtitle="Dang tai du lieu danh gia he thong.">
             <Stack direction="row" spacing={1.2} sx={{ alignItems: "center" }}>
               <CircularProgress size={20} />
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                Vui lÃƒÂ²ng Ã„â€˜Ã¡Â»Â£i trong giÃƒÂ¢y lÃƒÂ¡t.
+                Vui long doi trong giay lat.
               </Typography>
             </Stack>
           </SystemSectionCard>
@@ -418,27 +499,27 @@ export default function SystemEvaluation() {
               }}
             >
               <ScoreCard
-                label="Accuracy"
+                label="Do chinh xac"
                 value={accuracyScore}
-                subtitle="Ã„ÂÃ¡Â»â„¢ chÃƒÂ­nh xÃƒÂ¡c thÃ¡Â»Â±c tÃ¡ÂºÂ¿ gÃ¡ÂºÂ§n nhÃ¡ÂºÂ¥t"
+                subtitle="Do chinh xac thuc te gan nhat"
                 icon={<AnalyticsRoundedIcon />}
               />
               <ScoreCard
-                label="Evaluation"
+                label="Diem danh gia"
                 value={evaluationScore}
-                subtitle="Ã„ÂiÃ¡Â»Æ’m Ã„â€˜ÃƒÂ¡nh giÃƒÂ¡ tÃ¡Â»â€¢ng hÃ¡Â»Â£p"
+                subtitle="Diem danh gia tong hop"
                 icon={<PsychologyAltRoundedIcon />}
               />
               <ScoreCard
-                label="Stability"
+                label="Do on dinh"
                 value={stabilityScore}
-                subtitle="MÃ¡Â»Â©c Ã¡Â»â€¢n Ã„â€˜Ã¡Â»â€¹nh tÃƒÂ­n hiÃ¡Â»â€¡u"
+                subtitle="Muc on dinh cua tin hieu"
                 icon={<ShieldRoundedIcon />}
               />
               <ScoreCard
-                label="Confidence"
+                label="Do tin cay"
                 value={confidenceScore}
-                subtitle="Ã„ÂÃ¡Â»â„¢ tin cÃ¡ÂºÂ­y hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i"
+                subtitle="Do tin cay hien tai"
                 icon={<VerifiedRoundedIcon />}
               />
             </Box>
@@ -450,22 +531,29 @@ export default function SystemEvaluation() {
                 gap: 1.6,
               }}
             >
-              <StateCard title="Phase State" value={phaseState} subtitle="TrÃ¡ÂºÂ¡ng thÃƒÂ¡i pha vÃ¡ÂºÂ­n hÃƒÂ nh hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i." />
               <StateCard
-                title="Confidence State"
-                value={confidenceState}
-                subtitle="PhÃƒÂ¢n loÃ¡ÂºÂ¡i mÃ¡Â»Â©c tÃ¡Â»Â± tin cÃ¡Â»Â§a hÃ¡Â»â€¡ thÃ¡Â»â€˜ng."
+                title="Giai doan de xuat"
+                value={phaseState}
+                formatValue={stateLabel}
+                subtitle="Trang thai giai doan van hanh hien tai."
               />
               <StateCard
-                title="Recommendation"
+                title="Trang thai do tin cay"
+                value={confidenceState}
+                formatValue={stateLabel}
+                subtitle="Phan loai muc do tin cay cua he thong."
+              />
+              <StateCard
+                title="De xuat"
                 value={recommendationCode}
-                subtitle={recommendationText || "KhuyÃ¡ÂºÂ¿n nghÃ¡Â»â€¹ ngÃ¡ÂºÂ¯n tÃ¡Â»Â« backend."}
+                formatValue={recommendationLabel}
+                subtitle={recommendationText}
               />
             </Box>
 
             <SystemSectionCard
-              title="TÃƒÂ³m TÃ¡ÂºÂ¯t HÃ¡Â»â€¡ ThÃ¡Â»â€˜ng"
-              subtitle={`NguÃ¡Â»â€œn mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t: ${formatDate(activeReport?.createdAt ?? activeReport?.targetDate)}`}
+              title="Tom tat he thong"
+              subtitle={`Nguon moi nhat: ${formatDate(activeReport?.createdAt ?? activeReport?.targetDate)}`}
             >
               <Typography variant="body1" sx={{ lineHeight: 1.7, color: theme.palette.text.primary }}>
                 {summaryText}
@@ -473,8 +561,8 @@ export default function SystemEvaluation() {
             </SystemSectionCard>
 
             <SystemSectionCard
-              title="LÃƒÂ½ Do"
-              subtitle="Danh sÃƒÂ¡ch Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c parse tÃ¡Â»Â« reasonsJson string JSON, khÃƒÂ´ng hiÃ¡Â»Æ’n thÃ¡Â»â€¹ raw payload."
+              title="Ly do"
+              subtitle="Danh sach ly do da duoc xu ly de hien thi de doc."
             >
               {reasons.length > 0 ? (
                 <Stack spacing={1}>
@@ -488,7 +576,7 @@ export default function SystemEvaluation() {
                         backgroundColor: "#F8FAFC",
                       }}
                     >
-                      <Typography variant="body2">{reason}</Typography>
+                      <Typography variant="body2">{sanitizeBackendText(reason)}</Typography>
                     </Box>
                   ))}
                 </Stack>
@@ -503,19 +591,19 @@ export default function SystemEvaluation() {
                     backgroundColor: "#F8FAFC",
                   }}
                 >
-                  ChÃ†Â°a cÃƒÂ³ lÃƒÂ½ do cÃ¡Â»Â¥ thÃ¡Â»Æ’.
+                  Chua co ly do cu the.
                 </Box>
               )}
             </SystemSectionCard>
 
             <SystemSectionCard
-              title="Confidence / Stability / Accuracy History"
-              subtitle="NguÃ¡Â»â€œn dÃ¡Â»Â¯ liÃ¡Â»â€¡u: GET /api/system-evaluation/recent?limit=20"
+              title="Lich su do tin cay, do on dinh va do chinh xac"
+              subtitle="Nguon du lieu: lich su danh gia he thong gan nhat."
             >
-              <MetricLineChart title="System Score History" rows={historyRows} series={HISTORY_SERIES} />
+              <MetricLineChart title="Lich su diem he thong" rows={historyRows} series={HISTORY_SERIES} />
             </SystemSectionCard>
 
-            <SystemSectionCard title="LÃ¡Â»â€¹ch SÃ¡Â»Â­" subtitle="20 bÃ¡ÂºÂ£n ghi System Evaluation gÃ¡ÂºÂ§n nhÃ¡ÂºÂ¥t.">
+            <SystemSectionCard title="Lich su" subtitle="20 ban ghi danh gia he thong gan nhat.">
               {displayRows.length > 0 ? (
                 <TableContainer
                   sx={{
@@ -528,7 +616,7 @@ export default function SystemEvaluation() {
                   <Table stickyHeader size="small">
                     <TableHead>
                       <TableRow>
-                        {["NgÃƒÂ y", "Mode", "Phase", "Confidence", "Recommendation"].map((head) => (
+                        {["Ngay", "Che do", "Giai doan", "Do tin cay", "De xuat"].map((head) => (
                           <TableCell
                             key={head}
                             sx={{
@@ -545,9 +633,9 @@ export default function SystemEvaluation() {
                     <TableBody>
                       {displayRows.map((row, index) => {
                         const rowDate = row.createdAt ?? row.targetDate ?? row.date;
-                        const rowPhase = row.phaseState ?? "--";
-                        const rowConfidence = row.confidenceState ?? "--";
-                        const rowRecommendation = row.recommendation ?? "--";
+                        const rowPhase = row.phaseState;
+                        const rowConfidence = row.confidenceState;
+                        const rowRecommendation = row.recommendation;
 
                         return (
                           <TableRow
@@ -562,24 +650,24 @@ export default function SystemEvaluation() {
                               {formatDate(rowDate)}
                             </TableCell>
                             <TableCell sx={{ color: theme.palette.text.primary, whiteSpace: "nowrap" }}>
-                              {row.mode ? vi.mode[String(row.mode).toUpperCase()] ?? String(row.mode).toUpperCase() : "--"}
+                              {modeLabel(row.mode)}
                             </TableCell>
                             <TableCell>
                               <Chip
                                 size="small"
-                                label={rowPhase}
+                                label={stateLabel(rowPhase)}
                                 sx={{ fontWeight: 800, ...stateChipSx(rowPhase, theme) }}
                               />
                             </TableCell>
                             <TableCell>
                               <Chip
                                 size="small"
-                                label={`${rowConfidence} Ã‚Â· ${formatPercent(row.confidenceScore)}`}
+                                label={`${stateLabel(rowConfidence)} - ${formatPercent(row.confidenceScore)}`}
                                 sx={{ fontWeight: 800, ...stateChipSx(rowConfidence, theme) }}
                               />
                             </TableCell>
                             <TableCell sx={{ color: theme.palette.text.primary, whiteSpace: "nowrap" }}>
-                              {rowRecommendation}
+                              {recommendationLabel(rowRecommendation)}
                             </TableCell>
                           </TableRow>
                         );
@@ -598,7 +686,7 @@ export default function SystemEvaluation() {
                     backgroundColor: "#F8FAFC",
                   }}
                 >
-                  ChÃ†Â°a cÃƒÂ³ bÃ¡ÂºÂ£n ghi lÃ¡Â»â€¹ch sÃ¡Â»Â­.
+                  Chua co ban ghi lich su.
                 </Box>
               )}
             </SystemSectionCard>

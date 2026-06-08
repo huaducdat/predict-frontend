@@ -14,14 +14,14 @@ function scoreTone(value, theme) {
 
   if (Number.isFinite(score) && score >= 0.45) {
     return {
-      name: "Trung bình",
+      name: "Trung binh",
       colors: ["#D97706", "#FCD34D"],
       text: theme.palette.warning.dark,
     };
   }
 
   return {
-    name: "Thấp",
+    name: "Thap",
     colors: ["#DC2626", "#FCA5A5"],
     text: theme.palette.error.dark,
   };

@@ -43,6 +43,7 @@ function toPoints(rows, field) {
 export default function MetricLineChart({ title, rows, series }) {
   const theme = useTheme();
   const safeRows = Array.isArray(rows) ? rows : [];
+  const safeSeries = Array.isArray(series) ? series : [];
   const latest = safeRows.at(-1);
 
   return (
@@ -60,7 +61,7 @@ export default function MetricLineChart({ title, rows, series }) {
             {title}
           </Typography>
           <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-            {series.map((item) => (
+            {safeSeries.map((item) => (
               <Stack key={item.field} direction="row" spacing={0.6} sx={{ alignItems: "center" }}>
                 <Box
                   sx={{
@@ -99,7 +100,7 @@ export default function MetricLineChart({ title, rows, series }) {
                 );
               })}
 
-              {series.map((item) => {
+              {safeSeries.map((item) => {
                 const points = toPoints(safeRows, item.field);
                 if (points.length < 2) return null;
 
@@ -141,7 +142,7 @@ export default function MetricLineChart({ title, rows, series }) {
               backgroundColor: theme.palette.background.paper,
             }}
           >
-            Chưa đủ dữ liệu lịch sử để vẽ biểu đồ.
+            Chua du du lieu lich su de ve bieu do.
           </Box>
         )}
       </Stack>
