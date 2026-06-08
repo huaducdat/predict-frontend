@@ -23,6 +23,11 @@ export const getMe = async () => {
   return res.data;
 };
 
+export const getBootstrapInfo = async () => {
+  const res = await axios.get(`${API}/api/auth/bootstrap-info`);
+  return res.data;
+};
+
 export const changePassword = async (currentPassword, newPassword) => {
   const res = await api.post("/api/auth/change-password", {
     currentPassword,
