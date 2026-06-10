@@ -132,6 +132,34 @@ function percentScore(value) {
   return `${numeric.toFixed(1)}/100`;
 }
 
+function rankingScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "--";
+  return Math.abs(numeric) < 1 ? numeric.toFixed(6) : numeric.toFixed(4);
+}
+
+function scoreStats(rows) {
+  const values = (rows || [])
+    .map((item) => Number(item?.score))
+    .filter((value) => Number.isFinite(value));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
+
+  return {
+    min,
+    max,
+    range: max - min,
+    stddev: Math.sqrt(variance),
+  };
+}
+
 function numberSet(rows) {
   return new Set((rows || []).map((item) => Number(item?.number)).filter((n) => Number.isFinite(n)));
 }
@@ -147,6 +175,7 @@ function isTraceUsable(trace) {
 
 function ModeBundleCard({ bundle }) {
   const top = topNumbers(bundle?.combinedPrediction, 10);
+  const spread = scoreStats(bundle?.combinedPrediction);
   const summary = bundle?.summary || bundle?.decisionTrace?.summary || "Chưa có dữ liệu";
 
   if (!bundle || top.length === 0) {
@@ -179,12 +208,37 @@ function ModeBundleCard({ bundle }) {
             {summary}
           </Typography>
 
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 1.5,
+              borderRadius: 2,
+              borderColor: "rgba(37,99,235,0.24)",
+              backgroundColor: "rgba(239,246,255,0.72)",
+            }}
+          >
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
+                <Typography variant="body2" sx={{ fontWeight: 900 }}>
+                  Production Ranking Logic:
+                </Typography>
+                <Chip label="Reduced Softmax / Pre-Final Boost Score" color="primary" size="small" />
+              </Stack>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
+                <Chip label={`Min ${rankingScore(spread?.min)}`} size="small" />
+                <Chip label={`Max ${rankingScore(spread?.max)}`} size="small" />
+                <Chip label={`Range ${rankingScore(spread?.range)}`} size="small" />
+                <Chip label={`Stddev ${rankingScore(spread?.stddev)}`} size="small" />
+              </Stack>
+            </Stack>
+          </Paper>
+
           {top.length > 0 && (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {top.map((item, index) => (
                 <Chip
                   key={`${item.number}-${index}`}
-                  label={`${String(item.number).padStart(2, "0")} · ${Number(item.score * 100).toFixed(2)}%`}
+                  label={`${String(item.number).padStart(2, "0")} · ${rankingScore(item.score)}`}
                   sx={numberChipSx(true)}
                 />
               ))}

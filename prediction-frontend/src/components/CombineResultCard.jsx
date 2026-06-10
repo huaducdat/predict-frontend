@@ -18,10 +18,30 @@ function CombineResultCard() {
   const [message, setMessage] = useState("");
   const [expanded, setExpanded] = useState(false);
 
-  // 🔥 FORMAT %
-  const formatPercent = (score) => {
+  const formatScore = (score) => {
     const value = Number(score);
-    return Number.isFinite(value) ? Number((value * 100).toFixed(3)) : "--";
+    if (!Number.isFinite(value)) return "--";
+    return Math.abs(value) < 1 ? value.toFixed(6) : value.toFixed(4);
+  };
+
+  const scoreStats = (rows) => {
+    const values = (rows || [])
+      .map((item) => Number(item?.score))
+      .filter((value) => Number.isFinite(value));
+
+    if (values.length === 0) return null;
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
+
+    return {
+      min,
+      max,
+      range: max - min,
+      stddev: Math.sqrt(variance),
+    };
   };
 
   const formatNumber = (n) => {
@@ -88,6 +108,7 @@ function CombineResultCard() {
   }, []);
 
   const displayList = expanded ? filtered : filtered.slice(0, 10);
+  const spread = scoreStats(data);
 
   if (!loading && data.length === 0) {
     return (
@@ -135,6 +156,26 @@ function CombineResultCard() {
       )}
 
       {/* SEARCH */}
+      <Box
+        sx={{
+          p: 1.5,
+          mb: 2,
+          borderRadius: 2,
+          background: "#EFF6FF",
+          border: "1px solid #BFDBFE",
+        }}
+      >
+        <Typography sx={{ fontWeight: 800, mb: 1 }}>
+          Production Ranking Logic: Reduced Softmax / Pre-Final Boost Score
+        </Typography>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
+          <Typography sx={{ fontSize: 12 }}>Min {formatScore(spread?.min)}</Typography>
+          <Typography sx={{ fontSize: 12 }}>Max {formatScore(spread?.max)}</Typography>
+          <Typography sx={{ fontSize: 12 }}>Range {formatScore(spread?.range)}</Typography>
+          <Typography sx={{ fontSize: 12 }}>Stddev {formatScore(spread?.stddev)}</Typography>
+        </Stack>
+      </Box>
+
       <TextField
         size="small"
         placeholder={vi.common.searchNumber}
@@ -220,7 +261,7 @@ function CombineResultCard() {
               </Typography>
 
               <Typography sx={{ fontSize: 12 }}>
-                {formatPercent(item.score)}%
+                {formatScore(item.score)}
               </Typography>
             </Box>
           );

@@ -15,6 +15,9 @@ import SystemEvaluation from "./pages/SystemEvaluation";
 import DecisionTrace from "./pages/DecisionTrace";
 import Account from "./pages/Account";
 import AdminUsers from "./pages/AdminUsers";
+import AuditDashboard from "./pages/AuditDashboard";
+import RankOptimization from "./pages/RankOptimization";
+import ShadowRanking from "./pages/ShadowRanking";
 
 
 
@@ -42,6 +45,9 @@ function App() {
                   <Route path="/intelligence" element={<PredictionIntelligence />} />
                   <Route path="/system-evaluation" element={<SystemEvaluation />} />
                   <Route path="/decision-trace" element={<DecisionTrace />} />
+                  <Route path="/system-intelligence/audit" element={<AuditDashboard />} />
+                  <Route path="/system-intelligence/rank-optimization" element={<RankOptimization />} />
+                  <Route path="/system-intelligence/shadow-ranking" element={<ShadowRanking />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
                 </Routes>

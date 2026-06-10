@@ -13,6 +13,7 @@ import { useTheme } from "@mui/material/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import LogoutIcon from "@mui/icons-material/Logout";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MenuIcon from "@mui/icons-material/Menu";
 
 import { useEffect, useMemo, useState } from "react";
@@ -32,12 +33,19 @@ const NAV_ITEMS = [
   { label: "Đánh giá hệ thống", path: "/system-evaluation" },
 ];
 
+const AUDIT_NAV_ITEMS = [
+  { label: "Audit Dashboard", path: "/system-intelligence/audit" },
+  { label: "Rank Optimization", path: "/system-intelligence/rank-optimization" },
+  { label: "Shadow Ranking", path: "/system-intelligence/shadow-ranking" },
+];
+
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
+  const [auditAnchorEl, setAuditAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -70,9 +78,18 @@ export default function Header() {
     setAnchorEl(null);
   };
 
+  const handleAuditMenuOpen = (event) => {
+    setAuditAnchorEl(event.currentTarget);
+  };
+
+  const handleAuditMenuClose = () => {
+    setAuditAnchorEl(null);
+  };
+
   const handleNavigate = (path) => {
     navigate(path);
     handleMenuClose();
+    handleAuditMenuClose();
   };
 
   const handleLogout = () => {
@@ -84,6 +101,8 @@ export default function Header() {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
+
+  const isAuditActive = AUDIT_NAV_ITEMS.some((item) => isActive(item.path));
 
   return (
     <AppBar
@@ -149,6 +168,19 @@ export default function Header() {
                   {item.label}
                 </MenuItem>
               ))}
+              <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
+                Audit & Analysis
+              </MenuItem>
+              {AUDIT_NAV_ITEMS.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  selected={isActive(item.path)}
+                  onClick={() => handleNavigate(item.path)}
+                  sx={{ pl: 3 }}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
               <MenuItem onClick={handleLogout}>
                 <LogoutIcon sx={{ mr: 1 }} />
                 {vi.menu.logout}
@@ -196,6 +228,50 @@ export default function Header() {
                 {item.label}
               </Button>
             ))}
+
+            <Button
+              onClick={handleAuditMenuOpen}
+              endIcon={<KeyboardArrowDownIcon />}
+              sx={{
+                textTransform: "none",
+                borderRadius: 999,
+                px: { md: 1.2, lg: 1.55 },
+                py: 0.72,
+                minWidth: 0,
+                color: isAuditActive ? "#0F172A" : "#475569",
+                backgroundColor: isAuditActive ? "#EAF2FF" : "transparent",
+                border: isAuditActive ? "1px solid #93C5FD" : "1px solid transparent",
+                boxShadow: isAuditActive ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
+                fontSize: { md: 13, lg: 14 },
+                fontWeight: isAuditActive ? 900 : 700,
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
+                "&:hover": {
+                  backgroundColor: "rgba(37,99,235,0.08)",
+                  color: "#1D4ED8",
+                },
+              }}
+            >
+              Audit & Analysis
+            </Button>
+
+            <Menu
+              anchorEl={auditAnchorEl}
+              open={Boolean(auditAnchorEl)}
+              onClose={handleAuditMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              {AUDIT_NAV_ITEMS.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  selected={isActive(item.path)}
+                  onClick={() => handleNavigate(item.path)}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Menu>
 
             <Button
               onClick={handleLogout}
