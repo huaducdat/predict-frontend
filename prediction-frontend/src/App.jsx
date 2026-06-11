@@ -48,6 +48,9 @@ function App() {
                   <Route path="/system-intelligence/audit" element={<AuditDashboard />} />
                   <Route path="/system-intelligence/rank-optimization" element={<RankOptimization />} />
                   <Route path="/system-intelligence/shadow-ranking" element={<ShadowRanking />} />
+                  <Route path="/audit" element={<AuditDashboard />} />
+                  <Route path="/audit/rank-optimization" element={<RankOptimization />} />
+                  <Route path="/audit/shadow-ranking" element={<ShadowRanking />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
                 </Routes>

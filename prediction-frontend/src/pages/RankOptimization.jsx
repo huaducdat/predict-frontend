@@ -49,12 +49,12 @@ function pp(value) {
 }
 
 function rowKey(row) {
-  return row.strategyKey || row.strategyName;
+  return row?.strategyKey || row?.strategyName || "";
 }
 
 function strategyMatches(row, keys) {
-  const key = String(row.strategyKey || "").toUpperCase();
-  const name = String(row.strategyName || "").toUpperCase().replaceAll(" ", "_");
+  const key = String(row?.strategyKey || "").toUpperCase();
+  const name = String(row?.strategyName || "").toUpperCase().replaceAll(" ", "_");
   return keys.some((candidate) => key.includes(candidate) || name.includes(candidate));
 }
 
@@ -82,7 +82,7 @@ export default function RankOptimization() {
   }, []);
 
   const strategies = useMemo(() => {
-    const rows = summary?.strategies || [];
+    const rows = Array.isArray(summary?.strategies) ? summary.strategies.filter(Boolean) : [];
     return [...rows].sort((a, b) => {
       const aIndex = STRATEGY_ORDER.findIndex((key) => strategyMatches(a, [key]));
       const bIndex = STRATEGY_ORDER.findIndex((key) => strategyMatches(b, [key]));
@@ -136,8 +136,9 @@ export default function RankOptimization() {
       </Stack>
 
       {error ? <Alert severity="error">{error}</Alert> : null}
+      {!error && strategies.length === 0 ? <Alert severity="info">No strategy data available</Alert> : null}
       <Alert severity="info">
-        Current production output now uses reduced-softmax boosted aggregate scores. Historical strategy comparisons can still include rows produced before the change.
+        Current production output uses boosted aggregate scores with GAP overdue logic. Historical strategy comparisons can still include rows produced before the change.
       </Alert>
       {(summary?.warnings || []).map((warning) => (
         <Alert key={warning} severity="warning">
@@ -155,7 +156,7 @@ export default function RankOptimization() {
                   Best Top1 Strategy
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 950 }}>
-                  {bestTop1?.strategyName || "--"}
+                  {bestTop1?.strategyName || "No strategy data available"}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "#64748B" }}>
                   {pct(bestTop1?.top1HitRate)} / {pp(bestTop1?.top1LiftVsCombine)} vs combine
@@ -171,7 +172,7 @@ export default function RankOptimization() {
               Best Top3 Strategy
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 950 }}>
-              {bestTop3?.strategyName || "--"}
+              {bestTop3?.strategyName || "No strategy data available"}
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
               {pct(bestTop3?.top3HitRate)} / {pp(bestTop3?.top3LiftVsCombine)} vs combine
@@ -219,31 +220,36 @@ export default function RankOptimization() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {strategies.map((row) => {
+                  {strategies.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10}>No strategy data available</TableCell>
+                    </TableRow>
+                  ) : null}
+                  {strategies.map((row, index) => {
                     const highlighted = highlightedRows.has(rowKey(row));
                     return (
                       <TableRow
-                        key={rowKey(row)}
+                        key={rowKey(row) || `strategy-${index}`}
                         sx={{
                           backgroundColor: highlighted ? alpha(theme.palette.success.main, 0.1) : "inherit",
                         }}
                       >
                         <TableCell>
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography sx={{ fontWeight: highlighted ? 950 : 800 }}>{row.strategyName}</Typography>
+                            <Typography sx={{ fontWeight: highlighted ? 950 : 800 }}>{row?.strategyName || row?.strategyKey || "No strategy data available"}</Typography>
                             {rowKey(bestTop1) === rowKey(row) ? <Chip size="small" color="success" label="Best Top1" /> : null}
                             {rowKey(bestTop3) === rowKey(row) ? <Chip size="small" color="primary" label="Best Top3" /> : null}
                           </Stack>
                         </TableCell>
-                        <TableCell>{row.samples}</TableCell>
-                        <TableCell>{pct(row.top1HitRate)}</TableCell>
-                        <TableCell>{pct(row.top3HitRate)}</TableCell>
-                        <TableCell>{pct(row.top5HitRate)}</TableCell>
-                        <TableCell>{pct(row.top10HitRate)}</TableCell>
-                        <TableCell>{pct(row.top15HitRate)}</TableCell>
-                        <TableCell>{pp(row.top1LiftVsCombine)}</TableCell>
-                        <TableCell>{pp(row.top3LiftVsCombine)}</TableCell>
-                        <TableCell>{row.confidenceWarning || "--"}</TableCell>
+                        <TableCell>{row?.samples ?? 0}</TableCell>
+                        <TableCell>{pct(row?.top1HitRate)}</TableCell>
+                        <TableCell>{pct(row?.top3HitRate)}</TableCell>
+                        <TableCell>{pct(row?.top5HitRate)}</TableCell>
+                        <TableCell>{pct(row?.top10HitRate)}</TableCell>
+                        <TableCell>{pct(row?.top15HitRate)}</TableCell>
+                        <TableCell>{pp(row?.top1LiftVsCombine)}</TableCell>
+                        <TableCell>{pp(row?.top3LiftVsCombine)}</TableCell>
+                        <TableCell>{row?.confidenceWarning || "--"}</TableCell>
                       </TableRow>
                     );
                   })}

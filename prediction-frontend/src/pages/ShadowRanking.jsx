@@ -58,18 +58,22 @@ function isProductionStrategy(strategy) {
 }
 
 function findProductionRanking(rankings) {
-  return rankings.find(isProductionStrategy) || rankings[0] || null;
+  const rows = Array.isArray(rankings) ? rankings.filter(Boolean) : [];
+  return rows.find(isProductionStrategy) || rows[0] || null;
 }
 
 function findStrategyRanking(rankings, selectedStrategy) {
-  if (!rankings.length) return null;
-  const selected = rankings.find((ranking) => ranking.strategyName === selectedStrategy);
+  const rows = Array.isArray(rankings) ? rankings.filter(Boolean) : [];
+  if (!rows.length) return null;
+  const selected = rows.find((ranking) => ranking?.strategyName === selectedStrategy);
   if (selected && !isProductionStrategy(selected)) return selected;
-  return rankings.find((ranking) => !isProductionStrategy(ranking)) || selected || rankings[0];
+  return rows.find((ranking) => !isProductionStrategy(ranking)) || selected || rows[0];
 }
 
 function strategyOptions(summary, bundle) {
-  const names = new Set([...(summary?.strategies || []), ...(bundle?.rankings || []).map((row) => row.strategyName)]);
+  const summaryStrategies = Array.isArray(summary?.strategies) ? summary.strategies : [];
+  const bundleRankings = Array.isArray(bundle?.rankings) ? bundle.rankings.filter(Boolean) : [];
+  const names = new Set([...summaryStrategies, ...bundleRankings.map((row) => row?.strategyName)]);
   return [...names].filter(Boolean).filter((name) => !isProductionStrategy({ strategyName: name }));
 }
 
@@ -89,7 +93,7 @@ export default function ShadowRanking() {
 
     try {
       const nextSummary = await getShadowRankingSummary(false);
-      const latest = nextSummary.latest || null;
+      const latest = nextSummary?.latest || null;
       setSummary(nextSummary);
       setBundle(latest);
       setDate(latest?.predictionDate || "");
@@ -139,14 +143,14 @@ export default function ShadowRanking() {
     void loadSummary();
   }, []);
 
-  const rankings = bundle?.rankings || [];
+  const rankings = Array.isArray(bundle?.rankings) ? bundle.rankings.filter(Boolean) : [];
   const productionRanking = useMemo(() => findProductionRanking(rankings), [rankings]);
   const shadowRanking = useMemo(() => findStrategyRanking(rankings, strategy), [rankings, strategy]);
   const options = useMemo(() => strategyOptions(summary, bundle), [summary, bundle]);
   const modes = useMemo(() => [...new Set([summary?.latest?.mode, bundle?.mode, mode].filter(Boolean))], [summary, bundle, mode]);
   const bestShadow = useMemo(
     () =>
-      (summary?.evaluation || []).reduce((best, row) => {
+      (Array.isArray(summary?.evaluation) ? summary.evaluation.filter(Boolean) : []).reduce((best, row) => {
         if (!best) return row;
         return Number(row.top1HitRate || 0) > Number(best.top1HitRate || 0) ? row : best;
       }, null),
@@ -198,14 +202,15 @@ export default function ShadowRanking() {
       </Stack>
 
       {error ? <Alert severity="error">{error}</Alert> : null}
-      {(summary?.warnings || []).map((warning) => (
+      {(Array.isArray(summary?.warnings) ? summary.warnings : []).map((warning) => (
         <Alert key={warning} severity="warning">
           {warning}
         </Alert>
       ))}
       <Alert severity="info">
-        This screen reads and evaluates shadow rankings only. Production rows generated after the ranking fix use reduced-softmax boosted aggregate scores.
+        This screen reads and evaluates shadow rankings only. Production rows generated after the GAP reversal use boosted aggregate scores with overdue GAP logic.
       </Alert>
+      {!error && rankings.length === 0 ? <Alert severity="info">No strategy data available</Alert> : null}
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1.15fr 0.85fr" }, gap: 2 }}>
         <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
@@ -245,7 +250,11 @@ export default function ShadowRanking() {
                     label="Strategy"
                     value={strategy}
                     onChange={(event) => setStrategy(event.target.value)}
+                    disabled={options.length === 0}
                   >
+                    {options.length === 0 ? (
+                      <MenuItem value="">No strategy data available</MenuItem>
+                    ) : null}
                     {options.map((item) => (
                       <MenuItem key={item} value={item}>
                         {item}
@@ -267,7 +276,7 @@ export default function ShadowRanking() {
               Current Best Shadow Strategy
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 950 }}>
-              {bestShadow?.strategyName || "--"}
+              {bestShadow?.strategyName || "No strategy data available"}
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
               Top1 {pct(bestShadow?.top1HitRate)} / Top3 {pct(bestShadow?.top3HitRate)} / Lift {pp(bestShadow?.top1LiftVsProduction)}
@@ -284,7 +293,7 @@ export default function ShadowRanking() {
                 Production Ranking vs Shadow Ranking
               </Typography>
               <Typography variant="body2" sx={{ color: "#64748B" }}>
-                {bundle?.predictionDate || "--"} / {bundle?.mode || "--"} / {shadowRanking?.strategyName || "--"}
+                {bundle?.predictionDate || "--"} / {bundle?.mode || "--"} / {shadowRanking?.strategyName || "No strategy data available"}
               </Typography>
             </Box>
             <TableContainer>
@@ -336,7 +345,12 @@ export default function ShadowRanking() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {(compare?.rows || []).slice(0, 25).map((row) => (
+                {(Array.isArray(compare?.rows) ? compare.rows : []).length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5}>No strategy data available</TableCell>
+                  </TableRow>
+                ) : null}
+                {(Array.isArray(compare?.rows) ? compare.rows : []).filter(Boolean).slice(0, 25).map((row) => (
                   <TableRow key={row.rankPosition}>
                     <TableCell sx={{ fontWeight: 900 }}>#{row.rankPosition}</TableCell>
                     <TableCell>{row.productionNumber ?? "--"}</TableCell>

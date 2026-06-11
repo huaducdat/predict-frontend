@@ -26,6 +26,7 @@ import {
   downloadAuditAccuracyCsv,
   downloadAuditSummaryJson,
   getAuditSummary,
+  getGapReversalSummary,
   getRankOptimizationSummary,
   getShadowRankingSummary,
 } from "../api/auditApi";
@@ -86,7 +87,7 @@ function SectionCard({ title, subtitle, children }) {
 function HeaderIndicator({ auditSummary, rankSummary, shadowSummary }) {
   const productionTop1 = auditSummary?.metaFindings?.currentCombineTop1Accuracy;
   const bestRankTop1 = rankSummary?.findings?.bestTop1HitRate;
-  const bestShadow = (shadowSummary?.evaluation || []).reduce((best, row) => {
+  const bestShadow = (Array.isArray(shadowSummary?.evaluation) ? shadowSummary.evaluation.filter(Boolean) : []).reduce((best, row) => {
     if (!best) return row;
     return Number(row.top1HitRate || 0) > Number(best.top1HitRate || 0) ? row : best;
   }, null);
@@ -130,6 +131,7 @@ function HeaderIndicator({ auditSummary, rankSummary, shadowSummary }) {
 export default function AuditDashboard() {
   const theme = useTheme();
   const [auditSummary, setAuditSummary] = useState(null);
+  const [gapSummary, setGapSummary] = useState(null);
   const [rankSummary, setRankSummary] = useState(null);
   const [shadowSummary, setShadowSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -140,14 +142,24 @@ export default function AuditDashboard() {
     setError("");
 
     try {
-      const [audit, rank, shadow] = await Promise.all([
+      const [audit, gap, rank, shadow] = await Promise.allSettled([
         getAuditSummary(),
+        getGapReversalSummary(),
         getRankOptimizationSummary(),
         getShadowRankingSummary(false),
       ]);
-      setAuditSummary(audit);
-      setRankSummary(rank);
-      setShadowSummary(shadow);
+      setAuditSummary(audit.status === "fulfilled" ? audit.value : null);
+      setGapSummary(gap.status === "fulfilled" ? gap.value : null);
+      setRankSummary(rank.status === "fulfilled" ? rank.value : null);
+      setShadowSummary(shadow.status === "fulfilled" ? shadow.value : null);
+
+      const failures = [audit, gap, rank, shadow]
+        .filter((result) => result.status === "rejected")
+        .map((result) => result.reason?.response?.data?.message || result.reason?.message)
+        .filter(Boolean);
+      if (failures.length > 0) {
+        setError(failures.join(" | "));
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Unable to load audit summary.");
     } finally {
@@ -159,10 +171,11 @@ export default function AuditDashboard() {
     void load();
   }, []);
 
-  const baselineRows = useMemo(() => rankSummary?.baselineCompare || [], [rankSummary]);
+  const baselineRows = useMemo(() => (Array.isArray(rankSummary?.baselineCompare) ? rankSummary.baselineCompare.filter(Boolean) : []), [rankSummary]);
   const scoreValidation = auditSummary?.scoreValidation;
   const recentOverlap = auditSummary?.recentOverlap;
-  const phaseRows = auditSummary?.phaseStability?.combineByPhase || [];
+  const phaseRows = Array.isArray(auditSummary?.phaseStability?.combineByPhase) ? auditSummary.phaseStability.combineByPhase.filter(Boolean) : [];
+  const gapWarning = gapSummary?.warning;
 
   if (loading) {
     return (
@@ -217,6 +230,56 @@ export default function AuditDashboard() {
         </Typography>
       </SectionCard>
 
+      <SectionCard
+        title="GAP Reversal / GAP Logic"
+        subtitle="Current GAP logic favors overdue numbers; old GAP logic favored recently seen numbers."
+      >
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
+          <Chip label="Current GAP logic: larger gap favored" color="success" />
+          <Chip label="Old GAP logic: smaller gap favored" variant="outlined" />
+          <Chip label={`Samples: ${gapSummary?.sampleCount ?? 0}`} variant="outlined" />
+        </Stack>
+        {gapWarning ? <Alert severity="warning">{gapWarning}</Alert> : null}
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Metric</TableCell>
+                <TableCell>Old Production</TableCell>
+                <TableCell>New GAP Combine</TableCell>
+                <TableCell>Lift</TableCell>
+                <TableCell>GAP-only Old/New</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {[
+                ["Top1", "top1HitRate", "top1Lift"],
+                ["Top3", "top3HitRate", "top3Lift"],
+                ["Top5", "top5HitRate", "top5Lift"],
+                ["Top10", "top10HitRate", "top10Lift"],
+                ["Top15", "top15HitRate", "top15Lift"],
+              ].map(([label, rateKey, liftKey]) => (
+                <TableRow key={label}>
+                  <TableCell sx={{ fontWeight: 900 }}>{label}</TableCell>
+                  <TableCell>{pct(gapSummary?.oldAccuracy?.[rateKey])}</TableCell>
+                  <TableCell>{pct(gapSummary?.newAccuracy?.[rateKey])}</TableCell>
+                  <TableCell>{pp(gapSummary?.lift?.[liftKey])}</TableCell>
+                  <TableCell>
+                    {pct(gapSummary?.oldGapOnlyAccuracy?.[rateKey])} / {pct(gapSummary?.newGapOnlyAccuracy?.[rateKey])}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Typography variant="body2" sx={{ color: "#64748B" }}>
+          {gapSummary?.sharpRankingAssessment || "No GAP reversal assessment available."}
+        </Typography>
+        <Typography variant="body2" sx={{ color: "#64748B" }}>
+          {gapSummary?.coverageAssessment || "No coverage assessment available."}
+        </Typography>
+      </SectionCard>
+
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(5, 1fr)" }, gap: 2 }}>
         {TOP_FIELDS.map((field) => (
           <Card key={field.key} sx={metricCardSx(theme)}>
@@ -249,6 +312,11 @@ export default function AuditDashboard() {
                 </TableRow>
               </TableHead>
               <TableBody>
+                {baselineRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5}>No strategy data available</TableCell>
+                  </TableRow>
+                ) : null}
                 {baselineRows.map((row) => (
                   <TableRow key={row.topN}>
                     <TableCell sx={{ fontWeight: 900 }}>{row.topN}</TableCell>
@@ -299,7 +367,7 @@ export default function AuditDashboard() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {(recentOverlap?.ranges || []).map((row) => (
+                  {(Array.isArray(recentOverlap?.ranges) ? recentOverlap.ranges.filter(Boolean) : []).map((row) => (
                     <TableRow key={row.range}>
                       <TableCell>{row.range}</TableCell>
                       <TableCell>{row.samples}</TableCell>
@@ -325,6 +393,11 @@ export default function AuditDashboard() {
                 </TableRow>
               </TableHead>
               <TableBody>
+                {phaseRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5}>No strategy data available</TableCell>
+                  </TableRow>
+                ) : null}
                 {phaseRows.map((row) => (
                   <TableRow key={`${row.name}-${row.mode}-${row.phase}`}>
                     <TableCell>{row.phase || "UNKNOWN"}</TableCell>

@@ -31,6 +31,11 @@ export const getAuditScoreValidation = async () => {
   return res.data;
 };
 
+export const getGapReversalSummary = async () => {
+  const res = await api.get("/api/audit/gap-reversal/summary");
+  return res.data;
+};
+
 export const getRankOptimizationSummary = async () => {
   const res = await api.get("/api/audit/rank-optimization/summary");
   return res.data;
