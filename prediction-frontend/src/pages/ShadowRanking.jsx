@@ -111,7 +111,7 @@ export default function ShadowRanking() {
         );
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Unable to load shadow ranking.");
+      setError(err.response?.data?.message || err.message || "Khong tai duoc xep hang shadow.");
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export default function ShadowRanking() {
         setStrategy(findStrategyRanking(nextBundle?.rankings || [], "")?.strategyName || "");
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Unable to load selected shadow ranking.");
+      setError(err.response?.data?.message || err.message || "Khong tai duoc xep hang shadow da chon.");
     } finally {
       setLoading(false);
     }
@@ -182,15 +182,15 @@ export default function ShadowRanking() {
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="h4" sx={{ fontWeight: 950 }}>
-            Shadow Ranking
+            Xep hang shadow
           </Typography>
           <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
-            Audit-only ranking snapshots stored beside production predictions. Production prediction output is unchanged.
+            Snapshot xep hang chi dung cho audit va duoc luu canh du doan production. Ket qua du doan production khong doi.
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
           <Button startIcon={<RefreshRoundedIcon />} variant="outlined" onClick={loadSummary}>
-            Refresh
+            Lam moi
           </Button>
           <Button startIcon={<DownloadRoundedIcon />} variant="contained" onClick={downloadShadowRankingJson}>
             JSON
@@ -208,20 +208,20 @@ export default function ShadowRanking() {
         </Alert>
       ))}
       <Alert severity="info">
-        This screen reads and evaluates shadow rankings only. Production rows use boosted aggregate scores with restored GAP logic: smaller recent gaps are favored.
+        Man hinh nay chi doc va danh gia xep hang shadow. Dong production dung diem tong hop da boost voi logic GAP da khoi phuc: uu tien gap gan nho hon.
       </Alert>
-      {!error && rankings.length === 0 ? <Alert severity="info">No strategy data available</Alert> : null}
+      {!error && rankings.length === 0 ? <Alert severity="info">Chua co du lieu chien luoc</Alert> : null}
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1.15fr 0.85fr" }, gap: 2 }}>
         <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6" sx={{ fontWeight: 950 }}>
-                Filters
+                Bo loc
               </Typography>
               <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
                 <TextField
-                  label="Date"
+                  label="Ngay"
                   type="date"
                   value={date}
                   onChange={(event) => setDate(event.target.value)}
@@ -229,10 +229,10 @@ export default function ShadowRanking() {
                   fullWidth
                 />
                 <FormControl fullWidth>
-                  <InputLabel id="shadow-mode-label">Prediction mode</InputLabel>
+                  <InputLabel id="shadow-mode-label">Che do du doan</InputLabel>
                   <Select
                     labelId="shadow-mode-label"
-                    label="Prediction mode"
+                    label="Che do du doan"
                     value={mode}
                     onChange={(event) => setMode(event.target.value)}
                   >
@@ -244,16 +244,16 @@ export default function ShadowRanking() {
                   </Select>
                 </FormControl>
                 <FormControl fullWidth>
-                  <InputLabel id="shadow-strategy-label">Strategy</InputLabel>
+                  <InputLabel id="shadow-strategy-label">Chien luoc</InputLabel>
                   <Select
                     labelId="shadow-strategy-label"
-                    label="Strategy"
+                    label="Chien luoc"
                     value={strategy}
                     onChange={(event) => setStrategy(event.target.value)}
                     disabled={options.length === 0}
                   >
                     {options.length === 0 ? (
-                      <MenuItem value="">No strategy data available</MenuItem>
+                      <MenuItem value="">Chua co du lieu chien luoc</MenuItem>
                     ) : null}
                     {options.map((item) => (
                       <MenuItem key={item} value={item}>
@@ -263,7 +263,7 @@ export default function ShadowRanking() {
                   </Select>
                 </FormControl>
                 <Button variant="contained" onClick={loadSelected} disabled={loading}>
-                  Load
+                  Tai
                 </Button>
               </Stack>
             </Stack>
@@ -273,13 +273,13 @@ export default function ShadowRanking() {
         <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
           <CardContent>
             <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-              Current Best Shadow Strategy
+              Chien luoc shadow tot nhat hien tai
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 950 }}>
-              {bestShadow?.strategyName || "No strategy data available"}
+              {bestShadow?.strategyName || "Chua co du lieu chien luoc"}
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
-              Top1 {pct(bestShadow?.top1HitRate)} / Top3 {pct(bestShadow?.top3HitRate)} / Lift {pp(bestShadow?.top1LiftVsProduction)}
+              Top1 {pct(bestShadow?.top1HitRate)} / Top3 {pct(bestShadow?.top3HitRate)} / Tang {pp(bestShadow?.top1LiftVsProduction)}
             </Typography>
           </CardContent>
         </Card>
@@ -290,10 +290,10 @@ export default function ShadowRanking() {
           <Stack spacing={2}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 950 }}>
-                Production Ranking vs Shadow Ranking
+                Xep hang production vs xep hang shadow
               </Typography>
               <Typography variant="body2" sx={{ color: "#64748B" }}>
-                {bundle?.predictionDate || "--"} / {bundle?.mode || "--"} / {shadowRanking?.strategyName || "No strategy data available"}
+                {bundle?.predictionDate || "--"} / {bundle?.mode || "--"} / {shadowRanking?.strategyName || "Chua co du lieu chien luoc"}
               </Typography>
             </Box>
             <TableContainer>
@@ -301,12 +301,12 @@ export default function ShadowRanking() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Rank</TableCell>
-                    <TableCell>Production Number</TableCell>
-                    <TableCell>Production Score</TableCell>
-                    <TableCell>Shadow Rank</TableCell>
-                    <TableCell>Shadow Number</TableCell>
-                    <TableCell>Original Score</TableCell>
-                    <TableCell>Shadow Score</TableCell>
+                    <TableCell>So production</TableCell>
+                    <TableCell>Diem production</TableCell>
+                    <TableCell>Rank shadow</TableCell>
+                    <TableCell>So shadow</TableCell>
+                    <TableCell>Diem goc</TableCell>
+                    <TableCell>Diem shadow</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -331,7 +331,7 @@ export default function ShadowRanking() {
       <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
         <CardContent>
           <Typography variant="h6" sx={{ fontWeight: 950, mb: 1.5 }}>
-            Strategy Comparison
+            So sanh chien luoc
           </Typography>
           <TableContainer>
             <Table size="small">
@@ -347,7 +347,7 @@ export default function ShadowRanking() {
               <TableBody>
                 {(Array.isArray(compare?.rows) ? compare.rows : []).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5}>No strategy data available</TableCell>
+                    <TableCell colSpan={5}>Chua co du lieu chien luoc</TableCell>
                   </TableRow>
                 ) : null}
                 {(Array.isArray(compare?.rows) ? compare.rows : []).filter(Boolean).slice(0, 25).map((row) => (

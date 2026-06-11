@@ -34,11 +34,11 @@ const NAV_ITEMS = [
 ];
 
 const AUDIT_NAV_ITEMS = [
-  { label: "Performance Cards", path: "/system-intelligence/performance-cards" },
-  { label: "Audit Dashboard", path: "/system-intelligence/audit" },
-  { label: "Rank Optimization", path: "/system-intelligence/rank-optimization" },
-  { label: "Shadow Ranking", path: "/system-intelligence/shadow-ranking" },
-  { label: "Predictor Contribution", path: "/system-intelligence/predictor-contribution" },
+  { label: "Theo doi hieu suat", path: "/system-intelligence/performance-cards" },
+  { label: "Bang audit", path: "/system-intelligence/audit" },
+  { label: "Toi uu rank", path: "/system-intelligence/rank-optimization" },
+  { label: "Xep hang shadow", path: "/system-intelligence/shadow-ranking" },
+  { label: "Dong gop predictor", path: "/system-intelligence/predictor-contribution" },
 ];
 
 export default function Header() {
@@ -171,7 +171,7 @@ export default function Header() {
                 </MenuItem>
               ))}
               <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
-                System Intelligence
+                Tri tue he thong
               </MenuItem>
               {AUDIT_NAV_ITEMS.map((item) => (
                 <MenuItem
@@ -254,7 +254,7 @@ export default function Header() {
                 },
               }}
             >
-              System Intelligence
+              Tri tue he thong
             </Button>
 
             <Menu

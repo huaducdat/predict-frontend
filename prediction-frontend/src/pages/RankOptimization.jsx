@@ -71,7 +71,7 @@ export default function RankOptimization() {
     try {
       setSummary(await getRankOptimizationSummary());
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Unable to load rank optimization.");
+      setError(err.response?.data?.message || err.message || "Khong tai duoc toi uu rank.");
     } finally {
       setLoading(false);
     }
@@ -116,15 +116,15 @@ export default function RankOptimization() {
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="h4" sx={{ fontWeight: 950 }}>
-            Rank Optimization
+            Toi uu rank
           </Typography>
           <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
-            Experimental audit-only ranking strategies. None of these strategies are promoted to production output.
+            Cac chien luoc xep hang thu nghiem chi dung cho audit. Khong chien luoc nao duoc dua vao ket qua production.
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
           <Button startIcon={<RefreshRoundedIcon />} variant="outlined" onClick={load}>
-            Refresh
+            Lam moi
           </Button>
           <Button startIcon={<DownloadRoundedIcon />} variant="contained" onClick={downloadRankOptimizationJson}>
             JSON
@@ -136,9 +136,9 @@ export default function RankOptimization() {
       </Stack>
 
       {error ? <Alert severity="error">{error}</Alert> : null}
-      {!error && strategies.length === 0 ? <Alert severity="info">No strategy data available</Alert> : null}
+      {!error && strategies.length === 0 ? <Alert severity="info">Chua co du lieu chien luoc</Alert> : null}
       <Alert severity="info">
-        Current production output uses boosted aggregate scores with restored GAP logic: smaller recent gaps are favored.
+        Ket qua production hien dung diem tong hop da boost voi logic GAP da khoi phuc: uu tien gap gan nho hon.
       </Alert>
       {(summary?.warnings || []).map((warning) => (
         <Alert key={warning} severity="warning">
@@ -153,13 +153,13 @@ export default function RankOptimization() {
               <TrendingUpRoundedIcon color="primary" />
               <Box>
                 <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-                  Best Top1 Strategy
+                  Chien luoc Top1 tot nhat
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 950 }}>
-                  {bestTop1?.strategyName || "No strategy data available"}
+                  {bestTop1?.strategyName || "Chua co du lieu chien luoc"}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "#64748B" }}>
-                  {pct(bestTop1?.top1HitRate)} / {pp(bestTop1?.top1LiftVsCombine)} vs combine
+                  {pct(bestTop1?.top1HitRate)} / {pp(bestTop1?.top1LiftVsCombine)} so voi combine
                 </Typography>
               </Box>
             </Stack>
@@ -169,13 +169,13 @@ export default function RankOptimization() {
         <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
           <CardContent>
             <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-              Best Top3 Strategy
+              Chien luoc Top3 tot nhat
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 950 }}>
-              {bestTop3?.strategyName || "No strategy data available"}
+              {bestTop3?.strategyName || "Chua co du lieu chien luoc"}
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
-              {pct(bestTop3?.top3HitRate)} / {pp(bestTop3?.top3LiftVsCombine)} vs combine
+              {pct(bestTop3?.top3HitRate)} / {pp(bestTop3?.top3LiftVsCombine)} so voi combine
             </Typography>
           </CardContent>
         </Card>
@@ -183,10 +183,10 @@ export default function RankOptimization() {
         <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
           <CardContent>
             <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-              Recommended Next Phase
+              Pha tiep theo de xuat
             </Typography>
             <Typography variant="body1" sx={{ fontWeight: 800 }}>
-              {summary?.findings?.recommendedNextPhase || "No recommendation available."}
+              {summary?.findings?.recommendedNextPhase || "Chua co de xuat."}
             </Typography>
           </CardContent>
         </Card>
@@ -197,32 +197,32 @@ export default function RankOptimization() {
           <Stack spacing={2}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 950 }}>
-                Strategy Comparison
+                So sanh chien luoc
               </Typography>
               <Typography variant="body2" sx={{ color: "#64748B" }}>
-                Current Combine, Score Ascending, Score Inversion, Hybrid, and all other experimental strategies.
+                Combine hien tai, Score Ascending, Score Inversion, Hybrid va cac chien luoc thu nghiem khac.
               </Typography>
             </Box>
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Strategy</TableCell>
-                    <TableCell>Samples</TableCell>
+                    <TableCell>Chien luoc</TableCell>
+                    <TableCell>Mau</TableCell>
                     <TableCell>Top1</TableCell>
                     <TableCell>Top3</TableCell>
                     <TableCell>Top5</TableCell>
                     <TableCell>Top10</TableCell>
                     <TableCell>Top15</TableCell>
-                    <TableCell>Lift Top1</TableCell>
-                    <TableCell>Lift Top3</TableCell>
-                    <TableCell>Warning</TableCell>
+                    <TableCell>Tang Top1</TableCell>
+                    <TableCell>Tang Top3</TableCell>
+                    <TableCell>Canh bao</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {strategies.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10}>No strategy data available</TableCell>
+                      <TableCell colSpan={10}>Chua co du lieu chien luoc</TableCell>
                     </TableRow>
                   ) : null}
                   {strategies.map((row, index) => {
@@ -236,9 +236,9 @@ export default function RankOptimization() {
                       >
                         <TableCell>
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography sx={{ fontWeight: highlighted ? 950 : 800 }}>{row?.strategyName || row?.strategyKey || "No strategy data available"}</Typography>
-                            {rowKey(bestTop1) === rowKey(row) ? <Chip size="small" color="success" label="Best Top1" /> : null}
-                            {rowKey(bestTop3) === rowKey(row) ? <Chip size="small" color="primary" label="Best Top3" /> : null}
+                            <Typography sx={{ fontWeight: highlighted ? 950 : 800 }}>{row?.strategyName || row?.strategyKey || "Chua co du lieu chien luoc"}</Typography>
+                            {rowKey(bestTop1) === rowKey(row) ? <Chip size="small" color="success" label="Top1 tot nhat" /> : null}
+                            {rowKey(bestTop3) === rowKey(row) ? <Chip size="small" color="primary" label="Top3 tot nhat" /> : null}
                           </Stack>
                         </TableCell>
                         <TableCell>{row?.samples ?? 0}</TableCell>
@@ -263,12 +263,12 @@ export default function RankOptimization() {
       <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
         <CardContent>
           <Typography variant="h6" sx={{ fontWeight: 950, mb: 1.5 }}>
-            Findings
+            Phat hien
           </Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-            <Chip label={`Score inversion: ${summary?.findings?.scoreInversionHelps || "--"}`} />
-            <Chip label={`Recent hit/miss: ${summary?.findings?.recentHitMissHelps || "--"}`} />
-            <Chip label={`Phase-aware: ${summary?.findings?.phaseAwareUsefulYet || "--"}`} />
+            <Chip label={`Dao diem: ${summary?.findings?.scoreInversionHelps || "--"}`} />
+            <Chip label={`Trung/truot gan day: ${summary?.findings?.recentHitMissHelps || "--"}`} />
+            <Chip label={`Theo pha: ${summary?.findings?.phaseAwareUsefulYet || "--"}`} />
           </Stack>
         </CardContent>
       </Card>

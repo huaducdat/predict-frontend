@@ -111,16 +111,16 @@ function HeaderIndicator({ auditSummary, rankSummary, shadowSummary }) {
           <InsightsRoundedIcon />
           <Box sx={{ flex: 1 }}>
             <Typography variant="overline" sx={{ color: "#BAE6FD", fontWeight: 900 }}>
-              Current Best Strategy
+              Chien luoc tot nhat hien tai
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 950 }}>
-              {bestShadow?.strategyName || rankSummary?.findings?.bestTop1Strategy || "Waiting for audit data"}
+              {bestShadow?.strategyName || rankSummary?.findings?.bestTop1Strategy || "Dang cho du lieu audit"}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-            <Chip label={`Production Top1: ${pct(productionTop1)}`} sx={{ color: "#F8FAFC", borderColor: "#5EEAD4" }} variant="outlined" />
-            <Chip label={`Best Shadow Top1: ${pct(bestShadowTop1)}`} sx={{ color: "#F8FAFC", borderColor: "#93C5FD" }} variant="outlined" />
-            <Chip label={`Improvement: ${pp(improvement)}`} sx={{ color: "#F8FAFC", borderColor: "#FDE68A" }} variant="outlined" />
+            <Chip label={`Top1 production: ${pct(productionTop1)}`} sx={{ color: "#F8FAFC", borderColor: "#5EEAD4" }} variant="outlined" />
+            <Chip label={`Shadow Top1 tot nhat: ${pct(bestShadowTop1)}`} sx={{ color: "#F8FAFC", borderColor: "#93C5FD" }} variant="outlined" />
+            <Chip label={`Cai thien: ${pp(improvement)}`} sx={{ color: "#F8FAFC", borderColor: "#FDE68A" }} variant="outlined" />
           </Stack>
         </Stack>
       </CardContent>
@@ -161,7 +161,7 @@ export default function AuditDashboard() {
         setError(failures.join(" | "));
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Unable to load audit summary.");
+      setError(err.response?.data?.message || err.message || "Khong tai duoc tong quan audit.");
     } finally {
       setLoading(false);
     }
@@ -190,15 +190,15 @@ export default function AuditDashboard() {
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="h4" sx={{ fontWeight: 950 }}>
-            Audit Dashboard
+            Bang audit
           </Typography>
           <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
-            Main application view for historical accuracy, score calibration, overlap, and phase behavior.
+            Theo doi do chinh xac lich su, hieu chuan diem, do trung lap va hanh vi theo pha.
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
           <Button startIcon={<RefreshRoundedIcon />} variant="outlined" onClick={load}>
-            Refresh
+            Lam moi
           </Button>
           <Button startIcon={<DownloadRoundedIcon />} variant="contained" onClick={downloadAuditSummaryJson}>
             JSON
@@ -214,16 +214,16 @@ export default function AuditDashboard() {
       <HeaderIndicator auditSummary={auditSummary} rankSummary={rankSummary} shadowSummary={shadowSummary} />
 
       <SectionCard
-        title="Production Scoring Status"
-        subtitle="New production combines use boosted aggregate ranking scores instead of the final score-flattening softmax."
+        title="Trang thai cham diem production"
+        subtitle="Ket qua combine moi dung diem xep hang tong hop da boost thay vi softmax lam phang diem cuoi."
       >
         <Alert severity="warning">
-          Historical audit rows created before this change can still show flattened scores near 0.0100. New production rows should show a wider score spread.
+          Cac dong audit cu tao truoc thay doi nay co the van hien diem bi lam phang gan 0.0100. Dong production moi se co do trai diem rong hon.
         </Alert>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-          <Chip label="Old final softmax: bypassed" color="warning" variant="outlined" />
-          <Chip label="Active logic: Reduced Softmax / Pre-Final Boost Score" color="success" />
-          <Chip label="Report generated" variant="outlined" />
+          <Chip label="Softmax cuoi cu: da bo qua" color="warning" variant="outlined" />
+          <Chip label="Logic dang dung: Reduced Softmax / Pre-Final Boost Score" color="success" />
+          <Chip label="Da tao bao cao" variant="outlined" />
         </Stack>
         <Typography variant="body2" sx={{ color: "#64748B", overflowWrap: "anywhere" }}>
           reports/audit/production-ranking-fix/PRODUCTION_FIX_SUMMARY.md
@@ -231,24 +231,24 @@ export default function AuditDashboard() {
       </SectionCard>
 
       <SectionCard
-        title="GAP Rollback / Current Logic"
-        subtitle="Current production GAP logic is restored to the previous behavior: smaller recent gaps score higher."
+        title="GAP rollback / logic hien tai"
+        subtitle="Logic GAP production da quay ve cach cu: gap gan nho hon duoc cham diem cao hon."
       >
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-          <Chip label="Current GAP logic: smaller gap favored" color="success" />
-          <Chip label="Overdue GAP reversal: rolled back" variant="outlined" />
-          <Chip label={`Backtest samples: ${auditSummary?.dataset?.backtestSamples ?? 0}`} variant="outlined" />
+          <Chip label="Logic GAP hien tai: uu tien gap nho" color="success" />
+          <Chip label="Dao chieu overdue GAP: da rollback" variant="outlined" />
+          <Chip label={`Mau backtest: ${auditSummary?.dataset?.backtestSamples ?? 0}`} variant="outlined" />
         </Stack>
         <Alert severity="info">
-          GAP now scores numbers seen within the 7/14-day windows via the production weight table; numbers absent from those windows contribute 0.
+          GAP hien cham diem cac so xuat hien trong cua so 7/14 ngay bang bang trong so production; so khong co trong cua so dong gop 0.
         </Alert>
         <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Metric</TableCell>
-                <TableCell>Current Production Combine</TableCell>
-                <TableCell>Stored Baseline</TableCell>
+                <TableCell>Chi so</TableCell>
+                <TableCell>Combine production hien tai</TableCell>
+                <TableCell>Baseline da luu</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -262,26 +262,26 @@ export default function AuditDashboard() {
                 <TableRow key={label}>
                   <TableCell sx={{ fontWeight: 900 }}>{label}</TableCell>
                   <TableCell>{pct(auditSummary?.metaFindings?.[`currentCombine${label}Accuracy`])}</TableCell>
-                  <TableCell>Previous production GAP behavior</TableCell>
+                  <TableCell>Hanh vi GAP production truoc do</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
         <Typography variant="body2" sx={{ color: "#64748B" }}>
-          reports/audit/predictor-contribution/PREDICTOR_ABLATION_ANALYSIS.md contains the current read-only contribution replay.
+          reports/audit/predictor-contribution/PREDICTOR_ABLATION_ANALYSIS.md chua replay dong gop chi doc hien tai.
         </Typography>
       </SectionCard>
 
       <SectionCard
-        title="PAIR Weight Experiment Results"
-        subtitle={pairSensitivity?.decision || "No PAIR weight experiment results available."}
+        title="Ket qua thu nghiem trong so PAIR"
+        subtitle={pairSensitivity?.decision || "Chua co ket qua thu nghiem trong so PAIR."}
       >
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-          <Chip label={`Current base PAIR: ${pct(pairSensitivity?.currentBasePairWeight, 2)}`} color="primary" variant="outlined" />
-          <Chip label={`Current effective PAIR: ${pct(pairSensitivity?.currentEffectivePairWeight, 2)}`} variant="outlined" />
-          <Chip label={`Selected: ${pairSensitivity?.bestBalancedConfiguration?.label || "No strategy data available"}`} color={pairSensitivity?.productionChangeRecommended ? "success" : "default"} />
-          <Chip label={`Samples: ${pairSensitivity?.currentProduction?.samples ?? 0}`} variant="outlined" />
+          <Chip label={`PAIR goc hien tai: ${pct(pairSensitivity?.currentBasePairWeight, 2)}`} color="primary" variant="outlined" />
+          <Chip label={`PAIR hieu luc hien tai: ${pct(pairSensitivity?.currentEffectivePairWeight, 2)}`} variant="outlined" />
+          <Chip label={`Da chon: ${pairSensitivity?.bestBalancedConfiguration?.label || "Chua co du lieu chien luoc"}`} color={pairSensitivity?.productionChangeRecommended ? "success" : "default"} />
+          <Chip label={`Mau: ${pairSensitivity?.currentProduction?.samples ?? 0}`} variant="outlined" />
         </Stack>
         {(Array.isArray(pairSensitivity?.warnings) ? pairSensitivity.warnings : []).map((warning) => (
           <Alert key={warning} severity="warning">
@@ -292,25 +292,25 @@ export default function AuditDashboard() {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>PAIR Weight</TableCell>
+                <TableCell>Trong so PAIR</TableCell>
                 <TableCell>Top1</TableCell>
                 <TableCell>Top3</TableCell>
                 <TableCell>Top5</TableCell>
                 <TableCell>Top10</TableCell>
                 <TableCell>Top15</TableCell>
-                <TableCell>Top1 Lift</TableCell>
-                <TableCell>Top3 Lift</TableCell>
+                <TableCell>Top1 tang</TableCell>
+                <TableCell>Top3 tang</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {pairRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8}>No strategy data available</TableCell>
+                  <TableCell colSpan={8}>Chua co du lieu chien luoc</TableCell>
                 </TableRow>
               ) : null}
               {pairRows.map((row) => (
                 <TableRow key={row?.label || row?.pairWeightFactor}>
-                  <TableCell sx={{ fontWeight: 900 }}>{row?.label || "No strategy data available"}</TableCell>
+                  <TableCell sx={{ fontWeight: 900 }}>{row?.label || "Chua co du lieu chien luoc"}</TableCell>
                   <TableCell>{pct(row?.top1HitRate)}</TableCell>
                   <TableCell>{pct(row?.top3HitRate)}</TableCell>
                   <TableCell>{pct(row?.top5HitRate)}</TableCell>
@@ -324,7 +324,7 @@ export default function AuditDashboard() {
           </Table>
         </TableContainer>
         <Typography variant="body2" sx={{ color: "#64748B" }}>
-          {pairSensitivity?.nextMostLikelyRootCause || "No next-root-cause assessment available."}
+          {pairSensitivity?.nextMostLikelyRootCause || "Chua co danh gia nguyen nhan tiep theo."}
         </Typography>
       </SectionCard>
 
@@ -333,13 +333,13 @@ export default function AuditDashboard() {
           <Card key={field.key} sx={metricCardSx(theme)}>
             <CardContent>
               <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-                {field.label} Accuracy
+                Do chinh xac {field.label}
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: 950, mt: 0.5 }}>
                 {pct(auditSummary?.metaFindings?.[field.key])}
               </Typography>
               <Typography variant="caption" sx={{ color: "#64748B" }}>
-                Current production combine
+                Combine production hien tai
               </Typography>
             </CardContent>
           </Card>
@@ -347,22 +347,22 @@ export default function AuditDashboard() {
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1.1fr 0.9fr" }, gap: 2 }}>
-        <SectionCard title="Random Baseline Comparison" subtitle="Pulled from the rank optimization audit baseline table.">
+        <SectionCard title="So sanh baseline ngau nhien" subtitle="Lay tu bang baseline audit toi uu rank.">
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Metric</TableCell>
-                  <TableCell>Current Combine</TableCell>
-                  <TableCell>Random Baseline</TableCell>
-                  <TableCell>Best Strategy</TableCell>
-                  <TableCell>Lift vs Combine</TableCell>
+                  <TableCell>Chi so</TableCell>
+                  <TableCell>Combine hien tai</TableCell>
+                  <TableCell>Baseline ngau nhien</TableCell>
+                  <TableCell>Chien luoc tot nhat</TableCell>
+                  <TableCell>Tang vs combine</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {baselineRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5}>No strategy data available</TableCell>
+                    <TableCell colSpan={5}>Chua co du lieu chien luoc</TableCell>
                   </TableRow>
                 ) : null}
                 {baselineRows.map((row) => (
@@ -379,11 +379,11 @@ export default function AuditDashboard() {
           </TableContainer>
         </SectionCard>
 
-        <SectionCard title="Score Correlation" subtitle={scoreValidation?.calibrationAssessment || "No calibration assessment available."}>
+        <SectionCard title="Tuong quan diem" subtitle={scoreValidation?.calibrationAssessment || "Chua co danh gia hieu chuan."}>
           <Stack spacing={1.5}>
             <Box>
               <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-                Score vs Hit Probability
+                Diem vs xac suat trung
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 950 }}>
                 {Number.isFinite(Number(scoreValidation?.scoreHitCorrelation))
@@ -392,26 +392,26 @@ export default function AuditDashboard() {
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
-              Samples: {scoreValidation?.samples ?? 0}
+              Mau: {scoreValidation?.samples ?? 0}
             </Typography>
           </Stack>
         </SectionCard>
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 2 }}>
-        <SectionCard title="Recent Overlap Statistics" subtitle={recentOverlap?.interpretation || "No overlap interpretation available."}>
+        <SectionCard title="Thong ke do trung lap gan day" subtitle={recentOverlap?.interpretation || "Chua co dien giai do trung lap."}>
           <Stack spacing={1.5}>
             <Chip
-              label={`Top10 correlation: ${Number.isFinite(Number(recentOverlap?.top10Correlation)) ? Number(recentOverlap.top10Correlation).toFixed(3) : "--"}`}
+              label={`Tuong quan Top10: ${Number.isFinite(Number(recentOverlap?.top10Correlation)) ? Number(recentOverlap.top10Correlation).toFixed(3) : "--"}`}
               sx={{ alignSelf: "flex-start", fontWeight: 900 }}
             />
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Overlap Range</TableCell>
-                    <TableCell>Samples</TableCell>
-                    <TableCell>Top10 Hit Rate</TableCell>
+                    <TableCell>Vung trung lap</TableCell>
+                    <TableCell>Mau</TableCell>
+                    <TableCell>Ty le trung Top10</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -428,13 +428,13 @@ export default function AuditDashboard() {
           </Stack>
         </SectionCard>
 
-        <SectionCard title="Phase Statistics" subtitle="Production combine accuracy grouped by detected phase.">
+        <SectionCard title="Thong ke theo pha" subtitle="Do chinh xac combine production duoc gom nhom theo pha phat hien.">
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Phase</TableCell>
-                  <TableCell>Samples</TableCell>
+                  <TableCell>Pha</TableCell>
+                  <TableCell>Mau</TableCell>
                   <TableCell>Top1</TableCell>
                   <TableCell>Top3</TableCell>
                   <TableCell>Top10</TableCell>
@@ -443,7 +443,7 @@ export default function AuditDashboard() {
               <TableBody>
                 {phaseRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5}>No strategy data available</TableCell>
+                    <TableCell colSpan={5}>Chua co du lieu chien luoc</TableCell>
                   </TableRow>
                 ) : null}
                 {phaseRows.map((row) => (

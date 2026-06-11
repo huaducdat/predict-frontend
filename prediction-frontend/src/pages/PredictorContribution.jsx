@@ -84,7 +84,7 @@ export default function PredictorContribution() {
     try {
       setSummary(await getPredictorContributionSummary());
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Unable to load predictor contribution.");
+      setError(err.response?.data?.message || err.message || "Khong tai duoc dong gop predictor.");
     } finally {
       setLoading(false);
     }
@@ -122,19 +122,19 @@ export default function PredictorContribution() {
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="h4" sx={{ fontWeight: 950 }}>
-            Predictor Contribution
+            Dong gop predictor
           </Typography>
           <Typography variant="body2" sx={{ color: "#64748B", mt: 0.5 }}>
-            Read-only ablation replay for predictor impact on current ranking metrics.
+            Replay ablation chi doc de xem tac dong predictor len cac chi so xep hang hien tai.
           </Typography>
         </Box>
         <Button startIcon={<RefreshRoundedIcon />} variant="outlined" onClick={load}>
-          Refresh
+          Lam moi
         </Button>
       </Stack>
 
       {error ? <Alert severity="error">{error}</Alert> : null}
-      {!error && rows.length === 0 ? <Alert severity="info">No strategy data available</Alert> : null}
+      {!error && rows.length === 0 ? <Alert severity="info">Chua co du lieu chien luoc</Alert> : null}
       {(Array.isArray(summary?.warnings) ? summary.warnings : []).map((warning) => (
         <Alert key={warning} severity="warning">
           {warning}
@@ -148,13 +148,13 @@ export default function PredictorContribution() {
               <StackedLineChartRoundedIcon color="primary" />
               <Box>
                 <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-                  Strongest Predictor
+                  Predictor manh nhat
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 950 }}>
-                  {strongest?.predictor || "No strategy data available"}
+                  {strongest?.predictor || "Chua co du lieu chien luoc"}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "#64748B" }}>
-                  Impact {pp(strongest?.impactScore)}
+                  Tac dong {pp(strongest?.impactScore)}
                 </Typography>
               </Box>
             </Stack>
@@ -164,13 +164,13 @@ export default function PredictorContribution() {
         <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
           <CardContent>
             <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-              Weakest Predictor
+              Predictor yeu nhat
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 950 }}>
-              {weakest?.predictor || "No strategy data available"}
+              {weakest?.predictor || "Chua co du lieu chien luoc"}
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
-              Impact {pp(weakest?.impactScore)}
+              Tac dong {pp(weakest?.impactScore)}
             </Typography>
           </CardContent>
         </Card>
@@ -178,46 +178,46 @@ export default function PredictorContribution() {
         <Card sx={{ borderRadius: 2, border: "1px solid #E2E8F0" }}>
           <CardContent>
             <Typography variant="overline" sx={{ color: "#64748B", fontWeight: 900 }}>
-              Replay Samples
+              Mau replay
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 950 }}>
               {summary?.sampleCount ?? 0}
             </Typography>
             <Typography variant="body2" sx={{ color: "#64748B" }}>
-              Reconstructed Top1 {pct(summary?.reconstructedBaseline?.top1HitRate)}
+              Top1 tai tao {pct(summary?.reconstructedBaseline?.top1HitRate)}
             </Typography>
           </CardContent>
         </Card>
       </Box>
 
-      <SectionCard title="Predictor Ranking" subtitle="Positive impact means removing the predictor reduced accuracy.">
+      <SectionCard title="Xep hang predictor" subtitle="Tac dong duong nghia la bo predictor lam giam do chinh xac.">
         <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Rank</TableCell>
                 <TableCell>Predictor</TableCell>
-                <TableCell>Class</TableCell>
-                <TableCell>Top1 Contribution</TableCell>
-                <TableCell>Top3 Contribution</TableCell>
+                <TableCell>Phan loai</TableCell>
+                <TableCell>Dong gop Top1</TableCell>
+                <TableCell>Dong gop Top3</TableCell>
                 <TableCell>Top5</TableCell>
                 <TableCell>Top10</TableCell>
                 <TableCell>Top15</TableCell>
-                <TableCell>Impact Score</TableCell>
+                <TableCell>Diem tac dong</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9}>No strategy data available</TableCell>
+                  <TableCell colSpan={9}>Chua co du lieu chien luoc</TableCell>
                 </TableRow>
               ) : null}
               {rows.map((row, index) => (
                 <TableRow key={row?.predictor || index}>
                   <TableCell sx={{ fontWeight: 900 }}>#{index + 1}</TableCell>
-                  <TableCell sx={{ fontWeight: 900 }}>{row?.predictor || "No strategy data available"}</TableCell>
+                  <TableCell sx={{ fontWeight: 900 }}>{row?.predictor || "Chua co du lieu chien luoc"}</TableCell>
                   <TableCell>
-                    <Chip size="small" label={row?.classification || "Neutral"} />
+                    <Chip size="small" label={row?.classification || "Trung lap"} />
                   </TableCell>
                   <TableCell>{pp(row?.top1Impact)}</TableCell>
                   <TableCell>{pp(row?.top3Impact)}</TableCell>
@@ -233,20 +233,20 @@ export default function PredictorContribution() {
       </SectionCard>
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 2 }}>
-        <SectionCard title="Top1 Correlation" subtitle="Predictor-only hits compared with production Top1 hits.">
+        <SectionCard title="Tuong quan Top1" subtitle="Lan trung rieng cua predictor so voi lan trung Top1 production.">
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>Predictor</TableCell>
-                  <TableCell>Own Top1</TableCell>
-                  <TableCell>Production Top1 Correlation</TableCell>
+                  <TableCell>Top1 rieng</TableCell>
+                  <TableCell>Tuong quan Top1 production</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {correlations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3}>No strategy data available</TableCell>
+                    <TableCell colSpan={3}>Chua co du lieu chien luoc</TableCell>
                   </TableRow>
                 ) : null}
                 {correlations.map((row) => (
@@ -261,20 +261,20 @@ export default function PredictorContribution() {
           </TableContainer>
         </SectionCard>
 
-        <SectionCard title="Highest Predictor Conflicts" subtitle="Higher conflict score means lower Top10 overlap.">
+        <SectionCard title="Xung dot predictor cao nhat" subtitle="Diem xung dot cao hon nghia la do trung lap Top10 thap hon.">
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Predictors</TableCell>
-                  <TableCell>Avg Top10 Overlap</TableCell>
-                  <TableCell>Conflict Score</TableCell>
+                  <TableCell>Predictor</TableCell>
+                  <TableCell>Trung lap Top10 TB</TableCell>
+                  <TableCell>Diem xung dot</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {conflicts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3}>No strategy data available</TableCell>
+                    <TableCell colSpan={3}>Chua co du lieu chien luoc</TableCell>
                   </TableRow>
                 ) : null}
                 {conflicts.map((row) => (
@@ -292,11 +292,11 @@ export default function PredictorContribution() {
         </SectionCard>
       </Box>
 
-      <SectionCard title="Recommended Future Changes" subtitle="Advisory only; production weights are unchanged.">
+      <SectionCard title="Thay doi tuong lai de xuat" subtitle="Chi la khuyen nghi; trong so production khong doi.">
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
           {(Array.isArray(summary?.recommendedFutureChanges) ? summary.recommendedFutureChanges : []).length === 0 ? (
             <Typography variant="body2" sx={{ color: "#64748B" }}>
-              No strategy data available
+              Chua co du lieu chien luoc
             </Typography>
           ) : null}
           {(Array.isArray(summary?.recommendedFutureChanges) ? summary.recommendedFutureChanges : []).map((item) => (

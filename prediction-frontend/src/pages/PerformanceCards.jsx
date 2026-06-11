@@ -68,6 +68,21 @@ function numberLabel(value) {
   return String(value).padStart(2, "0");
 }
 
+function predictedNumbers(card) {
+  if (Array.isArray(card?.predictedTop10Numbers)) {
+    return card.predictedTop10Numbers;
+  }
+
+  if (typeof card?.predictedTop10Csv === "string" && card.predictedTop10Csv.trim()) {
+    return card.predictedTop10Csv
+      .split(",")
+      .map((item) => Number(item.trim()))
+      .filter((item) => Number.isFinite(item));
+  }
+
+  return [];
+}
+
 function modeAccent(mode) {
   if (mode === "SHORT_TERM") return "#2563EB";
   if (mode === "EXTENDED") return "#0F766E";
@@ -114,7 +129,7 @@ function SummaryPanel({ mode, summary }) {
           </Typography>
           <Chip
             size="small"
-            label={`${summary?.totalDays ?? 0} days`}
+            label={`${summary?.totalDays ?? 0} ngay`}
             sx={{ bgcolor: alpha(accent, 0.1), color: accent, fontWeight: 900 }}
           />
         </Stack>
@@ -168,7 +183,7 @@ function StatusChip({ hit, label }) {
   return (
     <Chip
       size="small"
-      label={`${label} ${hit ? "Hit" : "Miss"}`}
+      label={`${label} ${hit ? "Trung" : "Truot"}`}
       sx={{
         bgcolor: hit ? "#DCFCE7" : "#FEE2E2",
         color: hit ? "#166534" : "#991B1B",
@@ -179,7 +194,7 @@ function StatusChip({ hit, label }) {
   );
 }
 
-function StreakRow({ title, values, bestValues }) {
+function StreakRow({ title, values, bestValues, historical = false }) {
   return (
     <Box>
       <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 950, mb: 0.8 }}>{title}</Typography>
@@ -192,7 +207,7 @@ function StreakRow({ title, values, bestValues }) {
               key={key}
               size="small"
               icon={isLongest ? <WorkspacePremiumRoundedIcon /> : undefined}
-              label={`${label} ${value}`}
+              label={historical ? `${label} tot nhat ${value}` : `Chuoi ${label} ${value}`}
               sx={{
                 bgcolor: value > 0 ? "#FEF3C7" : "#F8FAFC",
                 color: value > 0 ? "#92400E" : "#64748B",
@@ -201,6 +216,64 @@ function StreakRow({ title, values, bestValues }) {
                 "& .MuiChip-icon": { color: "#B45309" },
               }}
             />
+          );
+        })}
+      </Stack>
+    </Box>
+  );
+}
+
+function PredictedNumberList({ card }) {
+  const numbers = predictedNumbers(card);
+  const actual = Number(card?.actualResult);
+  const hasHit = numbers.some((number) => number === actual);
+
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} sx={{ mb: 0.8 }}>
+        <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 950 }}>
+          Ket qua du doan Top10
+        </Typography>
+        {hasHit ? (
+          <Chip
+            size="small"
+            label="SO TRUNG"
+            sx={{
+              bgcolor: "#FCE7F3",
+              color: "#9D174D",
+              border: "1px solid #F9A8D4",
+              fontWeight: 950,
+            }}
+          />
+        ) : null}
+      </Stack>
+      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+        {numbers.length === 0 ? (
+          <Typography sx={{ color: "#94A3B8", fontWeight: 800 }}>Chua co danh sach du doan</Typography>
+        ) : null}
+        {numbers.map((number) => {
+          const hit = number === actual;
+          return (
+            <Box
+              key={`${card?.mode}-${card?.resultDate}-${number}`}
+              component="span"
+              sx={{
+                minWidth: 34,
+                height: 32,
+                px: 1,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 999,
+                bgcolor: hit ? "#FCE7F3" : "#F8FAFC",
+                color: hit ? "#9D174D" : "#0F172A",
+                border: hit ? "2px solid #EC4899" : "1px solid #E2E8F0",
+                fontWeight: 950,
+                boxShadow: hit ? "0 8px 18px rgba(236,72,153,0.18)" : "none",
+              }}
+            >
+              {numberLabel(number)}
+            </Box>
           );
         })}
       </Stack>
@@ -236,7 +309,7 @@ function PerformanceCard({ card }) {
         borderRadius: 2,
         background: "#FFFFFF",
         p: 2,
-        minHeight: 366,
+        minHeight: 460,
         display: "flex",
         flexDirection: "column",
         gap: 1.4,
@@ -246,12 +319,12 @@ function PerformanceCard({ card }) {
         <Box>
           <Typography sx={{ fontWeight: 950, color: "#0F172A", letterSpacing: 0 }}>{MODE_LABELS[mode] ?? mode}</Typography>
           <Typography sx={{ fontSize: 13, color: "#64748B", fontWeight: 700 }}>
-            {formatDate(card?.resultDate)}
+            Ngay {formatDate(card?.resultDate)}
           </Typography>
         </Box>
         <Chip
           size="small"
-          label={card?.predictionAvailable ? "Tracked" : "No snapshot"}
+          label={card?.predictionAvailable ? "Da theo doi" : "Chua co anh chup"}
           sx={{
             bgcolor: card?.predictionAvailable ? alpha(theme.palette.success.main, 0.14) : "#F1F5F9",
             color: card?.predictionAvailable ? theme.palette.success.dark : "#64748B",
@@ -262,19 +335,19 @@ function PerformanceCard({ card }) {
 
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1 }}>
         <Box>
-          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 800 }}>Actual Result</Typography>
+          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 800 }}>Ket qua thuc te</Typography>
           <Typography sx={{ fontSize: 28, color: "#0F172A", fontWeight: 950 }}>
             {numberLabel(card?.actualResult)}
           </Typography>
         </Box>
         <Box>
-          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 800 }}>Rank Position</Typography>
+          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 800 }}>Vi tri rank</Typography>
           <Typography sx={{ fontSize: 28, color: "#0F172A", fontWeight: 950 }}>
             {card?.rankPosition ?? "--"}
           </Typography>
         </Box>
         <Box>
-          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 800 }}>Prediction Date</Typography>
+          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 800 }}>Ngay du doan</Typography>
           <Typography sx={{ fontSize: 14, color: "#0F172A", fontWeight: 900, mt: 1 }}>
             {card?.predictionDate ?? "--"}
           </Typography>
@@ -289,8 +362,12 @@ function PerformanceCard({ card }) {
 
       <Divider />
 
-      <StreakRow title="Current Streaks" values={current} bestValues={best} />
-      <StreakRow title="Best Streaks" values={best} />
+      <PredictedNumberList card={card} />
+
+      <Divider />
+
+      <StreakRow title="Chuoi hien tai" values={current} bestValues={best} />
+      <StreakRow title="Chuoi tot nhat" values={best} historical />
     </Paper>
   );
 }
@@ -318,7 +395,7 @@ export default function PerformanceCards() {
       if (mountedRef.current) setDashboard(data);
     } catch (err) {
       console.error("Load performance cards error:", err);
-      if (mountedRef.current) setError("Could not load performance cards.");
+      if (mountedRef.current) setError("Khong tai duoc the theo doi hieu suat.");
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -342,7 +419,7 @@ export default function PerformanceCards() {
       await loadData();
     } catch (err) {
       console.error("Rebuild performance cards error:", err);
-      setError("Could not rebuild performance cards.");
+      setError("Khong tao lai duoc the theo doi hieu suat.");
     } finally {
       setRunning(false);
     }
@@ -354,7 +431,7 @@ export default function PerformanceCards() {
       triggerBlobDownload(blob, "prediction-performance-cards.csv");
     } catch (err) {
       console.error("Download CSV error:", err);
-      setError("Could not export CSV.");
+      setError("Khong xuat duoc CSV.");
     }
   };
 
@@ -364,7 +441,7 @@ export default function PerformanceCards() {
       triggerJsonDownload(data, "prediction-performance-cards.json");
     } catch (err) {
       console.error("Download JSON error:", err);
-      setError("Could not export JSON.");
+      setError("Khong xuat duoc JSON.");
     }
   };
 
@@ -381,20 +458,20 @@ export default function PerformanceCards() {
             <Stack direction="row" spacing={1} alignItems="center">
               <InsightsRoundedIcon sx={{ color: "#2563EB" }} />
               <Typography variant="h4" sx={{ fontWeight: 950, color: "#0F172A", letterSpacing: 0 }}>
-                Performance Cards
+                Theo doi hieu suat
               </Typography>
             </Stack>
             <Typography sx={{ color: "#64748B", fontWeight: 700, mt: 0.4 }}>
-              Daily prediction hits, active streaks, best streaks, and long-term mode health.
+              Theo doi trung hang ngay, chuoi hien tai, chuoi tot nhat va suc khoe du doan dai han.
             </Typography>
           </Box>
 
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent={{ xs: "flex-start", md: "flex-end" }}>
             <FormControl size="small" sx={{ minWidth: 126 }}>
-              <InputLabel id="performance-limit-label">Days</InputLabel>
+              <InputLabel id="performance-limit-label">So ngay</InputLabel>
               <Select
                 labelId="performance-limit-label"
-                label="Days"
+                label="So ngay"
                 value={limit}
                 onChange={(event) => setLimit(Number(event.target.value))}
               >
@@ -410,7 +487,7 @@ export default function PerformanceCards() {
               variant="outlined"
               sx={{ textTransform: "none", fontWeight: 900 }}
             >
-              Rebuild
+              Tao lai
             </Button>
             <Button startIcon={<DownloadRoundedIcon />} onClick={handleCsv} variant="contained" sx={{ textTransform: "none", fontWeight: 900 }}>
               CSV
@@ -436,7 +513,7 @@ export default function PerformanceCards() {
             </Box>
 
             <Paper elevation={0} sx={{ border: "1px solid #E2E8F0", borderRadius: 2, p: 2, background: "#FFFFFF" }}>
-              <Typography sx={{ fontWeight: 950, color: "#0F172A", mb: 1 }}>Automatic Notes</Typography>
+              <Typography sx={{ fontWeight: 950, color: "#0F172A", mb: 1 }}>Ghi chu tu dong</Typography>
               <Stack spacing={0.8}>
                 {notes.map((note) => (
                   <Alert key={note} severity="info" icon={false} sx={{ py: 0.6, fontWeight: 800 }}>
@@ -447,7 +524,7 @@ export default function PerformanceCards() {
             </Paper>
 
             {days.length === 0 ? (
-              <Alert severity="info">No performance cards yet. Cards will be created automatically after result data is entered.</Alert>
+              <Alert severity="info">Chua co the theo doi hieu suat. The se tu tao sau khi nhap ket qua.</Alert>
             ) : (
               <Stack spacing={2}>
                 {days.map((day) => (
