@@ -18,6 +18,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AuditDashboard from "./pages/AuditDashboard";
 import RankOptimization from "./pages/RankOptimization";
 import ShadowRanking from "./pages/ShadowRanking";
+import PredictorContribution from "./pages/PredictorContribution";
 
 
 
@@ -48,9 +49,11 @@ function App() {
                   <Route path="/system-intelligence/audit" element={<AuditDashboard />} />
                   <Route path="/system-intelligence/rank-optimization" element={<RankOptimization />} />
                   <Route path="/system-intelligence/shadow-ranking" element={<ShadowRanking />} />
+                  <Route path="/system-intelligence/predictor-contribution" element={<PredictorContribution />} />
                   <Route path="/audit" element={<AuditDashboard />} />
                   <Route path="/audit/rank-optimization" element={<RankOptimization />} />
                   <Route path="/audit/shadow-ranking" element={<ShadowRanking />} />
+                  <Route path="/audit/predictor-contribution" element={<PredictorContribution />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
                 </Routes>

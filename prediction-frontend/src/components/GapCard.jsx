@@ -19,7 +19,7 @@ function GapCard({ data }) {
     <div>
       <h3>{vi.predictor.GAP}</h3>
       <div style={{ color: "#0F766E", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
-        GAP Logic: Overdue numbers favored
+        GAP Logic: Recent gaps favored
       </div>
 
       {list.length === 0 ? (

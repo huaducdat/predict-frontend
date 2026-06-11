@@ -208,7 +208,7 @@ export default function ShadowRanking() {
         </Alert>
       ))}
       <Alert severity="info">
-        This screen reads and evaluates shadow rankings only. Production rows generated after the GAP reversal use boosted aggregate scores with overdue GAP logic.
+        This screen reads and evaluates shadow rankings only. Production rows use boosted aggregate scores with restored GAP logic: smaller recent gaps are favored.
       </Alert>
       {!error && rankings.length === 0 ? <Alert severity="info">No strategy data available</Alert> : null}
 

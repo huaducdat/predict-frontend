@@ -138,7 +138,7 @@ export default function RankOptimization() {
       {error ? <Alert severity="error">{error}</Alert> : null}
       {!error && strategies.length === 0 ? <Alert severity="info">No strategy data available</Alert> : null}
       <Alert severity="info">
-        Current production output uses boosted aggregate scores with GAP overdue logic. Historical strategy comparisons can still include rows produced before the change.
+        Current production output uses boosted aggregate scores with restored GAP logic: smaller recent gaps are favored.
       </Alert>
       {(summary?.warnings || []).map((warning) => (
         <Alert key={warning} severity="warning">

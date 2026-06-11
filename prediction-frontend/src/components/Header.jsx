@@ -37,6 +37,7 @@ const AUDIT_NAV_ITEMS = [
   { label: "Audit Dashboard", path: "/system-intelligence/audit" },
   { label: "Rank Optimization", path: "/system-intelligence/rank-optimization" },
   { label: "Shadow Ranking", path: "/system-intelligence/shadow-ranking" },
+  { label: "Predictor Contribution", path: "/system-intelligence/predictor-contribution" },
 ];
 
 export default function Header() {

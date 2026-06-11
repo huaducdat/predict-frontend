@@ -36,6 +36,11 @@ export const getGapReversalSummary = async () => {
   return res.data;
 };
 
+export const getPredictorContributionSummary = async () => {
+  const res = await api.get("/api/audit/predictor-contribution/summary");
+  return res.data;
+};
+
 export const getRankOptimizationSummary = async () => {
   const res = await api.get("/api/audit/rank-optimization/summary");
   return res.data;

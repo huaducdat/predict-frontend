@@ -26,7 +26,6 @@ import {
   downloadAuditAccuracyCsv,
   downloadAuditSummaryJson,
   getAuditSummary,
-  getGapReversalSummary,
   getRankOptimizationSummary,
   getShadowRankingSummary,
 } from "../api/auditApi";
@@ -131,7 +130,6 @@ function HeaderIndicator({ auditSummary, rankSummary, shadowSummary }) {
 export default function AuditDashboard() {
   const theme = useTheme();
   const [auditSummary, setAuditSummary] = useState(null);
-  const [gapSummary, setGapSummary] = useState(null);
   const [rankSummary, setRankSummary] = useState(null);
   const [shadowSummary, setShadowSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -142,18 +140,16 @@ export default function AuditDashboard() {
     setError("");
 
     try {
-      const [audit, gap, rank, shadow] = await Promise.allSettled([
+      const [audit, rank, shadow] = await Promise.allSettled([
         getAuditSummary(),
-        getGapReversalSummary(),
         getRankOptimizationSummary(),
         getShadowRankingSummary(false),
       ]);
       setAuditSummary(audit.status === "fulfilled" ? audit.value : null);
-      setGapSummary(gap.status === "fulfilled" ? gap.value : null);
       setRankSummary(rank.status === "fulfilled" ? rank.value : null);
       setShadowSummary(shadow.status === "fulfilled" ? shadow.value : null);
 
-      const failures = [audit, gap, rank, shadow]
+      const failures = [audit, rank, shadow]
         .filter((result) => result.status === "rejected")
         .map((result) => result.reason?.response?.data?.message || result.reason?.message)
         .filter(Boolean);
@@ -175,7 +171,6 @@ export default function AuditDashboard() {
   const scoreValidation = auditSummary?.scoreValidation;
   const recentOverlap = auditSummary?.recentOverlap;
   const phaseRows = Array.isArray(auditSummary?.phaseStability?.combineByPhase) ? auditSummary.phaseStability.combineByPhase.filter(Boolean) : [];
-  const gapWarning = gapSummary?.warning;
 
   if (loading) {
     return (
@@ -231,52 +226,45 @@ export default function AuditDashboard() {
       </SectionCard>
 
       <SectionCard
-        title="GAP Reversal / GAP Logic"
-        subtitle="Current GAP logic favors overdue numbers; old GAP logic favored recently seen numbers."
+        title="GAP Rollback / Current Logic"
+        subtitle="Current production GAP logic is restored to the previous behavior: smaller recent gaps score higher."
       >
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-          <Chip label="Current GAP logic: larger gap favored" color="success" />
-          <Chip label="Old GAP logic: smaller gap favored" variant="outlined" />
-          <Chip label={`Samples: ${gapSummary?.sampleCount ?? 0}`} variant="outlined" />
+          <Chip label="Current GAP logic: smaller gap favored" color="success" />
+          <Chip label="Overdue GAP reversal: rolled back" variant="outlined" />
+          <Chip label={`Backtest samples: ${auditSummary?.dataset?.backtestSamples ?? 0}`} variant="outlined" />
         </Stack>
-        {gapWarning ? <Alert severity="warning">{gapWarning}</Alert> : null}
+        <Alert severity="info">
+          GAP now scores numbers seen within the 7/14-day windows via the production weight table; numbers absent from those windows contribute 0.
+        </Alert>
         <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Metric</TableCell>
-                <TableCell>Old Production</TableCell>
-                <TableCell>New GAP Combine</TableCell>
-                <TableCell>Lift</TableCell>
-                <TableCell>GAP-only Old/New</TableCell>
+                <TableCell>Current Production Combine</TableCell>
+                <TableCell>Stored Baseline</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {[
-                ["Top1", "top1HitRate", "top1Lift"],
-                ["Top3", "top3HitRate", "top3Lift"],
-                ["Top5", "top5HitRate", "top5Lift"],
-                ["Top10", "top10HitRate", "top10Lift"],
-                ["Top15", "top15HitRate", "top15Lift"],
-              ].map(([label, rateKey, liftKey]) => (
+                "Top1",
+                "Top3",
+                "Top5",
+                "Top10",
+                "Top15",
+              ].map((label) => (
                 <TableRow key={label}>
                   <TableCell sx={{ fontWeight: 900 }}>{label}</TableCell>
-                  <TableCell>{pct(gapSummary?.oldAccuracy?.[rateKey])}</TableCell>
-                  <TableCell>{pct(gapSummary?.newAccuracy?.[rateKey])}</TableCell>
-                  <TableCell>{pp(gapSummary?.lift?.[liftKey])}</TableCell>
-                  <TableCell>
-                    {pct(gapSummary?.oldGapOnlyAccuracy?.[rateKey])} / {pct(gapSummary?.newGapOnlyAccuracy?.[rateKey])}
-                  </TableCell>
+                  <TableCell>{pct(auditSummary?.metaFindings?.[`currentCombine${label}Accuracy`])}</TableCell>
+                  <TableCell>Previous production GAP behavior</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
         <Typography variant="body2" sx={{ color: "#64748B" }}>
-          {gapSummary?.sharpRankingAssessment || "No GAP reversal assessment available."}
-        </Typography>
-        <Typography variant="body2" sx={{ color: "#64748B" }}>
-          {gapSummary?.coverageAssessment || "No coverage assessment available."}
+          reports/audit/predictor-contribution/PREDICTOR_ABLATION_ANALYSIS.md contains the current read-only contribution replay.
         </Typography>
       </SectionCard>
 
