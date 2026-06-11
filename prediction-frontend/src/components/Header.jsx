@@ -34,6 +34,7 @@ const NAV_ITEMS = [
 ];
 
 const AUDIT_NAV_ITEMS = [
+  { label: "Performance Cards", path: "/system-intelligence/performance-cards" },
   { label: "Audit Dashboard", path: "/system-intelligence/audit" },
   { label: "Rank Optimization", path: "/system-intelligence/rank-optimization" },
   { label: "Shadow Ranking", path: "/system-intelligence/shadow-ranking" },
@@ -170,7 +171,7 @@ export default function Header() {
                 </MenuItem>
               ))}
               <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
-                Audit & Analysis
+                System Intelligence
               </MenuItem>
               {AUDIT_NAV_ITEMS.map((item) => (
                 <MenuItem
@@ -253,7 +254,7 @@ export default function Header() {
                 },
               }}
             >
-              Audit & Analysis
+              System Intelligence
             </Button>
 
             <Menu
