@@ -69,12 +69,32 @@ function numberLabel(value) {
 }
 
 function predictedNumbers(card) {
-  if (Array.isArray(card?.predictedTop10Numbers)) {
-    return card.predictedTop10Numbers;
+  return numberList(card?.predictedTop10Numbers, card?.predictedTop10Csv);
+}
+
+function actualNumbers(card) {
+  const numbers = numberList(card?.actualNumbers, card?.actualNumbersCsv);
+  if (numbers.length > 0) return numbers;
+
+  const actual = Number(card?.actualResult);
+  return Number.isFinite(actual) ? [actual] : [];
+}
+
+function cardHitNumbers(card) {
+  const storedHits = numberList(card?.hitNumbers, card?.hitNumbersCsv);
+  if (storedHits.length > 0) return storedHits;
+
+  const actualSet = new Set(actualNumbers(card));
+  return predictedNumbers(card).filter((number) => actualSet.has(number));
+}
+
+function numberList(values, csv) {
+  if (Array.isArray(values)) {
+    return values.map((item) => Number(item)).filter((item) => Number.isFinite(item));
   }
 
-  if (typeof card?.predictedTop10Csv === "string" && card.predictedTop10Csv.trim()) {
-    return card.predictedTop10Csv
+  if (typeof csv === "string" && csv.trim()) {
+    return csv
       .split(",")
       .map((item) => Number(item.trim()))
       .filter((item) => Number.isFinite(item));
@@ -225,8 +245,11 @@ function StreakRow({ title, values, bestValues, historical = false }) {
 
 function PredictedNumberList({ card }) {
   const numbers = predictedNumbers(card);
-  const actual = Number(card?.actualResult);
-  const hasHit = numbers.some((number) => number === actual);
+  const hits = cardHitNumbers(card);
+  const hitSet = new Set(hits);
+  const hitCountValue = Number(card?.top10HitCount);
+  const hitCount = Number.isFinite(hitCountValue) ? hitCountValue : hits.length;
+  const hasHit = hitCount > 0;
 
   return (
     <Box>
@@ -251,11 +274,11 @@ function PredictedNumberList({ card }) {
         {numbers.length === 0 ? (
           <Typography sx={{ color: "#94A3B8", fontWeight: 800 }}>Chua co danh sach du doan</Typography>
         ) : null}
-        {numbers.map((number) => {
-          const hit = number === actual;
+        {numbers.map((number, index) => {
+          const hit = hitSet.has(number);
           return (
             <Box
-              key={`${card?.mode}-${card?.resultDate}-${number}`}
+              key={`${card?.mode}-${card?.resultDate}-${number}-${index}`}
               component="span"
               sx={{
                 minWidth: 34,
@@ -276,6 +299,40 @@ function PredictedNumberList({ card }) {
             </Box>
           );
         })}
+      </Stack>
+      <Stack spacing={0.75} sx={{ mt: 1.2 }}>
+        <Stack direction="row" spacing={0.75} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 950 }}>
+            So trung:
+          </Typography>
+          {hasHit ? (
+            hits.map((number, index) => (
+              <Chip
+                key={`${card?.mode}-${card?.resultDate}-hit-${number}-${index}`}
+                size="small"
+                label={numberLabel(number)}
+                sx={{
+                  bgcolor: "#FCE7F3",
+                  color: "#9D174D",
+                  border: "1px solid #EC4899",
+                  fontWeight: 950,
+                }}
+              />
+            ))
+          ) : (
+            <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 850 }}>
+              Khong co
+            </Typography>
+          )}
+        </Stack>
+        <Stack direction="row" spacing={1.25} useFlexGap flexWrap="wrap">
+          <Typography sx={{ fontSize: 12, color: "#0F172A", fontWeight: 900 }}>
+            Tong so trung: {hitCount}
+          </Typography>
+          <Typography sx={{ fontSize: 12, color: "#0F172A", fontWeight: 900 }}>
+            Top10 Hit Count: {hitCount}/10
+          </Typography>
+        </Stack>
       </Stack>
     </Box>
   );
