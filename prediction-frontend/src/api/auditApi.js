@@ -41,6 +41,11 @@ export const getPredictorContributionSummary = async () => {
   return res.data;
 };
 
+export const getPairWeightSensitivitySummary = async () => {
+  const res = await api.get("/api/audit/pair-weight-sensitivity/summary");
+  return res.data;
+};
+
 export const getRankOptimizationSummary = async () => {
   const res = await api.get("/api/audit/rank-optimization/summary");
   return res.data;

@@ -26,6 +26,7 @@ import {
   downloadAuditAccuracyCsv,
   downloadAuditSummaryJson,
   getAuditSummary,
+  getPairWeightSensitivitySummary,
   getRankOptimizationSummary,
   getShadowRankingSummary,
 } from "../api/auditApi";
@@ -130,6 +131,7 @@ function HeaderIndicator({ auditSummary, rankSummary, shadowSummary }) {
 export default function AuditDashboard() {
   const theme = useTheme();
   const [auditSummary, setAuditSummary] = useState(null);
+  const [pairSensitivity, setPairSensitivity] = useState(null);
   const [rankSummary, setRankSummary] = useState(null);
   const [shadowSummary, setShadowSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -140,16 +142,18 @@ export default function AuditDashboard() {
     setError("");
 
     try {
-      const [audit, rank, shadow] = await Promise.allSettled([
+      const [audit, pair, rank, shadow] = await Promise.allSettled([
         getAuditSummary(),
+        getPairWeightSensitivitySummary(),
         getRankOptimizationSummary(),
         getShadowRankingSummary(false),
       ]);
       setAuditSummary(audit.status === "fulfilled" ? audit.value : null);
+      setPairSensitivity(pair.status === "fulfilled" ? pair.value : null);
       setRankSummary(rank.status === "fulfilled" ? rank.value : null);
       setShadowSummary(shadow.status === "fulfilled" ? shadow.value : null);
 
-      const failures = [audit, rank, shadow]
+      const failures = [audit, pair, rank, shadow]
         .filter((result) => result.status === "rejected")
         .map((result) => result.reason?.response?.data?.message || result.reason?.message)
         .filter(Boolean);
@@ -171,6 +175,7 @@ export default function AuditDashboard() {
   const scoreValidation = auditSummary?.scoreValidation;
   const recentOverlap = auditSummary?.recentOverlap;
   const phaseRows = Array.isArray(auditSummary?.phaseStability?.combineByPhase) ? auditSummary.phaseStability.combineByPhase.filter(Boolean) : [];
+  const pairRows = Array.isArray(pairSensitivity?.experiments) ? pairSensitivity.experiments.filter(Boolean) : [];
 
   if (loading) {
     return (
@@ -265,6 +270,61 @@ export default function AuditDashboard() {
         </TableContainer>
         <Typography variant="body2" sx={{ color: "#64748B" }}>
           reports/audit/predictor-contribution/PREDICTOR_ABLATION_ANALYSIS.md contains the current read-only contribution replay.
+        </Typography>
+      </SectionCard>
+
+      <SectionCard
+        title="PAIR Weight Experiment Results"
+        subtitle={pairSensitivity?.decision || "No PAIR weight experiment results available."}
+      >
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
+          <Chip label={`Current base PAIR: ${pct(pairSensitivity?.currentBasePairWeight, 2)}`} color="primary" variant="outlined" />
+          <Chip label={`Current effective PAIR: ${pct(pairSensitivity?.currentEffectivePairWeight, 2)}`} variant="outlined" />
+          <Chip label={`Selected: ${pairSensitivity?.bestBalancedConfiguration?.label || "No strategy data available"}`} color={pairSensitivity?.productionChangeRecommended ? "success" : "default"} />
+          <Chip label={`Samples: ${pairSensitivity?.currentProduction?.samples ?? 0}`} variant="outlined" />
+        </Stack>
+        {(Array.isArray(pairSensitivity?.warnings) ? pairSensitivity.warnings : []).map((warning) => (
+          <Alert key={warning} severity="warning">
+            {warning}
+          </Alert>
+        ))}
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>PAIR Weight</TableCell>
+                <TableCell>Top1</TableCell>
+                <TableCell>Top3</TableCell>
+                <TableCell>Top5</TableCell>
+                <TableCell>Top10</TableCell>
+                <TableCell>Top15</TableCell>
+                <TableCell>Top1 Lift</TableCell>
+                <TableCell>Top3 Lift</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {pairRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8}>No strategy data available</TableCell>
+                </TableRow>
+              ) : null}
+              {pairRows.map((row) => (
+                <TableRow key={row?.label || row?.pairWeightFactor}>
+                  <TableCell sx={{ fontWeight: 900 }}>{row?.label || "No strategy data available"}</TableCell>
+                  <TableCell>{pct(row?.top1HitRate)}</TableCell>
+                  <TableCell>{pct(row?.top3HitRate)}</TableCell>
+                  <TableCell>{pct(row?.top5HitRate)}</TableCell>
+                  <TableCell>{pct(row?.top10HitRate)}</TableCell>
+                  <TableCell>{pct(row?.top15HitRate)}</TableCell>
+                  <TableCell>{pp(row?.top1LiftVsCurrent)}</TableCell>
+                  <TableCell>{pp(row?.top3LiftVsCurrent)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Typography variant="body2" sx={{ color: "#64748B" }}>
+          {pairSensitivity?.nextMostLikelyRootCause || "No next-root-cause assessment available."}
         </Typography>
       </SectionCard>
 
