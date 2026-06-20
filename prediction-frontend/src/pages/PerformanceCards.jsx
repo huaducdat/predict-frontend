@@ -56,6 +56,13 @@ function formatPercent(value) {
   return `${Math.round(number * 100)}%`;
 }
 
+function formatOverlapMetric(value) {
+  if (value === null || value === undefined || value === "") return "--";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "--";
+  return `${Math.round(number * 100)}%`;
+}
+
 function formatDate(value) {
   if (!value) return "--";
   const date = new Date(value);
@@ -379,15 +386,37 @@ function PerformanceCard({ card }) {
             Ngay {formatDate(card?.resultDate)}
           </Typography>
         </Box>
-        <Chip
-          size="small"
-          label={card?.predictionAvailable ? "Da theo doi" : "Chua co anh chup"}
-          sx={{
-            bgcolor: card?.predictionAvailable ? alpha(theme.palette.success.main, 0.14) : "#F1F5F9",
-            color: card?.predictionAvailable ? theme.palette.success.dark : "#64748B",
-            fontWeight: 900,
-          }}
-        />
+        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+          <Chip
+            size="small"
+            label={`RO: ${formatOverlapMetric(card?.recentOverlap)}`}
+            sx={{
+              bgcolor: "#F1F5F9",
+              color: "#334155",
+              border: "1px solid #E2E8F0",
+              fontWeight: 900,
+            }}
+          />
+          <Chip
+            size="small"
+            label={`AO: ${formatOverlapMetric(card?.activeOverlap)}`}
+            sx={{
+              bgcolor: "#F1F5F9",
+              color: "#334155",
+              border: "1px solid #E2E8F0",
+              fontWeight: 900,
+            }}
+          />
+          <Chip
+            size="small"
+            label={card?.predictionAvailable ? "Da theo doi" : "Chua co anh chup"}
+            sx={{
+              bgcolor: card?.predictionAvailable ? alpha(theme.palette.success.main, 0.14) : "#F1F5F9",
+              color: card?.predictionAvailable ? theme.palette.success.dark : "#64748B",
+              fontWeight: 900,
+            }}
+          />
+        </Stack>
       </Stack>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1 }}>
