@@ -20,7 +20,11 @@ import RankOptimization from "./pages/RankOptimization";
 import ShadowRanking from "./pages/ShadowRanking";
 import PredictorContribution from "./pages/PredictorContribution";
 import PerformanceCards from "./pages/PerformanceCards";
+import AdaptiveDashboard from "./pages/AdaptiveDashboard";
 import AdaptivePrediction from "./pages/AdaptivePrediction";
+import AdaptivePerformance from "./pages/AdaptivePerformance";
+import AdaptiveIntelligence from "./pages/AdaptiveIntelligence";
+import AdaptiveShadowRanking from "./pages/AdaptiveShadowRanking";
 import SpecialPrediction from "./pages/SpecialPrediction";
 import SpecialPerformanceCards from "./pages/SpecialPerformanceCards";
 import SpecialIntelligence from "./pages/SpecialIntelligence";
@@ -57,7 +61,11 @@ function App() {
                   <Route path="/system-intelligence/shadow-ranking" element={<ShadowRanking />} />
                   <Route path="/system-intelligence/predictor-contribution" element={<PredictorContribution />} />
                   <Route path="/system-intelligence/performance-cards" element={<PerformanceCards />} />
+                  <Route path="/adaptive" element={<AdaptiveDashboard />} />
                   <Route path="/adaptive-prediction" element={<AdaptivePrediction />} />
+                  <Route path="/adaptive-performance" element={<AdaptivePerformance />} />
+                  <Route path="/adaptive-intelligence" element={<AdaptiveIntelligence />} />
+                  <Route path="/adaptive-shadow" element={<AdaptiveShadowRanking />} />
                   <Route path="/special-prediction" element={<SpecialPrediction />} />
                   <Route path="/special-prediction/performance-cards" element={<SpecialPerformanceCards />} />
                   <Route path="/special-prediction/intelligence" element={<SpecialIntelligence />} />

@@ -33,8 +33,15 @@ const NAV_ITEMS = [
   { label: "Đánh giá hệ thống", path: "/system-evaluation" },
 ];
 
+const ADAPTIVE_NAV_ITEMS = [
+  { label: "Dashboard", path: "/adaptive" },
+  { label: "Prediction", path: "/adaptive-prediction" },
+  { label: "Performance", path: "/adaptive-performance" },
+  { label: "Intelligence", path: "/adaptive-intelligence" },
+  { label: "Shadow Ranking", path: "/adaptive-shadow" },
+];
+
 const AUDIT_NAV_ITEMS = [
-  { label: "Adaptive Prediction", path: "/adaptive-prediction" },
   { label: "Theo doi hieu suat", path: "/system-intelligence/performance-cards" },
   { label: "Bang audit", path: "/system-intelligence/audit" },
   { label: "Toi uu rank", path: "/system-intelligence/rank-optimization" },
@@ -55,6 +62,7 @@ export default function Header() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
+  const [adaptiveAnchorEl, setAdaptiveAnchorEl] = useState(null);
   const [auditAnchorEl, setAuditAnchorEl] = useState(null);
   const [specialAnchorEl, setSpecialAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
@@ -93,6 +101,14 @@ export default function Header() {
     setAuditAnchorEl(event.currentTarget);
   };
 
+  const handleAdaptiveMenuOpen = (event) => {
+    setAdaptiveAnchorEl(event.currentTarget);
+  };
+
+  const handleAdaptiveMenuClose = () => {
+    setAdaptiveAnchorEl(null);
+  };
+
   const handleAuditMenuClose = () => {
     setAuditAnchorEl(null);
   };
@@ -108,6 +124,7 @@ export default function Header() {
   const handleNavigate = (path) => {
     navigate(path);
     handleMenuClose();
+    handleAdaptiveMenuClose();
     handleAuditMenuClose();
     handleSpecialMenuClose();
   };
@@ -123,6 +140,7 @@ export default function Header() {
   };
 
   const isAuditActive = AUDIT_NAV_ITEMS.some((item) => isActive(item.path));
+  const isAdaptiveActive = ADAPTIVE_NAV_ITEMS.some((item) => isActive(item.path));
   const isSpecialActive = SPECIAL_NAV_ITEMS.some((item) => isActive(item.path));
 
   return (
@@ -185,6 +203,19 @@ export default function Header() {
                   key={item.path}
                   selected={isActive(item.path)}
                   onClick={() => handleNavigate(item.path)}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
+              <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
+                Adaptive
+              </MenuItem>
+              {ADAPTIVE_NAV_ITEMS.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  selected={isActive(item.path)}
+                  onClick={() => handleNavigate(item.path)}
+                  sx={{ pl: 3 }}
                 >
                   {item.label}
                 </MenuItem>
@@ -262,6 +293,50 @@ export default function Header() {
                 {item.label}
               </Button>
             ))}
+
+            <Button
+              onClick={handleAdaptiveMenuOpen}
+              endIcon={<KeyboardArrowDownIcon />}
+              sx={{
+                textTransform: "none",
+                borderRadius: 999,
+                px: { md: 1.2, lg: 1.55 },
+                py: 0.72,
+                minWidth: 0,
+                color: isAdaptiveActive ? "#0F172A" : "#475569",
+                backgroundColor: isAdaptiveActive ? "#EAF2FF" : "transparent",
+                border: isAdaptiveActive ? "1px solid #93C5FD" : "1px solid transparent",
+                boxShadow: isAdaptiveActive ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
+                fontSize: { md: 13, lg: 14 },
+                fontWeight: isAdaptiveActive ? 900 : 700,
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
+                "&:hover": {
+                  backgroundColor: "rgba(37,99,235,0.08)",
+                  color: "#1D4ED8",
+                },
+              }}
+            >
+              Adaptive
+            </Button>
+
+            <Menu
+              anchorEl={adaptiveAnchorEl}
+              open={Boolean(adaptiveAnchorEl)}
+              onClose={handleAdaptiveMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              {ADAPTIVE_NAV_ITEMS.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  selected={isActive(item.path)}
+                  onClick={() => handleNavigate(item.path)}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Menu>
 
             <Button
               onClick={handleSpecialMenuOpen}
