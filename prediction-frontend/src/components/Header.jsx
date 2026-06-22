@@ -1,147 +1,125 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   AppBar,
   Box,
   Button,
+  Divider,
   IconButton,
   Menu,
   MenuItem,
   Toolbar,
+  Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useLocation, useNavigate } from "react-router-dom";
-
-import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 
-import { useEffect, useMemo, useState } from "react";
-import PatternReportWidget from "./PatternReportWidget";
-import { vi } from "../i18n/vi";
 import { getMe } from "../api/authApi";
+import { vi } from "../i18n/vi";
+import PatternReportWidget from "./PatternReportWidget";
 
-const NAV_ITEMS = [
-  { label: vi.menu.home, path: "/" },
-  { label: "Nhập kết quả", path: "/input" },
-  { label: "Dự đoán", path: "/prediction" },
-  { label: "Kết quả", path: "/history" },
-  { label: "Cược", path: "/bet" },
-  { label: "Phân tích predictor", path: "/intelligence" },
-  { label: "Báo cáo pattern", path: "/pattern-report" },
-  { label: "Luồng quyết định", path: "/decision-trace" },
-  { label: "Đánh giá hệ thống", path: "/system-evaluation" },
+const DOMAIN_MENUS = [
+  {
+    key: "prediction",
+    label: "Prediction",
+    items: [
+      { label: "Prediction", path: "/prediction" },
+      { label: "Performance Cards", path: "/system-intelligence/performance-cards" },
+      { label: "Prediction Intelligence", path: "/intelligence" },
+      { label: "Meta Intelligence", path: "/system-intelligence/audit" },
+      { label: "Shadow Ranking", path: "/system-intelligence/shadow-ranking" },
+      { label: "System Evaluation", path: "/system-evaluation" },
+      { label: "Pattern Report", path: "/pattern-report" },
+    ],
+  },
+  {
+    key: "adaptive",
+    label: "Adaptive",
+    items: [
+      { label: "Adaptive Dashboard", path: "/adaptive" },
+      { label: "Adaptive Prediction", path: "/adaptive-prediction" },
+      { label: "Adaptive Performance", path: "/adaptive-performance" },
+      { label: "Adaptive Intelligence", path: "/adaptive-intelligence" },
+      { label: "Adaptive Shadow Ranking", path: "/adaptive-shadow" },
+    ],
+  },
+  {
+    key: "special",
+    label: "Special",
+    items: [
+      { label: "Special Dashboard", path: "/special" },
+      { label: "Special Prediction", path: "/special-prediction" },
+      { label: "Special Performance Cards", path: "/special-prediction/performance-cards" },
+      { label: "Special Intelligence", path: "/special-prediction/intelligence" },
+      { label: "Special Analytics", path: "/special-prediction/analytics" },
+    ],
+  },
 ];
 
-const ADAPTIVE_NAV_ITEMS = [
-  { label: "Dashboard", path: "/adaptive" },
-  { label: "Prediction", path: "/adaptive-prediction" },
-  { label: "Performance", path: "/adaptive-performance" },
-  { label: "Intelligence", path: "/adaptive-intelligence" },
-  { label: "Shadow Ranking", path: "/adaptive-shadow" },
-];
-
-const AUDIT_NAV_ITEMS = [
-  { label: "Theo doi hieu suat", path: "/system-intelligence/performance-cards" },
-  { label: "Bang audit", path: "/system-intelligence/audit" },
-  { label: "Toi uu rank", path: "/system-intelligence/rank-optimization" },
-  { label: "Xep hang shadow", path: "/system-intelligence/shadow-ranking" },
-  { label: "Dong gop predictor", path: "/system-intelligence/predictor-contribution" },
-];
-
-const SPECIAL_NAV_ITEMS = [
-  { label: "Special Prediction", path: "/special-prediction" },
-  { label: "Special Performance Cards", path: "/special-prediction/performance-cards" },
-  { label: "Special Intelligence", path: "/special-prediction/intelligence" },
-  { label: "Special Analytics", path: "/special-prediction/analytics" },
-];
+function pathOnly(path) {
+  return path.split("#")[0];
+}
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [adaptiveAnchorEl, setAdaptiveAnchorEl] = useState(null);
-  const [auditAnchorEl, setAuditAnchorEl] = useState(null);
-  const [specialAnchorEl, setSpecialAnchorEl] = useState(null);
+  const [mobileAnchor, setMobileAnchor] = useState(null);
+  const [domainMenu, setDomainMenu] = useState({ key: null, anchor: null });
+  const [accountAnchor, setAccountAnchor] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        setUser(await getMe());
-      } catch (err) {
-        console.error("Load current user error:", err);
-      }
-    };
-
-    void loadUser();
+    getMe().then(setUser).catch((err) => console.error("Load current user error:", err));
   }, []);
 
-  const navItems = useMemo(() => {
-    const items = [...NAV_ITEMS, { label: "Tai khoan", path: "/account" }];
-
-    if (user?.role === "ADMIN") {
-      items.push({ label: "Quan ly user", path: "/admin/users" });
-    }
-
+  const accountItems = useMemo(() => {
+    const items = [{ label: "Tai khoan", path: "/account" }];
+    if (user?.role === "ADMIN") items.push({ label: "Quan ly user", path: "/admin/users" });
     return items;
   }, [user?.role]);
 
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+  const isActive = (path) => {
+    const target = pathOnly(path);
+    if (target === "/") return location.pathname === "/";
+    return location.pathname === target || location.pathname.startsWith(`${target}/`);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+  const isDomainActive = (menu) => menu.items.some((item) => isActive(item.path));
 
-  const handleAuditMenuOpen = (event) => {
-    setAuditAnchorEl(event.currentTarget);
-  };
-
-  const handleAdaptiveMenuOpen = (event) => {
-    setAdaptiveAnchorEl(event.currentTarget);
-  };
-
-  const handleAdaptiveMenuClose = () => {
-    setAdaptiveAnchorEl(null);
-  };
-
-  const handleAuditMenuClose = () => {
-    setAuditAnchorEl(null);
-  };
-
-  const handleSpecialMenuOpen = (event) => {
-    setSpecialAnchorEl(event.currentTarget);
-  };
-
-  const handleSpecialMenuClose = () => {
-    setSpecialAnchorEl(null);
+  const closeMenus = () => {
+    setMobileAnchor(null);
+    setDomainMenu({ key: null, anchor: null });
+    setAccountAnchor(null);
   };
 
   const handleNavigate = (path) => {
+    closeMenus();
     navigate(path);
-    handleMenuClose();
-    handleAdaptiveMenuClose();
-    handleAuditMenuClose();
-    handleSpecialMenuClose();
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    closeMenus();
     navigate("/login");
   };
 
-  const isActive = (path) => {
-    if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
-  };
-
-  const isAuditActive = AUDIT_NAV_ITEMS.some((item) => isActive(item.path));
-  const isAdaptiveActive = ADAPTIVE_NAV_ITEMS.some((item) => isActive(item.path));
-  const isSpecialActive = SPECIAL_NAV_ITEMS.some((item) => isActive(item.path));
+  const domainButtonSx = (active) => ({
+    minWidth: 0,
+    px: 1.5,
+    color: active ? "#0F172A" : "#475569",
+    backgroundColor: active ? "#EAF2FF" : "transparent",
+    border: active ? "1px solid #93C5FD" : "1px solid transparent",
+    textTransform: "none",
+    fontWeight: active ? 950 : 800,
+    "&:hover": { backgroundColor: "rgba(37,99,235,0.08)", color: "#1D4ED8" },
+  });
 
   return (
     <AppBar
@@ -150,99 +128,64 @@ export default function Header() {
       sx={{
         top: 0,
         zIndex: theme.zIndex.appBar,
-        background: "rgba(255,255,255,0.88)",
+        background: "rgba(255,255,255,0.92)",
         backdropFilter: "blur(14px)",
         borderBottom: "1px solid #E2E8F0",
         color: "#0F172A",
       }}
     >
-      <Toolbar
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 2,
-          minHeight: 72,
-          px: { xs: 2, md: 3 },
-          py: { xs: 1, md: 1.2 },
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, minWidth: 0 }}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #2563EB, #0F766E)",
-              boxShadow: "0 12px 28px rgba(37,99,235,0.22)",
-            }}
-          />
-          <Typography variant="h6" sx={{ fontWeight: 950, color: "#0F172A", whiteSpace: "nowrap" }}>
-            {vi.app.name}
-          </Typography>
-        </Box>
+      <Toolbar sx={{ minHeight: 68, gap: 2, px: { xs: 2, md: 3 } }}>
+        <Button
+          onClick={() => navigate("/")}
+          sx={{ minWidth: 0, p: 0, textTransform: "none", color: "#0F172A" }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+            <Box sx={{ width: 36, height: 36, borderRadius: 2, background: "linear-gradient(135deg, #2563EB, #0F766E)" }} />
+            <Typography variant="h6" sx={{ fontWeight: 950, whiteSpace: "nowrap" }}>
+              {vi.app.name}
+            </Typography>
+          </Box>
+        </Button>
+
+        <Box sx={{ flex: 1 }} />
 
         {isMobile ? (
           <>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <PatternReportWidget dense />
-              <IconButton onClick={handleMenuOpen} sx={{ color: "#0F172A" }}>
+            <PatternReportWidget dense />
+            <Tooltip title="Navigation">
+              <IconButton onClick={(event) => setMobileAnchor(event.currentTarget)} aria-label="Open navigation">
                 <MenuIcon />
               </IconButton>
-            </Box>
-
+            </Tooltip>
             <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
+              anchorEl={mobileAnchor}
+              open={Boolean(mobileAnchor)}
+              onClose={closeMenus}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
+              slotProps={{ paper: { sx: { minWidth: 280, maxHeight: "calc(100vh - 88px)" } } }}
             >
-              {navItems.map((item) => (
-                <MenuItem
-                  key={item.path}
-                  selected={isActive(item.path)}
-                  onClick={() => handleNavigate(item.path)}
-                >
-                  {item.label}
-                </MenuItem>
+              {DOMAIN_MENUS.map((menu, menuIndex) => (
+                <Box key={menu.key}>
+                  {menuIndex > 0 ? <Divider /> : null}
+                  <MenuItem disabled sx={{ opacity: "1 !important", color: "#0F172A", fontWeight: 950 }}>
+                    {menu.label}
+                  </MenuItem>
+                  {menu.items.map((item) => (
+                    <MenuItem
+                      key={`${menu.key}-${item.label}`}
+                      selected={isActive(item.path)}
+                      onClick={() => handleNavigate(item.path)}
+                      sx={{ pl: 3 }}
+                    >
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Box>
               ))}
-              <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
-                Adaptive
-              </MenuItem>
-              {ADAPTIVE_NAV_ITEMS.map((item) => (
-                <MenuItem
-                  key={item.path}
-                  selected={isActive(item.path)}
-                  onClick={() => handleNavigate(item.path)}
-                  sx={{ pl: 3 }}
-                >
-                  {item.label}
-                </MenuItem>
-              ))}
-              <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
-                Tri tue he thong
-              </MenuItem>
-              {AUDIT_NAV_ITEMS.map((item) => (
-                <MenuItem
-                  key={item.path}
-                  selected={isActive(item.path)}
-                  onClick={() => handleNavigate(item.path)}
-                  sx={{ pl: 3 }}
-                >
-                  {item.label}
-                </MenuItem>
-              ))}
-              <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
-                Special Prediction
-              </MenuItem>
-              {SPECIAL_NAV_ITEMS.map((item) => (
-                <MenuItem
-                  key={item.path}
-                  selected={isActive(item.path)}
-                  onClick={() => handleNavigate(item.path)}
-                  sx={{ pl: 3 }}
-                >
+              <Divider />
+              {accountItems.map((item) => (
+                <MenuItem key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)}>
                   {item.label}
                 </MenuItem>
               ))}
@@ -253,198 +196,64 @@ export default function Header() {
             </Menu>
           </>
         ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 1,
-              alignItems: "center",
-              justifyContent: "flex-end",
-              minWidth: 0,
-              maxWidth: "calc(100vw - 260px)",
-            }}
-          >
+          <>
             <PatternReportWidget />
-
-            {navItems.map((item) => (
-              <Button
-                key={item.path}
-                onClick={() => handleNavigate(item.path)}
-                sx={{
-                  textTransform: "none",
-                  borderRadius: 999,
-                  px: { md: 1.2, lg: 1.55 },
-                  py: 0.72,
-                  minWidth: 0,
-                  color: isActive(item.path) ? "#0F172A" : "#475569",
-                  backgroundColor: isActive(item.path) ? "#EAF2FF" : "transparent",
-                  border: isActive(item.path) ? "1px solid #93C5FD" : "1px solid transparent",
-                  boxShadow: isActive(item.path) ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
-                  fontSize: { md: 13, lg: 14 },
-                  fontWeight: isActive(item.path) ? 900 : 700,
-                  whiteSpace: "nowrap",
-                  lineHeight: 1.2,
-                  "&:hover": {
-                    backgroundColor: "rgba(37,99,235,0.08)",
-                    color: "#1D4ED8",
-                  },
-                }}
-              >
-                {item.label}
-              </Button>
+            {DOMAIN_MENUS.map((menu) => (
+              <Box key={menu.key}>
+                <Button
+                  endIcon={<KeyboardArrowDownIcon />}
+                  onClick={(event) => setDomainMenu({ key: menu.key, anchor: event.currentTarget })}
+                  sx={domainButtonSx(isDomainActive(menu))}
+                >
+                  {menu.label}
+                </Button>
+                <Menu
+                  anchorEl={domainMenu.anchor}
+                  open={domainMenu.key === menu.key}
+                  onClose={closeMenus}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                  transformOrigin={{ vertical: "top", horizontal: "left" }}
+                >
+                  {menu.items.map((item) => (
+                    <MenuItem
+                      key={`${menu.key}-${item.label}`}
+                      selected={isActive(item.path)}
+                      onClick={() => handleNavigate(item.path)}
+                    >
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Box>
             ))}
-
-            <Button
-              onClick={handleAdaptiveMenuOpen}
-              endIcon={<KeyboardArrowDownIcon />}
-              sx={{
-                textTransform: "none",
-                borderRadius: 999,
-                px: { md: 1.2, lg: 1.55 },
-                py: 0.72,
-                minWidth: 0,
-                color: isAdaptiveActive ? "#0F172A" : "#475569",
-                backgroundColor: isAdaptiveActive ? "#EAF2FF" : "transparent",
-                border: isAdaptiveActive ? "1px solid #93C5FD" : "1px solid transparent",
-                boxShadow: isAdaptiveActive ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
-                fontSize: { md: 13, lg: 14 },
-                fontWeight: isAdaptiveActive ? 900 : 700,
-                whiteSpace: "nowrap",
-                lineHeight: 1.2,
-                "&:hover": {
-                  backgroundColor: "rgba(37,99,235,0.08)",
-                  color: "#1D4ED8",
-                },
-              }}
-            >
-              Adaptive
-            </Button>
-
+            <Tooltip title="Account">
+              <IconButton
+                onClick={(event) => setAccountAnchor(event.currentTarget)}
+                aria-label="Open account menu"
+                sx={{ color: isActive("/account") || isActive("/admin/users") ? "#1D4ED8" : "#475569" }}
+              >
+                <AccountCircleOutlinedIcon />
+              </IconButton>
+            </Tooltip>
             <Menu
-              anchorEl={adaptiveAnchorEl}
-              open={Boolean(adaptiveAnchorEl)}
-              onClose={handleAdaptiveMenuClose}
+              anchorEl={accountAnchor}
+              open={Boolean(accountAnchor)}
+              onClose={closeMenus}
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              {ADAPTIVE_NAV_ITEMS.map((item) => (
-                <MenuItem
-                  key={item.path}
-                  selected={isActive(item.path)}
-                  onClick={() => handleNavigate(item.path)}
-                >
+              {accountItems.map((item) => (
+                <MenuItem key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)}>
                   {item.label}
                 </MenuItem>
               ))}
+              <Divider />
+              <MenuItem onClick={handleLogout}>
+                <LogoutIcon sx={{ mr: 1 }} />
+                {vi.menu.logout}
+              </MenuItem>
             </Menu>
-
-            <Button
-              onClick={handleSpecialMenuOpen}
-              endIcon={<KeyboardArrowDownIcon />}
-              sx={{
-                textTransform: "none",
-                borderRadius: 999,
-                px: { md: 1.2, lg: 1.55 },
-                py: 0.72,
-                minWidth: 0,
-                color: isSpecialActive ? "#0F172A" : "#475569",
-                backgroundColor: isSpecialActive ? "#EAF2FF" : "transparent",
-                border: isSpecialActive ? "1px solid #93C5FD" : "1px solid transparent",
-                boxShadow: isSpecialActive ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
-                fontSize: { md: 13, lg: 14 },
-                fontWeight: isSpecialActive ? 900 : 700,
-                whiteSpace: "nowrap",
-                lineHeight: 1.2,
-                "&:hover": {
-                  backgroundColor: "rgba(37,99,235,0.08)",
-                  color: "#1D4ED8",
-                },
-              }}
-            >
-              Special Prediction
-            </Button>
-
-            <Menu
-              anchorEl={specialAnchorEl}
-              open={Boolean(specialAnchorEl)}
-              onClose={handleSpecialMenuClose}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-            >
-              {SPECIAL_NAV_ITEMS.map((item) => (
-                <MenuItem
-                  key={item.path}
-                  selected={isActive(item.path)}
-                  onClick={() => handleNavigate(item.path)}
-                >
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Menu>
-
-            <Button
-              onClick={handleAuditMenuOpen}
-              endIcon={<KeyboardArrowDownIcon />}
-              sx={{
-                textTransform: "none",
-                borderRadius: 999,
-                px: { md: 1.2, lg: 1.55 },
-                py: 0.72,
-                minWidth: 0,
-                color: isAuditActive ? "#0F172A" : "#475569",
-                backgroundColor: isAuditActive ? "#EAF2FF" : "transparent",
-                border: isAuditActive ? "1px solid #93C5FD" : "1px solid transparent",
-                boxShadow: isAuditActive ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
-                fontSize: { md: 13, lg: 14 },
-                fontWeight: isAuditActive ? 900 : 700,
-                whiteSpace: "nowrap",
-                lineHeight: 1.2,
-                "&:hover": {
-                  backgroundColor: "rgba(37,99,235,0.08)",
-                  color: "#1D4ED8",
-                },
-              }}
-            >
-              Tri tue he thong
-            </Button>
-
-            <Menu
-              anchorEl={auditAnchorEl}
-              open={Boolean(auditAnchorEl)}
-              onClose={handleAuditMenuClose}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-            >
-              {AUDIT_NAV_ITEMS.map((item) => (
-                <MenuItem
-                  key={item.path}
-                  selected={isActive(item.path)}
-                  onClick={() => handleNavigate(item.path)}
-                >
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Menu>
-
-            <Button
-              onClick={handleLogout}
-              startIcon={<LogoutIcon />}
-              variant="contained"
-              sx={{
-                borderRadius: 999,
-                textTransform: "none",
-                px: { md: 1.45, lg: 1.8 },
-                ml: 0.2,
-                fontSize: { md: 13, lg: 14 },
-                whiteSpace: "nowrap",
-                background: "#0F172A",
-                boxShadow: "0 12px 28px rgba(15,23,42,0.18)",
-                "&:hover": { background: "#1E293B" },
-              }}
-            >
-              {vi.menu.logout}
-            </Button>
-          </Box>
+          </>
         )}
       </Toolbar>
     </AppBar>
