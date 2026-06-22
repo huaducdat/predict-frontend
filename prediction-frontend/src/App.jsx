@@ -20,6 +20,9 @@ import RankOptimization from "./pages/RankOptimization";
 import ShadowRanking from "./pages/ShadowRanking";
 import PredictorContribution from "./pages/PredictorContribution";
 import PerformanceCards from "./pages/PerformanceCards";
+import SpecialPrediction from "./pages/SpecialPrediction";
+import SpecialPerformanceCards from "./pages/SpecialPerformanceCards";
+import SpecialIntelligence from "./pages/SpecialIntelligence";
 
 
 
@@ -52,6 +55,9 @@ function App() {
                   <Route path="/system-intelligence/shadow-ranking" element={<ShadowRanking />} />
                   <Route path="/system-intelligence/predictor-contribution" element={<PredictorContribution />} />
                   <Route path="/system-intelligence/performance-cards" element={<PerformanceCards />} />
+                  <Route path="/special-prediction" element={<SpecialPrediction />} />
+                  <Route path="/special-prediction/performance-cards" element={<SpecialPerformanceCards />} />
+                  <Route path="/special-prediction/intelligence" element={<SpecialIntelligence />} />
                   <Route path="/audit" element={<AuditDashboard />} />
                   <Route path="/audit/rank-optimization" element={<RankOptimization />} />
                   <Route path="/audit/shadow-ranking" element={<ShadowRanking />} />

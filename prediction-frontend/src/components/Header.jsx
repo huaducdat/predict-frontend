@@ -41,6 +41,12 @@ const AUDIT_NAV_ITEMS = [
   { label: "Dong gop predictor", path: "/system-intelligence/predictor-contribution" },
 ];
 
+const SPECIAL_NAV_ITEMS = [
+  { label: "Special Prediction", path: "/special-prediction" },
+  { label: "Special Performance Cards", path: "/special-prediction/performance-cards" },
+  { label: "Special Intelligence", path: "/special-prediction/intelligence" },
+];
+
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,6 +54,7 @@ export default function Header() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
   const [auditAnchorEl, setAuditAnchorEl] = useState(null);
+  const [specialAnchorEl, setSpecialAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -88,10 +95,19 @@ export default function Header() {
     setAuditAnchorEl(null);
   };
 
+  const handleSpecialMenuOpen = (event) => {
+    setSpecialAnchorEl(event.currentTarget);
+  };
+
+  const handleSpecialMenuClose = () => {
+    setSpecialAnchorEl(null);
+  };
+
   const handleNavigate = (path) => {
     navigate(path);
     handleMenuClose();
     handleAuditMenuClose();
+    handleSpecialMenuClose();
   };
 
   const handleLogout = () => {
@@ -105,6 +121,7 @@ export default function Header() {
   };
 
   const isAuditActive = AUDIT_NAV_ITEMS.some((item) => isActive(item.path));
+  const isSpecialActive = SPECIAL_NAV_ITEMS.some((item) => isActive(item.path));
 
   return (
     <AppBar
@@ -183,6 +200,19 @@ export default function Header() {
                   {item.label}
                 </MenuItem>
               ))}
+              <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
+                Special
+              </MenuItem>
+              {SPECIAL_NAV_ITEMS.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  selected={isActive(item.path)}
+                  onClick={() => handleNavigate(item.path)}
+                  sx={{ pl: 3 }}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
               <MenuItem onClick={handleLogout}>
                 <LogoutIcon sx={{ mr: 1 }} />
                 {vi.menu.logout}
@@ -230,6 +260,50 @@ export default function Header() {
                 {item.label}
               </Button>
             ))}
+
+            <Button
+              onClick={handleSpecialMenuOpen}
+              endIcon={<KeyboardArrowDownIcon />}
+              sx={{
+                textTransform: "none",
+                borderRadius: 999,
+                px: { md: 1.2, lg: 1.55 },
+                py: 0.72,
+                minWidth: 0,
+                color: isSpecialActive ? "#0F172A" : "#475569",
+                backgroundColor: isSpecialActive ? "#EAF2FF" : "transparent",
+                border: isSpecialActive ? "1px solid #93C5FD" : "1px solid transparent",
+                boxShadow: isSpecialActive ? "0 6px 18px rgba(37,99,235,0.12)" : "none",
+                fontSize: { md: 13, lg: 14 },
+                fontWeight: isSpecialActive ? 900 : 700,
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
+                "&:hover": {
+                  backgroundColor: "rgba(37,99,235,0.08)",
+                  color: "#1D4ED8",
+                },
+              }}
+            >
+              Special
+            </Button>
+
+            <Menu
+              anchorEl={specialAnchorEl}
+              open={Boolean(specialAnchorEl)}
+              onClose={handleSpecialMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              {SPECIAL_NAV_ITEMS.map((item) => (
+                <MenuItem
+                  key={item.path}
+                  selected={isActive(item.path)}
+                  onClick={() => handleNavigate(item.path)}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Menu>
 
             <Button
               onClick={handleAuditMenuOpen}
