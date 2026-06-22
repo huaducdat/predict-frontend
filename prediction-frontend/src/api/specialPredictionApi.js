@@ -22,3 +22,12 @@ export const getSpecialEvolutionRecommendations = async (limit = 100) => (await 
 export const getSpecialRankingLeaderboard = async () => (await api.get("/api/special-prediction/ranking-leaderboard")).data;
 export const approveSpecialEvolutionRecommendation = async (id) => (await api.post(`/api/special-prediction/evolution/recommendations/${id}/approve`)).data;
 export const rejectSpecialEvolutionRecommendation = async (id) => (await api.post(`/api/special-prediction/evolution/recommendations/${id}/reject`)).data;
+export const getSpecialAnalyticsPredictors = async (limit = 50) => (await api.get("/api/special-prediction/analytics/predictors", { params: { limit } })).data;
+export const getSpecialAnalyticsWindows = async (limit = 50) => (await api.get("/api/special-prediction/analytics/windows", { params: { limit } })).data;
+export const getSpecialAnalyticsVariants = async (limit = 100) => (await api.get("/api/special-prediction/analytics/variants", { params: { limit } })).data;
+export const getSpecialAnalyticsChampions = async (limit = 100) => (await api.get("/api/special-prediction/analytics/champions", { params: { limit } })).data;
+export const getSpecialAnalyticsRoTrend = async (limit = 100) => (await api.get("/api/special-prediction/analytics/ro-trend", { params: { limit } })).data;
+export const getSpecialAnalyticsAoTrend = async (limit = 100) => (await api.get("/api/special-prediction/analytics/ao-trend", { params: { limit } })).data;
+export const getSpecialAnalyticsBiasHistory = async (limit = 100) => (await api.get("/api/special-prediction/analytics/bias-history", { params: { limit } })).data;
+export const getSpecialAnalyticsRegimes = async (limit = 100) => (await api.get("/api/special-prediction/analytics/regimes", { params: { limit } })).data;
+export const getSpecialAnalyticsRecommendations = async (limit = 100) => (await api.get("/api/special-prediction/analytics/recommendations", { params: { limit } })).data;

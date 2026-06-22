@@ -34,6 +34,7 @@ const NAV_ITEMS = [
 ];
 
 const AUDIT_NAV_ITEMS = [
+  { label: "Adaptive Prediction", path: "/adaptive-prediction" },
   { label: "Theo doi hieu suat", path: "/system-intelligence/performance-cards" },
   { label: "Bang audit", path: "/system-intelligence/audit" },
   { label: "Toi uu rank", path: "/system-intelligence/rank-optimization" },
@@ -45,6 +46,7 @@ const SPECIAL_NAV_ITEMS = [
   { label: "Special Prediction", path: "/special-prediction" },
   { label: "Special Performance Cards", path: "/special-prediction/performance-cards" },
   { label: "Special Intelligence", path: "/special-prediction/intelligence" },
+  { label: "Special Analytics", path: "/special-prediction/analytics" },
 ];
 
 export default function Header() {
@@ -201,7 +203,7 @@ export default function Header() {
                 </MenuItem>
               ))}
               <MenuItem disabled sx={{ fontWeight: 900, opacity: "1 !important", color: "#0F172A" }}>
-                Special
+                Special Prediction
               </MenuItem>
               {SPECIAL_NAV_ITEMS.map((item) => (
                 <MenuItem
@@ -284,7 +286,7 @@ export default function Header() {
                 },
               }}
             >
-              Special
+              Special Prediction
             </Button>
 
             <Menu
