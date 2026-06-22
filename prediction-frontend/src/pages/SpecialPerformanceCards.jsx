@@ -46,6 +46,7 @@ function NumberPill({ item, actual }) {
 
 function Card({ card }) {
   const top10 = parseJson(card?.predictedTop10Json, []);
+  const riskFlags = parseJson(card?.riskFlagsJson, []);
   const primary = card?.primaryPrediction ?? top10[0]?.number;
   const directHit = card?.actualSpecialNumber !== null && card?.actualSpecialNumber !== undefined && Number(primary) === Number(card.actualSpecialNumber);
   return (
@@ -90,9 +91,19 @@ function Card({ card }) {
             <StateChip label="" value={card?.bias ?? "--"} color="#F1F5F9" />
             <StateChip label="Confidence" value={fmtPct(card?.confidence)} color="#DBEAFE" />
             <StateChip label="Champion" value={card?.rankingChampion ?? "--"} color="#CCFBF1" />
+            <StateChip label="Champion Conf" value={fmtPct(card?.championConfidence)} color="#CCFBF1" />
+            <StateChip label="Regime" value={card?.regimeState ?? "--"} color="#F5F3FF" />
             <StateChip label="Predictor" value={card?.strongestPredictor ?? "--"} color="#F8FAFC" />
             <StateChip label="Window" value={card?.strongestWindow ?? "--"} color="#F8FAFC" />
             <StateChip label="Strongest" value={card?.strongestVariant ?? "--"} color="#F8FAFC" />
+          </Stack>
+        </Box>
+        <Box>
+          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 950, mb: 0.75 }}>Risk Flags</Typography>
+          <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+            {(riskFlags.length ? riskFlags : ["None"]).map((flag) => (
+              <Chip key={`${card?.id}-risk-${flag}`} size="small" label={flag} sx={{ bgcolor: riskFlags.length ? "#FEF3C7" : "#DCFCE7", fontWeight: 950 }} />
+            ))}
           </Stack>
         </Box>
       </Stack>
