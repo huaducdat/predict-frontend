@@ -1,5 +1,20 @@
 import api from "./api";
 
+export const runAdaptivePrediction = async () => {
+  const res = await api.post("/api/adaptive-prediction/run");
+  return res.data;
+};
+
+export const rebuildAdaptivePhase3 = async () => {
+  const res = await api.post("/api/adaptive-prediction/phase3/rebuild");
+  return res.data;
+};
+
+export const rebuildAdaptivePhase4 = async () => {
+  const res = await api.post("/api/adaptive-prediction/phase4/rebuild");
+  return res.data;
+};
+
 export const getAdaptiveLatest = async () => {
   const res = await api.get("/api/adaptive-prediction/latest");
   return res.data;
