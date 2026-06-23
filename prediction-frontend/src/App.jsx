@@ -25,6 +25,7 @@ import AdaptivePrediction from "./pages/AdaptivePrediction";
 import AdaptivePerformance from "./pages/AdaptivePerformance";
 import AdaptiveIntelligence from "./pages/AdaptiveIntelligence";
 import AdaptiveShadowRanking from "./pages/AdaptiveShadowRanking";
+import SpecialDashboard from "./pages/SpecialDashboard";
 import SpecialPrediction from "./pages/SpecialPrediction";
 import SpecialPerformanceCards from "./pages/SpecialPerformanceCards";
 import SpecialIntelligence from "./pages/SpecialIntelligence";
@@ -66,6 +67,7 @@ function App() {
                   <Route path="/adaptive-performance" element={<AdaptivePerformance />} />
                   <Route path="/adaptive-intelligence" element={<AdaptiveIntelligence />} />
                   <Route path="/adaptive-shadow" element={<AdaptiveShadowRanking />} />
+                  <Route path="/special" element={<SpecialDashboard />} />
                   <Route path="/special-prediction" element={<SpecialPrediction />} />
                   <Route path="/special-prediction/performance-cards" element={<SpecialPerformanceCards />} />
                   <Route path="/special-prediction/intelligence" element={<SpecialIntelligence />} />
