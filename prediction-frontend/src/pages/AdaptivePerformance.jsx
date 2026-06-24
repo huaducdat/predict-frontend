@@ -5,7 +5,6 @@ import { getAdaptivePerformanceCards } from "../api/adaptivePredictionApi";
 import {
   AdaptiveDataTable,
   AdaptiveMetric,
-  AdaptiveNumberPill,
   AdaptivePageHeader,
   AdaptiveSection,
   AdaptiveStateChip,
@@ -21,15 +20,167 @@ function hitRate(cards, field) {
   return formatAdaptivePercent(cards.filter((card) => card[field]).length / cards.length);
 }
 
+function numberLabel(value) {
+  if (value === null || value === undefined || value === "") return "--";
+  return String(value).padStart(2, "0");
+}
+
+function numberFromItem(item) {
+  const value = typeof item === "number" ? item : item?.number;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function numberList(value) {
+  const parsed = parseAdaptiveJson(value, []);
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map(numberFromItem)
+    .filter((number) => number !== null);
+}
+
+function predictedNumbers(card) {
+  return numberList(card?.predictedTop10Json);
+}
+
+function actualNumbers(card) {
+  return numberList(card?.actualNumbersJson);
+}
+
+function cardHitNumbers(card) {
+  const storedHits = numberList(card?.hitNumbersJson);
+  if (storedHits.length > 0) return storedHits;
+
+  const actualSet = new Set(actualNumbers(card));
+  return predictedNumbers(card).filter((number) => actualSet.has(number));
+}
+
+function NumberPill({ number, hit = false }) {
+  return (
+    <Box
+      component="span"
+      sx={{
+        minWidth: 34,
+        height: 32,
+        px: 1,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 999,
+        bgcolor: hit ? "#FCE7F3" : "#F8FAFC",
+        color: hit ? "#9D174D" : "#0F172A",
+        border: hit ? "2px solid #EC4899" : "1px solid #E2E8F0",
+        fontWeight: 950,
+        boxShadow: hit ? "0 8px 18px rgba(236,72,153,0.18)" : "none",
+      }}
+    >
+      {numberLabel(number)}
+    </Box>
+  );
+}
+
+function AdaptivePredictedNumberList({ card }) {
+  const numbers = predictedNumbers(card);
+  const actual = actualNumbers(card);
+  const hits = cardHitNumbers(card);
+  const hitSet = new Set(hits);
+  const hitCountValue = Number(card?.hitCountTop10);
+  const hitCount = Number.isFinite(hitCountValue) ? hitCountValue : hits.length;
+  const hasHit = hitCount > 0;
+
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} sx={{ mb: 0.8 }}>
+        <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 950 }}>
+          Ket qua du doan Top10
+        </Typography>
+        {hasHit ? (
+          <Chip
+            size="small"
+            label="SO TRUNG"
+            sx={{
+              bgcolor: "#FCE7F3",
+              color: "#9D174D",
+              border: "1px solid #F9A8D4",
+              fontWeight: 950,
+            }}
+          />
+        ) : null}
+      </Stack>
+      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+        {numbers.length === 0 ? (
+          <Typography sx={{ color: "#94A3B8", fontWeight: 800 }}>Chua co danh sach du doan</Typography>
+        ) : null}
+        {numbers.map((number, index) => (
+          <NumberPill
+            key={`${card?.id}-predicted-${number}-${index}`}
+            number={number}
+            hit={hitSet.has(number)}
+          />
+        ))}
+      </Stack>
+
+      <Stack spacing={0.75} sx={{ mt: 1.2 }}>
+        <Stack direction="row" spacing={0.75} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 950 }}>
+            Ket qua thuc te:
+          </Typography>
+          {actual.length ? (
+            actual.map((number, index) => (
+              <NumberPill
+                key={`${card?.id}-actual-${number}-${index}`}
+                number={number}
+                hit={hitSet.has(number)}
+              />
+            ))
+          ) : (
+            <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 850 }}>
+              Chua co
+            </Typography>
+          )}
+        </Stack>
+        <Stack direction="row" spacing={0.75} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 950 }}>
+            So trung:
+          </Typography>
+          {hasHit ? (
+            hits.map((number, index) => (
+              <Chip
+                key={`${card?.id}-hit-${number}-${index}`}
+                size="small"
+                label={numberLabel(number)}
+                sx={{
+                  bgcolor: "#FCE7F3",
+                  color: "#9D174D",
+                  border: "1px solid #EC4899",
+                  fontWeight: 950,
+                }}
+              />
+            ))
+          ) : (
+            <Typography sx={{ fontSize: 12, color: "#64748B", fontWeight: 850 }}>
+              Khong co
+            </Typography>
+          )}
+        </Stack>
+        <Stack direction="row" spacing={1.25} useFlexGap flexWrap="wrap">
+          <Typography sx={{ fontSize: 12, color: "#0F172A", fontWeight: 900 }}>
+            Tong so trung: {hitCount}
+          </Typography>
+          <Typography sx={{ fontSize: 12, color: "#0F172A", fontWeight: 900 }}>
+            Top10 Hit Count: {hitCount}/10
+          </Typography>
+        </Stack>
+      </Stack>
+    </Box>
+  );
+}
+
 function PerformanceCard({ card }) {
-  const predicted = parseAdaptiveJson(card?.predictedTop10Json, []);
-  const hits = new Set(parseAdaptiveJson(card?.hitNumbersJson, []));
   return (
     <AdaptiveSection title={formatAdaptiveDate(card?.targetDate)} action={<Chip label={`Hits ${card?.hitCountTop10 ?? 0}/10`} sx={{ bgcolor: "#ECFDF5", fontWeight: 950 }} />}>
       <Stack spacing={1.25}>
-        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
-          {predicted.map((item) => <AdaptiveNumberPill key={`${card.id}-${item.number}`} item={item} hit={hits.has(item.number)} />)}
-        </Stack>
+        <AdaptivePredictedNumberList card={card} />
         <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
           {["top1Hit", "top3Hit", "top10Hit"].map((field) => (
             <Chip key={field} size="small" label={`${field.replace("Hit", "").toUpperCase()} ${card[field] ? "Hit" : "Miss"}`} sx={{ bgcolor: card[field] ? "#DCFCE7" : "#FEE2E2", color: card[field] ? "#166534" : "#991B1B", fontWeight: 950 }} />
